@@ -89,13 +89,13 @@
   type: sitemap_detail
   sitemap: https://www.paradiso.nl/sitemap.xml
   sitemap_pattern: "/sitemap/event_\\d+\\.xml"
-  last_files: 60
-  sitemap_recent_days: 120
+  last_files: 70
+  sitemap_recent_days: 400
   link_pattern: "paradiso\\.nl/programma/[^/]+/\\d+$"
   max_detail: 900
   detail_ttl_days: 30
   crawl_delay: 0.7
-  notes: geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml (364 bestanden à 30 URL's) is op id gesorteerd, NIET op datum; daarom de laatste 60 bestanden lezen en alleen URL's houden met een lastmod in de laatste 120 dagen (aankomende events worden bijgewerkt). Eerste run zwaar, daarna gecached.
+  notes: "geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml (364 bestanden à 30 URL's) is op id gesorteerd, NIET op datum; daarom de laatste 70 bestanden lezen en alleen URL's houden met een lastmod in de laatste 400 dagen (120 was te krap: The Patchwork Family, aangemaakt in het voorjaar, viel eruit). Verleden events worden na één keer nooit meer opgehaald."
 
 - name: Tolhuistuin
   city: Amsterdam

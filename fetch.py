@@ -1314,7 +1314,7 @@ def main(only: list[str] | None = None) -> int:
         meta = vmeta.get(rv["name"], {})
         rv["section"] = meta.get("section", "poppodium")
         rv["capacity"] = meta.get("capacity")
-    report["kinds"] = {k: sum(1 for e in all_events if e.kind == k) for k in ("concert", "club", "festival", "other")}
+    report["kinds"] = {k: sum(1 for e in all_events if e.kind == k) for k in ("concert", "club", "festival", "talk", "other")}
 
     all_events.sort(key=lambda e: (e.start, e.venue, e.title))
     (DATA / "events.json").write_text(json.dumps([asdict(e) for e in all_events], ensure_ascii=False, indent=1), encoding="utf-8")
