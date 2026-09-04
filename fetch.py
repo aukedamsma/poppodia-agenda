@@ -15,6 +15,7 @@ Een falend podium blokkeert nooit de rest; de uitkomst per podium staat in data/
 from __future__ import annotations
 
 import json
+from collections import Counter
 import os
 import re
 import sys
@@ -858,51 +859,122 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
     return out
 
 
+def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
+    """Gestructureerde + tekstuele gegevens van een eventpagina (gecached onder "x|url"); None als niet opgehaald."""
+    key = "x|" + url
+    c = cache.get(key)
+    if c and date.fromisoformat(c["fetched"]) >= TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
+        return c.get("extra") or {}
+    try:
+        html = get(url, delay=float(v.get("crawl_delay", 0.6))).text
+    except requests.RequestException:
+        cache[key] = {"fetched": TODAY.isoformat(), "extra": {}}
+        return {}
+    extra: dict = {}
+    for n in jsonld_events(html):
+        ld = event_from_jsonld(n, v, url, "x")
+        if ld:
+            extra.update({"ld_start": ld.start, "ld_price": ld.price, "ld_genres": ld.genres, "lineup": ld.lineup})
+            break
+    txt = page_text(html)
+    tdt, tstart, tdoors, tprice = extract_from_text(txt)
+    extra.update({"start": tstart, "doors": tdoors, "price": tprice})
+    if v.get("lineup") and not extra.get("lineup"):
+        names = [clean(x.get_text()) for x in soup_of(html).select(v["lineup"])]
+        extra["lineup"] = [x for x in dict.fromkeys(names) if x and 1 < len(x) <= 60][:20]
+    if not extra.get("ld_genres"):
+        extra["hint_genres"] = genre_hints(txt[:1500])
+    cache[key] = {"fetched": TODAY.isoformat(), "extra": extra}
+    return extra
+
+
+def apply_extra(e: Event, x: dict, needs_time: bool) -> None:
+    """Regels voor het samenvoegen van eventpaginagegevens met een event uit een overzichtslijst.
+    Aanvang ('aanvang/start') op de pagina wint altijd van de lijst; deuren alleen als er niets beters is."""
+    st = datetime.fromisoformat(e.start)
+    if x.get("start"):
+        hh, mm = x["start"]
+        if needs_time or (hh, mm) != (st.hour, st.minute):
+            e.start, e.time_est = st.replace(hour=hh, minute=mm).isoformat(timespec="minutes"), False
+    elif needs_time:
+        if x.get("ld_start") and x["ld_start"][11:16] != "00:00":
+            e.start = st.replace(hour=int(x["ld_start"][11:13]), minute=int(x["ld_start"][14:16])).isoformat(timespec="minutes")
+        elif x.get("doors"):
+            e.start = st.replace(hour=x["doors"][0], minute=x["doors"][1]).isoformat(timespec="minutes")
+    if not e.price:
+        e.price = x.get("price") or x.get("ld_price")
+    if not e.genres:
+        e.genres = x.get("ld_genres") or x.get("hint_genres") or []
+    if not e.lineup and x.get("lineup"):
+        e.lineup = x["lineup"]
+
+
 def enrich_from_detail(v: dict, evs: list[Event], cache: dict) -> None:
-    """Vul ontbrekende aanvangstijd/prijs aan vanaf de eventpagina (tekst-extractie, gecached)."""
+    """Vul ontbrekende aanvangstijd/prijs/genre/line-up aan vanaf de eventpagina (gecached, met budget per run)."""
     budget = int(v.get("enrich_max", 120))
     for e in evs:
         needs_time = e.start[11:16] in ("", "00:00")
-        if not (needs_time or not e.price) or not e.url or e.url.rstrip("/") == v["url"].rstrip("/"):
+        if not (needs_time or not e.price or not e.genres) or not e.url or e.url.rstrip("/") == v["url"].rstrip("/"):
             continue
-        key = "x|" + e.url
-        c = cache.get(key)
-        if not c or date.fromisoformat(c["fetched"]) < TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
+        cached = ("x|" + e.url) in cache
+        if not cached:
             if budget <= 0:
                 continue
             budget -= 1
-            try:
-                html = get(e.url, delay=float(v.get("crawl_delay", 0.6))).text
-            except requests.RequestException:
-                cache[key] = {"fetched": TODAY.isoformat(), "extra": {}}
-                continue
-            # eerst gestructureerd (JSON-LD op de eventpagina), dan tekst
-            extra = {}
-            for n in jsonld_events(html):
-                ld = event_from_jsonld(n, v, e.url, "x")
-                if ld:
-                    extra["ld_start"] = ld.start
-                    extra["ld_price"] = ld.price
-                    extra["ld_genres"] = ld.genres
-                    break
-            tdt, tstart, tdoors, tprice = extract_from_text(page_text(html))
-            extra.update({"start": tstart, "doors": tdoors, "price": tprice})
-            cache[key] = {"fetched": TODAY.isoformat(), "extra": extra}
-            c = cache[key]
-        x = c.get("extra") or {}
-        st = datetime.fromisoformat(e.start)
-        if needs_time:
-            if x.get("start"):
-                st = st.replace(hour=x["start"][0], minute=x["start"][1])
-            elif x.get("ld_start") and x["ld_start"][11:16] != "00:00":
-                st = st.replace(hour=int(x["ld_start"][11:13]), minute=int(x["ld_start"][14:16]))
-            elif x.get("doors"):
-                st = st.replace(hour=x["doors"][0], minute=x["doors"][1])
-            e.start = st.isoformat(timespec="minutes")
-        if not e.price:
-            e.price = x.get("price") or x.get("ld_price")
-        if not e.genres and x.get("ld_genres"):
-            e.genres = x["ld_genres"]
+        x = detail_extra(v, e.url, cache)
+        if x:
+            apply_extra(e, x, needs_time)
+
+
+def audit_venue(v: dict, evs: list[Event], cache: dict) -> dict:
+    """Generieke kwaliteitscontrole per podium; de lessen van eerdere fouten, toegepast op álle podia.
+    - tijdcontrole: steekproef van eventpagina's; staat daar een expliciete aanvang die structureel afwijkt van de
+      lijsttijd (Doornroosje: +1u door foute tijdzone), dan worden de gecontroleerde events gecorrigeerd en wordt
+      het podium gemarkeerd (time_shift) zodat `time_is_local` gezet kan worden.
+    - datumcluster: >25% van de events op één dag zonder tijd = vrijwel zeker een parserfout (ECI: 74 op 'vandaag');
+      die events worden verwijderd.
+    - late tijden: >35% van de events om 23:00 of later is verdacht voor een concertpodium.
+    - dekking: aandeel events met tijd, prijs, genre.
+    """
+    a: dict = {}
+    n = len(evs)
+    if not n:
+        return a
+    # datumcluster
+    by_day = Counter(e.start[:10] for e in evs)
+    day, cnt = by_day.most_common(1)[0]
+    if n >= 10 and cnt / n > 0.25:
+        notime = [e for e in evs if e.start[:10] == day and e.start[11:16] in ("", "00:00")]
+        if len(notime) >= 0.8 * cnt:
+            for e in notime:
+                evs.remove(e)
+            a["date_cluster_removed"] = {"day": day, "events": len(notime)}
+    # tijdcontrole (steekproef, gecached)
+    if v.get("time_check", True) and v.get("type", "auto") not in ("disabled",):
+        sample = [e for e in evs if e.start[11:16] not in ("", "00:00") and e.url and e.url.rstrip("/") != v["url"].rstrip("/")]
+        sample = sample[:: max(1, len(sample) // 4)][:4]
+        offsets = []
+        for e in sample:
+            x = detail_extra(v, e.url, cache)
+            if x and x.get("start"):
+                hh, mm = x["start"]
+                st = datetime.fromisoformat(e.start)
+                diff = round(((hh * 60 + mm) - (st.hour * 60 + st.minute)) / 60, 1)
+                offsets.append(diff)
+                if diff:
+                    e.start = st.replace(hour=hh, minute=mm).isoformat(timespec="minutes")
+        if offsets:
+            common = Counter(offsets).most_common(1)[0]
+            a["time_check"] = {"sampled": len(offsets), "offsets": offsets}
+            if common[0] and common[1] >= 2 and common[1] >= len(offsets) - 1 and abs(common[0]) in (1.0, 2.0):
+                a["time_shift"] = common[0]
+    late = sum(1 for e in evs if e.start[11:16] >= "23:00")
+    if n >= 10 and late / n > 0.35:
+        a["many_late"] = round(late / n, 2)
+    a["coverage"] = {"time": round(sum(1 for e in evs if e.start[11:16] not in ("", "00:00")) / n, 2),
+                     "price": round(sum(1 for e in evs if e.price) / n, 2),
+                     "genre": round(sum(1 for e in evs if e.genres) / n, 2)}
+    return a
 
 
 def strat_jsonld_detail(v: dict, html: str, base: str, cache: dict) -> list[Event]:
@@ -1022,8 +1094,8 @@ def strat_html_preset(v: dict, html: str, base: str) -> tuple[list[Event], str |
 # per podium
 # ----------------------------------------------------------------------------
 
-def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str]:
-    """Geeft (events, gebruikte strategie, opmerking)."""
+def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
+    """Geeft (events, gebruikte strategie, opmerking, audit)."""
     base = v["url"]
     t = v.get("type", "auto")
     if t == "disabled" or v.get("enabled") is False:
@@ -1089,8 +1161,19 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str]:
                 enrich_from_detail(v, evs, cache)
             except Exception as ex:  # noqa: BLE001
                 notes.append(f"enrich: {type(ex).__name__}")
-        return evs, strat, "; ".join(notes)
-    return [], "none", "; ".join(notes)
+        audit = {}
+        try:
+            audit = audit_venue(v, evs, cache)
+        except Exception as ex:  # noqa: BLE001
+            notes.append(f"audit: {type(ex).__name__}")
+        if audit.get("time_shift"):
+            notes.append(f"LET OP: aanvang op eventpagina's wijkt {audit['time_shift']:+.0f}u af van de lijst -> zet time_is_local of controleer tijdzone")
+        if audit.get("date_cluster_removed"):
+            notes.append(f"{audit['date_cluster_removed']['events']} events zonder tijd op {audit['date_cluster_removed']['day']} verwijderd (datumcluster)")
+        if audit.get("many_late"):
+            notes.append(f"{int(audit['many_late']*100)}% van de events begint na 23:00")
+        return evs, strat, "; ".join(notes), audit
+    return [], "none", "; ".join(notes), {}
 
 
 def dedupe(events: list[Event]) -> list[Event]:
@@ -1121,22 +1204,22 @@ def main(only: list[str] | None = None) -> int:
     def run_one(v):
         t0 = time.time()
         try:
-            evs, strat, note = fetch_venue(v, cache)
+            evs, strat, note, audit = fetch_venue(v, cache)
         except Exception as ex:  # noqa: BLE001
-            evs, strat, note = [], "error", f"{type(ex).__name__}: {str(ex)[:200]}"
+            evs, strat, note, audit = [], "error", f"{type(ex).__name__}: {str(ex)[:200]}", {}
             traceback.print_exc()
         evs = dedupe(evs)
         log(f"== {v['name']} ({v['city']}): {len(evs)} events via {strat} ({time.time()-t0:.0f}s) {note}")
-        return v, evs, strat, note
+        return v, evs, strat, note, audit
 
     todo = [v for v in venues if not only or v["name"] in only]
     # podia parallel (elk podium zelf netjes sequentieel met zijn eigen crawl_delay)
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8"))) as pool:
         results = list(pool.map(run_one, todo))
-    for v, evs, strat, note in results:
+    for v, evs, strat, note, audit in results:
         report["venues"].append({"name": v["name"], "city": v["city"], "url": v["url"], "strategy": strat,
-                                 "events": len(evs), "note": note, "ok": len(evs) > 0})
+                                 "events": len(evs), "note": note, "ok": len(evs) > 0, "audit": audit})
         all_events.extend(evs)
 
     # 'nieuw' bepalen; een podium dat voor het eerst meedoet levert geen 'nieuwe' events op

@@ -148,9 +148,9 @@ main{padding:6px 0 60px}
 
 footer{border-top:1px solid var(--line);padding:16px 0 40px;font-size:12.5px;color:var(--ink-3)}
 footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
-.statuslist{list-style:none;padding:0;margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:3px 18px}
+.statuslist{list-style:none;padding:0;margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:3px 18px}
 .statuslist li{display:flex;gap:8px;font-variant-numeric:tabular-nums}
-.statuslist .ok{color:#2E8B57}.statuslist .fail{color:var(--warn)}
+.statuslist .ok{color:#2E8B57}.statuslist .fail{color:var(--warn)}.statuslist .warn{color:var(--warn);font-weight:700}
 .statuslist .how{color:var(--ink-3);margin-left:auto}
 
 @media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
@@ -337,7 +337,10 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 
   // status
   const st=document.getElementById('statusList');
-  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); li.innerHTML=`<span class="${v.ok?'ok':'fail'}">${v.ok?'✓':'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+' · '+esc(v.strategy) : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`; li.title=v.note||''; st.append(li); });
+  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); const cov=(v.audit||{}).coverage; const warn=(v.audit||{}).time_shift||(v.audit||{}).date_cluster_removed||(v.audit||{}).many_late;
+    const pct=x=>Math.round((x||0)*100)+'%';
+    li.innerHTML=`<span class="${v.ok?(warn?'warn':'ok'):'fail'}">${v.ok?(warn?'!':'✓'):'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+(cov?` · tijd ${pct(cov.time)} · prijs ${pct(cov.price)} · genre ${pct(cov.genre)}`:'') : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`;
+    li.title=(v.strategy||'')+(v.note?' — '+v.note:''); st.append(li); });
 
   // render
   let shownDays = PAGE; const PAGE_W = 8; let shownWeeks = PAGE_W; const PAGE_M = 3; let shownMonths = PAGE_M;

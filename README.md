@@ -25,10 +25,33 @@ met de reden in `data/report.json`.
 - `genres.yaml` bevat de taxonomie: ~23 hoofdgenres (naar RateYourMusic/Discogs/Bandcamp, toegesneden op de Nederlandse
   poppodia) plus regels die ruwe podiumtags op een hoofdgenre afbeelden. Ruwe tags blijven bewaard als subgenre.
   Onbekende tags staan na elke run in `data/report.json` onder `unknown_genres`; voeg ze toe aan de regels.
-- `taxonomy.py` herkent artiesten in titels/ondertitels, bepaalt het eventtype (concert/club/festival/other) en de prijs als getal.
+- `taxonomy.py` herkent artiesten in titels/ondertitels, bepaalt het eventtype (concert / club / festival / talk / other;
+  regels in `genres.yaml` onder `kinds`, aanvangstijd telt mee: vanaf 23:00 is het een feest) en de prijs als getal.
+- `series.py` beheert `state/series.json`: terugkerende events per podium ("Cheeky Monday", "Jazz Jam #14", "VroegZat")
+  met hun gebruikelijke prijs, aanvangstijd en type. Ontbrekende waarden worden daaruit ingevuld en gemarkeerd (`~ € 7,50`).
 - `artists.py` beheert `state/artists.json`: een kennisbank die elke run groeit (genre-stemmen van podia, medespelers,
   podia, MusicBrainz-tags en — met `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` als GitHub-secrets — Spotify-genres en
   populariteit). Events zonder genre krijgen er een via de kennisbank. Basis voor de smaakscore.
+
+## Methodiek: regels die voor álle podia gelden
+
+Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in `fetch.py`, zodat hij bij alle
+(ook toekomstige) podia wordt afgevangen:
+
+| Les (waar gevonden) | Regel |
+|---|---|
+| Aanvang vs. deuren (PAARD, Tivoli) | Een expliciete *aanvang/start* op de eventpagina wint altijd van de tijd in de lijst; *deuren* alleen als er niets beters is (`apply_extra`). |
+| Lokale tijd met foute tijdzone (Doornroosje, +1u) | Steekproef per podium: wijkt de aanvang op de eventpagina structureel 1–2 uur af, dan worden die events gecorrigeerd en krijgt het podium een `!` met "zet `time_is_local`" in het rapport (`audit_venue`). |
+| Datum van vandaag uit de sitekop (ECI, 74 films op één dag) | Een datum uit losse tekst die precies vandaag is zonder tijd wordt genegeerd; blijft er toch een cluster (>25% van de events op één dag zonder tijd), dan worden die events verwijderd en gemeld. |
+| Categoriepagina's als event (Cpunt "Film", "Exposities") | `/agenda/<categorie>` en soortgelijke paden zijn nooit een event (`NON_EVENT_PATH`). |
+| Sitemap op id, niet op datum (Paradiso) | Sitemap-URL's worden op `lastmod` gefilterd (`sitemap_recent_days`): aankomende events worden bijgewerkt, oude niet meer. |
+| Gemengd programma (ECI, Cacaofabriek, Tivoli) | Eventtype uit titel + podiumtags + aanvangstijd; film/theater/talk/kids verdwijnen uit "Concert". Waar het podium een aparte muziekpagina heeft, gebruiken we die. |
+| Line-up en genre alleen in de beschrijving (Tivoli, pop-agenda) | JSON-LD `performer`, een `lineup`-selector of de beschrijving leveren artiesten; specifieke genrewoorden in de beschrijving ("postpunk", "garagerock") worden tags als het podium er geen geeft. |
+| Bandnamen die op feesten lijken ("Jungle By Night", "Two Door Cinema Club") | Zwakke feestwoorden (night, club, disco) tellen alleen samen met een late aanvang. |
+| Terugkerende events zonder prijs/tijd | Reeksengeheugen vult aan uit eerdere edities, gemarkeerd als schatting. |
+
+Elk podium krijgt in `data/report.json` een `audit` met dekking (aandeel events met tijd / prijs / genre) en
+waarschuwingen; de voettekst van de site toont dezelfde cijfers. Zo is in één blik te zien waar de data dun is.
 
 ## Een podium toevoegen
 

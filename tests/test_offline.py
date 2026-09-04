@@ -40,7 +40,7 @@ def test_jsonld_on_list_page():
                          "offers": {"@type": "Offer", "price": "9.50", "priceCurrency": "EUR"}}) * 5 + "</html>"
     v = {"name": "De Helling", "city": "Utrecht", "url": "https://www.dehelling.nl/agenda/", "type": "jsonld"}
     fake_session({"dehelling": FakeResp(html)})
-    evs, strat, _ = fetch.fetch_venue(v, {})
+    evs, strat, _, _ = fetch.fetch_venue(v, {})
     assert strat == "jsonld" and len(evs) == 5
     assert evs[0].title == "90’s Alternative" and evs[0].price == "€ 9.50" and evs[0].start.startswith(FUT + "T22:00")
 
@@ -54,11 +54,11 @@ def test_jsonld_detail_with_cache():
     v = {"name": "TivoliVredenburg", "city": "Utrecht", "url": "https://www.tivolivredenburg.nl/agenda/",
          "type": "jsonld_detail", "link_pattern": r"tivolivredenburg\.nl/agenda/\d+/", "crawl_delay": 0}
     cache = {}
-    evs, strat, _ = fetch.fetch_venue(v, cache)
-    assert strat == "jsonld_detail" and len(evs) == 6 and len(cache) == 6
+    evs, strat, _, _ = fetch.fetch_venue(v, cache)
+    assert strat == "jsonld_detail" and len(evs) == 6 and sum(1 for k in cache if not k.startswith("x|")) == 6
     # tweede run gebruikt de cache: geen detail-requests meer nodig
     fake_session({"tivolivredenburg.nl/agenda/": FakeResp(lst)})
-    evs2, _, _ = fetch.fetch_venue(v, cache)
+    evs2, _, _, _ = fetch.fetch_venue(v, cache)
     assert len(evs2) == 6
 
 
@@ -70,7 +70,7 @@ def test_embedded_nextdata_melkweg_shape():
     html = f'<html><script id="__NEXT_DATA__" type="application/json">{json.dumps(nd)}</script></html>'
     fake_session({"melkweg": FakeResp(html)})
     v = {"name": "Melkweg", "city": "Amsterdam", "url": "https://www.melkweg.nl/nl/agenda", "type": "embedded"}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     assert strat == "embedded" and len(out) == 8
     e0 = out[0]
     assert e0.url == "https://www.melkweg.nl/nl/agenda/band-0-04-09-2026" and e0.status == "afgelast"
@@ -87,7 +87,7 @@ def test_embedded_angular_hedon_shape():
     fake_session({"hedon": FakeResp(html)})
     v = {"name": "Hedon", "city": "Zwolle", "url": "https://www.hedon-zwolle.nl/", "type": "embedded",
          "url_template": "https://www.hedon-zwolle.nl/voorstelling/{id}"}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     assert len(out) == 10 and out[0].url == "https://www.hedon-zwolle.nl/voorstelling/33000"
     assert out[0].genres == ["Nederlands", "Pop"] and out[0].price == "€ 23,5" and out[0].subtitle == "TOUR"
 
@@ -100,7 +100,7 @@ def test_embedded_effenaar_shape():
     html = f'<html><script id="__NEXT_DATA__" type="application/json">{json.dumps(nd)}</script></html>'
     fake_session({"effenaar": FakeResp(html)})
     v = {"name": "Effenaar", "city": "Eindhoven", "url": "https://www.effenaar.nl/agenda", "type": "embedded"}
-    out, _, _ = fetch.fetch_venue(v, {})
+    out, _, _, _ = fetch.fetch_venue(v, {})
     assert len(out) == 7 and out[0].start == f"{FUT}T20:30" and out[0].url == "https://www.effenaar.nl/agenda/act-0"
     assert out[0].genres == ["Metal"]
 
@@ -113,7 +113,7 @@ def test_tribe():
              "categories": [{"name": "Concert"}, {"name": "Punk"}]} for _ in range(3)]})
     fake_session({"tribe/events/v1/events": api})
     v = {"name": "dB's", "city": "Utrecht", "url": "https://www.dbstudio.nl/agenda/", "type": "tribe"}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     assert strat == "tribe" and out[0].title == "KILLER KIN (USA) + JC Thomaz & the Missing Slippers" and out[0].genres == ["Punk"]
 
 
@@ -124,7 +124,7 @@ def test_wp_event_ekko_acf():
     fake_session({"wp-json/wp/v2/event": FakeResp(json_=items, headers={"X-WP-TotalPages": "1"}), "ekko.nl/agenda": FakeResp("<html></html>")})
     v = {"name": "EKKO", "city": "Utrecht", "url": "https://www.ekko.nl/agenda/", "type": "wp_event",
          "api": "https://www.ekko.nl/wp-json/wp/v2/event?per_page=100&lang=nl&_embed=1"}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     assert strat == "wp_event" and len(out) == 4 and out[0].genres == ["indie"] and out[0].price == "€ 12" and out[0].start == f"{FUT}T19:30"
 
 
@@ -136,7 +136,7 @@ def test_wp_event_bitterzoet_date_from_detail_text():
     fake_session({"wp-json/wp/v2/event": FakeResp(json_=items, headers={"X-WP-TotalPages": "1"}), "/event/dripped": detail, "bitterzoet.com/agenda": FakeResp("")})
     v = {"name": "Bitterzoet", "city": "Amsterdam", "url": "https://www.bitterzoet.com/agenda/", "type": "wp_event",
          "api": "https://www.bitterzoet.com/wp-json/wp/v2/event?per_page=100", "crawl_delay": 0}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     assert len(out) == 3 and out[0].start == f"{d.isoformat()}T20:00" and out[0].source == "wp_event+detail"
 
 
@@ -151,7 +151,7 @@ def test_html_selectors_patronaat():
     v = {"name": "Patronaat", "city": "Haarlem", "url": "https://www.patronaat.nl/programma/", "type": "html", "item": ".event-program",
          "title": ".event-program__name", "date": ".event-program__date", "link": ".event-program__name a", "subtitle": ".event-program__subtitle",
          "genre": ".event-program__genres", "date_from_url": True, "crawl_delay": 0}
-    out, strat, _ = fetch.fetch_venue(v, {})
+    out, strat, _, _ = fetch.fetch_venue(v, {})
     # datumtekst '4 sep 2026' wordt geparsed; als die in het verleden ligt valt hij buiten het venster -> dan url-datum
     assert strat == "html" and len(out) == 4 and out[0].genres == ["klassiekers", "tributes pop"] and out[0].url.startswith("https://patronaat.nl/event/")
 
@@ -171,7 +171,7 @@ def test_parse_dt_variants():
 def test_failing_venue_does_not_break():
     fake_session({})
     v = {"name": "Kapot", "city": "Nergens", "url": "https://kapot.example/agenda", "type": "auto"}
-    out, strat, note = fetch.fetch_venue(v, {}) if False else ([], "none", "")
+    out, strat, note, _ = fetch.fetch_venue(v, {}) if False else ([], "none", "", {})
     assert out == []
 
 
@@ -184,7 +184,7 @@ def test_embedded_vue_attribute_tolhuistuin():
     page = "<html><body><div id=\"page-wrapper\"><agenda-filter-component inline-template :all-items='" + h.escape(json.dumps(items), quote=True).replace("'", "&#039;") + "'><ul></ul></agenda-filter-component></body></html>"
     fake_session({"tolhuistuin": FakeResp(page)})
     v = {"name": "Tolhuistuin", "city": "Amsterdam", "url": "https://tolhuistuin.nl/agenda", "type": "embedded", "only_genres": ["Muziek", "Clubnacht"]}
-    out, strat, note = fetch.fetch_venue(v, {})
+    out, strat, note, _ = fetch.fetch_venue(v, {})
     assert strat == "embedded", note
     assert len(out) == 4 and out[0].start == f"{FUT}T20:30" and out[0].genres == ["Muziek"] and out[0].price == "gratis"
     assert out[1].status == "uitverkocht" and out[1].price == "€ 17,50" and out[0].subtitle == "Zonnige popmuziek"
@@ -205,7 +205,7 @@ def test_sitemap_detail_paradiso_flight_json():
     v = {"name": "Paradiso", "city": "Amsterdam", "url": "https://www.paradiso.nl/", "type": "sitemap_detail", "sitemap": "https://www.paradiso.nl/sitemap.xml",
          "sitemap_pattern": r"/sitemap/event_\d+\.xml", "last_files": 2, "link_pattern": r"paradiso\.nl/programma/[^/]+/\d+$", "crawl_delay": 0}
     cache = {}
-    out, strat, note = fetch.fetch_venue(v, cache)
+    out, strat, note, _ = fetch.fetch_venue(v, cache)
     assert strat == "sitemap_detail", note
     assert len(out) == 6 and out[0].title == "Pip Millett" and out[0].start == f"{FUT}T20:30" and out[0].genres == ["Super-Sonic Jazz"]
     assert out[0].subtitle == "Veelbelovende neo-soulzangeres · Zonnehuis" and out[0].source == "flight_json"
