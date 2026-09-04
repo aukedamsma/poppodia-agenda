@@ -390,7 +390,7 @@ button:focus-visible{outline:none}
   document.getElementById('clearGenres').addEventListener('click',()=>{ state.genres=[]; state.subs=[]; save(); chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); buildSubs(); render(); });
   // Type: hoofdsplitsing Muziek / Overig (standaard: Muziek), daaronder subtypes
   const MAINS={muziek:{label:'Muziek', kinds:['concert','club','festival']}, overig:{label:'Overig', kinds:['talk','other']}};
-  const KINDS={concert:'Concert',club:'Clubnacht / feest',festival:'Festival',talk:'Talk / lezing',other:'Overig (quiz, film, kids)'};
+  const KINDS={concert:'Concert',club:'Clubnacht',festival:'Festival',talk:'Talk / lezing',other:'Overig (quiz, film, kids)'};
   if (!Array.isArray(state.mains)) state.mains=['muziek'];
   const mainChips=document.getElementById('mainChips'), kindChips=document.getElementById('kindChips');
   function buildKinds(){
