@@ -36,18 +36,24 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .wrap{max-width:none;margin:0 auto;padding:0 24px}
 
 /* kop */
-header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px;padding:18px 0 10px}
-h1{font-family:var(--display);font-weight:400;font-size:40px;line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase}
-h1 span{color:var(--accent)}
-.meta{color:var(--ink-3);font-size:12.5px;margin-left:auto}
+.brand{font-family:var(--display);font-weight:400;font-size:22px;line-height:1;letter-spacing:.01em;text-transform:uppercase;color:var(--ink);text-decoration:none;padding:4px 6px 4px 0;white-space:nowrap}
+.brand span{color:var(--accent)}
+.fbtn.section{font-weight:600;color:var(--ink)}
+.chip:disabled{opacity:.6;cursor:default}
+.meta{color:var(--ink-3);font-size:12.5px;font-weight:400;margin-left:auto}
+footer summary{display:flex;align-items:baseline;gap:12px;list-style:none}
+footer summary::before{content:'▸';color:var(--ink-3);font-size:11px}
+footer details[open] summary::before{content:'▾'}
 .meta b{color:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums}
 .meta a{color:var(--ink-2)}
 
 /* filterbalk */
-.bar{position:sticky;top:0;z-index:20;background:var(--paper);border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow:visible}
-.bar > *{flex:0 0 auto}
+.bar{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);padding:12px 0 10px;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow:visible}
+.bar > *{flex:0 1 auto;min-width:0}
+.bar .tabs,.bar .pop,.bar .brand{flex-shrink:0}
 .tabs{display:flex;gap:2px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--paper-2)}
-.tabs button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500;position:relative}
+.tabs button{padding:0 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500;position:relative}
+.tabs > *{height:31px;box-sizing:border-box;display:inline-flex;align-items:center}
 .tabs > button + button::before,.tabs > button + .plabel::before,.tabs > .daynav::before{content:'';position:absolute;left:-1px;top:7px;bottom:7px;border-left:1px solid var(--line)}
 .tabs button[aria-pressed="true"]::before,.tabs button[aria-pressed="true"] + button::before{display:none}
 .tabs button:hover{background:var(--card)}
@@ -60,7 +66,7 @@ h1 span{color:var(--accent)}
 .fbtn .cnt{display:none!important}
 .fbtn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
 .filters{display:flex;gap:8px;margin-left:auto;align-items:center}
-.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:0 1 260px !important;min-width:110px;box-shadow:var(--shadow)}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:1 1 120px !important;min-width:60px;max-width:280px;box-shadow:var(--shadow)}
 .search input{border:0;background:none;color:var(--ink);font:inherit;width:100%;outline:none;font-size:13px}
 .search input::placeholder{color:var(--ink-3)}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -86,10 +92,10 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 .pnav button:disabled{opacity:.35}
-.pnav .plabel{position:relative;padding:6px 12px 6px 12px;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pnav .plabel{position:relative;padding:0 12px;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pnav .plabel small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:6px}
 .daynav{display:inline-flex;align-items:center;position:relative;padding-left:6px}
-.daynav input{font:inherit;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);background:transparent;border:0;padding:6px 8px 6px 0;border-radius:6px}
+.daynav input{font:inherit;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);background:transparent;border:0;padding:0 8px 0 0;height:31px;box-sizing:border-box;border-radius:6px}
 .save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
 .save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
 .save:hover{color:var(--accent);background:var(--accent-soft)}
@@ -164,6 +170,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 .statuslist .how{color:var(--ink-3);margin-left:auto}
 
 @media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:1560px){ .bar{flex-wrap:wrap} .filters{margin-left:auto} }
 @media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .wgrid{grid-template-columns:1fr} .wcol{min-height:0} .mgrid{grid-template-columns:repeat(7,minmax(0,1fr))} .mgrid .wk{display:none} .mcell{min-height:60px} .mi{display:none} .mi.plus{display:block} }
 @media (max-width:560px){
   .bar{flex-wrap:wrap} .filters{margin-left:0} .search{flex:1 1 100% !important}
@@ -177,12 +184,19 @@ button:focus-visible{outline:none}
 </head>
 <body>
 <div class="wrap">
-<header class="top">
-  <h1>Podium<span>agenda</span></h1>
-  <div class="meta">bijgewerkt <b id="updated">—</b> · <b id="total">0</b> concerten · <b id="venuesOk">0</b> podia · <a href="agenda.ics">agenda-feed (.ics)</a></div>
-</header>
-
 <div class="bar" role="region" aria-label="Filters">
+  <a class="brand" href="./" title="Podiumagenda">Podium<span>agenda</span></a>
+  <div class="pop">
+    <button class="fbtn section" id="sectionBtn" aria-expanded="false" aria-controls="sectionPanel">Concertagenda<svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
+    <div class="panel" id="sectionPanel" hidden style="min-width:200px">
+      <div class="row">Agenda's</div>
+      <div class="chips" style="flex-direction:column;align-items:stretch">
+        <button class="chip" aria-pressed="true" style="text-align:left">Concertagenda</button>
+        <button class="chip" disabled title="binnenkort" style="text-align:left;white-space:nowrap">Theateragenda <span style="color:var(--ink-3)">· binnenkort</span></button>
+        <button class="chip" disabled title="binnenkort" style="text-align:left;white-space:nowrap">Debatagenda <span style="color:var(--ink-3)">· binnenkort</span></button>
+      </div>
+    </div>
+  </div>
   <div class="tabs" role="group" aria-label="Weergave">
     <button data-view="all" aria-pressed="true">Per dag</button>
     <button data-view="week" aria-pressed="false">Per week</button>
@@ -245,7 +259,7 @@ button:focus-visible{outline:none}
 
 <footer>
   <details>
-    <summary>Status per podium (laatste run)</summary>
+    <summary>Status per podium (laatste run)<span class="meta">bijgewerkt <b id="updated">—</b> · <b id="total">0</b> concerten · <b id="venuesOk">0</b> podia · <a href="agenda.ics">agenda-feed (.ics)</a></span></summary>
     <ul class="statuslist" id="statusList"></ul>
     <p>Podia zonder vinkje leverden geen events; de oorzaak staat in <code>data/report.json</code>. Podia toevoegen: <code>venues.yaml</code> in de <a href="https://github.com/aukedamsma/poppodia-agenda">repository</a>.</p>
   </details>
