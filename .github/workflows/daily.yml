@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "0 5 * * *"      # dagelijks 07:00 Nederlandse zomertijd (06:00 wintertijd)
   workflow_dispatch:          # handmatig starten via de Actions-tab
+  push:
+   branches: [main]
+   paths: ["venues.yaml", "fetch.py", "build.py", "template.html"]
 
 permissions:
   contents: write
