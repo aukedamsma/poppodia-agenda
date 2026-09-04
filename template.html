@@ -161,9 +161,8 @@ main{padding:6px 0 60px}
 .card:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
 .card .t{font-weight:600;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:70px}
 .card.compact .t{padding-right:0}
-.card.compact .dt{padding-right:26px;color:var(--ink-3)} .card.compact .dt .date{color:var(--ink-2);font-weight:500} .card.compact .dt .time{color:var(--ink)}
-.card.compact .s{padding-right:0}
-.card.compact .save{bottom:auto;top:67px}
+.card.compact .dt{padding-right:0;color:var(--ink-3);align-items:center} .card.compact .dt .date{color:var(--ink-2);font-weight:500} .card.compact .dt .time{color:var(--ink)}
+.card.compact .save{position:static;width:22px;height:22px;margin:-3px -4px -3px 0;flex-shrink:0}
 .card .s{color:var(--ink-2);font-size:12px;text-transform:lowercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.4em;padding-right:70px}
 .card .w{color:var(--ink-2);font-size:12.5px;margin-top:3px;padding-right:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.compact .w{padding-right:0;display:flex;justify-content:space-between;gap:10px;overflow:visible}
@@ -174,7 +173,7 @@ main{padding:6px 0 60px}
 .card .gr:empty{padding-right:0}
 .card .w b{font-weight:500;color:var(--ink)}
 .card .g{color:var(--ink-3);font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;min-height:1.4em}
-.card.compact .g{display:flex;padding-right:24px}
+.card.compact .g{display:flex;padding-right:0}
 .card .g .price{color:var(--ink-2)}
 .card .side{position:absolute;top:9px;right:11px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:12px;font-variant-numeric:tabular-nums;line-height:1.4}
 .card .date{color:var(--ink-2);font-weight:500}
@@ -467,14 +466,12 @@ button:focus-visible{outline:none}
     const sub = e.subtitle ? esc(e.subtitle) : (e.lineup&&e.lineup.length>1 ? 'met '+esc(e.lineup.slice(0,6).join(', ')) : '');
     const saveBtn = `<button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>`;
     if (compact){
-      // weekweergave, vijf regels: titel · ondertitel · podium + stad · datum + tijd + prijs (+ bookmark) · genre
+      // weekweergave, vier regels: titel · podium + stad · datum + tijd + prijs + bookmark · genre
       return `<a class="card compact${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
         <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
-        <div class="s">${sub}</div>
         <div class="w"><span class="wl"><b>${esc(e.venue)}</b> · ${esc(e.city)}</span></div>
-        <div class="w dt"><span class="wl">${[`<span class="date">${fmtCard(e.start)}</span>`,tm,pr].filter(Boolean).join(' · ')}</span></div>
+        <div class="w dt"><span class="wl">${[`<span class="date">${fmtCard(e.start)}</span>`,tm,pr].filter(Boolean).join(' · ')}</span>${saveBtn}</div>
         <div class="g"><span class="gl">${g}</span></div>
-        ${saveBtn}
       </a>`;
     }
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">

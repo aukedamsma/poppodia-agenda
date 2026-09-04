@@ -211,10 +211,15 @@ def to_local(dt: datetime) -> datetime:
 
 
 def date_from_url(url: str) -> datetime | None:
-    m = re.search(r"(\d{2})-(\d{2})-(\d{4})(?:/|$)", url) or re.search(r"(\d{2})-(\d{2})-(\d{2})(?:/|$)", url)
-    if not m:
-        return None
-    d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    """Datum uit de slug: …-04-09-2026, …-04-09-26 of …-2026-09-04 (ISO eerst, anders wordt 2026-09-18 als 26-09-18 gelezen)."""
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})(?:/|$|[-_])", url)
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    else:
+        m = re.search(r"(\d{2})-(\d{2})-(\d{4})(?:/|$)", url) or re.search(r"(\d{2})-(\d{2})-(\d{2})(?:/|$)", url)
+        if not m:
+            return None
+        d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
     if y < 100:
         y += 2000
     try:
@@ -603,9 +608,12 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
             acf = it.get("acf") or it.get("meta") or {}
             dt = _acf_date(acf) or date_from_url(link)
             genres = []
+            want_tax = v.get("genre_taxonomies")  # bv. [production_genre]; anders alles behalve categorie/tag/taal
             for grp in (it.get("_embedded", {}) or {}).get("wp:term", []):
                 for term in grp:
-                    if term.get("taxonomy") not in ("category", "post_tag", "language") and term.get("name"):
+                    tax = term.get("taxonomy")
+                    ok = (tax in want_tax) if want_tax else (tax not in ("category", "post_tag", "language"))
+                    if ok and term.get("name"):
                         genres.append(clean(term["name"]))
             price = acf.get("price") if isinstance(acf, dict) else None
             sub = acf.get("one_liner") or acf.get("subtitle") or acf.get("support_act") if isinstance(acf, dict) else None

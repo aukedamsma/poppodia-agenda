@@ -14,6 +14,7 @@
 #   only_genres   alleen events met een van deze genres/typen houden (bijv. [Muziek, Clubnacht])
 #   time_is_local ISO-tijden van dit podium als Nederlandse lokale tijd lezen, ook al staat er +00:00/Z achter
 #   sitemap / sitemap_pattern / last_files   voor sitemap_detail: sitemap-index, regex voor eventbestanden, hoeveel laatste bestanden
+#   genre_taxonomies  wp_event: alleen deze WordPress-taxonomieën als genre gebruiken (bv. [production_genre])
 #   lineup        CSS-selector op de eventpagina voor de line-up (artiestnamen), bv. ".accordion__title h2"
 #   sitemap_recent_days   alleen sitemap-URL's met een lastmod in de laatste N dagen (aankomende events worden bijgewerkt)
 #   detail_ttl_days  hoe lang een gelezen eventpagina in de cache blijft (standaard 10)
@@ -294,7 +295,14 @@
   only_genres: [Poppodium]
   notes: gemengd programma (kunstruimte, toonzaal); alleen tag Poppodium; datum "vr 14 aug. t/m zo 20 sep."
 - {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma", capacity: 400, type: disabled, notes: "Nuxt-app, data in devalue-formaat; nog uitzoeken"}
-- {name: Muziekgieterij, city: Maastricht, url: "https://muziekgieterij.nl/", capacity: 1520}
+- name: Muziekgieterij
+  city: Maastricht
+  capacity: 1520
+  url: https://muziekgieterij.nl/
+  type: wp_event
+  api: https://muziekgieterij.nl/wp-json/wp/v2/event?per_page=100&_embed=1
+  genre_taxonomies: [production_genre, production_type]
+  notes: "WP REST 'event' (Stager-koppeling, 121 producties); datum staat in de slug (…-2026-09-18), tijd/prijs via eventpagina (enrich). Homepage-JSON-LD gaf maar 1 event."
 - {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda", capacity: 1100}
 - name: Grenswerk
   city: Venlo
