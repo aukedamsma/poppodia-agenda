@@ -79,6 +79,7 @@ footer details[open] summary::before{content:'▾'}
 .pop{position:relative}
 .panel{position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:12px;min-width:360px;max-height:70vh;overflow:auto;font-size:13px}
 .panel[hidden]{display:none}
+.filters .panel{left:auto;right:0}
 .panel .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:var(--ink-3);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
 .panel .row button{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px;font-size:12px;letter-spacing:0;text-transform:none;font-weight:400}
 .venues{display:grid;grid-template-columns:max-content minmax(220px,1fr);gap:0 28px;align-items:start}
@@ -259,9 +260,13 @@ button:focus-visible{outline:none}
   </div>
   <div class="pop">
     <button class="fbtn" id="kindBtn" aria-expanded="false" aria-controls="kindPanel">Type <span class="cnt" id="kindCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
-    <div class="panel" id="kindPanel" hidden style="min-width:200px">
-      <div class="row">Soort event <button id="clearKinds">wissen</button></div>
-      <div class="chips" id="kindChips"></div>
+    <div class="panel" id="kindPanel" hidden style="min-width:260px">
+      <div class="row">Type <button id="clearKinds">standaard</button></div>
+      <div class="chips" id="mainChips"></div>
+      <div id="kindBlock">
+        <div class="row" style="margin-top:12px">Subtype</div>
+        <div class="chips" id="kindChips"></div>
+      </div>
     </div>
   </div>
   <div class="pop">
@@ -314,7 +319,7 @@ button:focus-visible{outline:none}
   const NEW_SINCE = plusDays(-7);
   const PAGE = 40; // dagen per keer renderen
 
-  let state = { view:'all', q:'', aq:'', venuesOff:[], genres:[], subs:[], kinds:[], sizes:[], scope:'poppodium', day:TODAY, wk:null, mo:null };
+  let state = { view:'all', q:'', aq:'', venuesOff:[], genres:[], subs:[], kinds:[], mains:['muziek'], sizes:[], scope:'poppodium', day:TODAY, wk:null, mo:null };
   let saved = new Set();
   try { saved = new Set(JSON.parse(localStorage.getItem('podiumagenda_saved') || '[]')); } catch(e){}
   const saveSaved = () => { try { localStorage.setItem('podiumagenda_saved', JSON.stringify([...saved])); } catch(e){} };
@@ -369,7 +374,7 @@ button:focus-visible{outline:none}
   const topG=Object.keys(GROUPS).filter(g=>gcount[g]).sort((a,b)=>gcount[b]-gcount[a]);
   state.genres = state.genres.filter(g=>topG.includes(g));
   const chips=document.getElementById('genreChips');
-  topG.forEach(g=>{ const b=document.createElement('button'); b.className='chip'; b.innerHTML=`${esc(GROUPS[g]||g)} <span style="opacity:.55">${gcount[g]}</span>`; b.setAttribute('aria-pressed', state.genres.includes(g));
+  topG.forEach(g=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=GROUPS[g]||g; b.setAttribute('aria-pressed', state.genres.includes(g));
     b.addEventListener('click',()=>{ state.genres=state.genres.includes(g)?state.genres.filter(x=>x!==g):[...state.genres,g]; b.setAttribute('aria-pressed', state.genres.includes(g)); save(); buildSubs(); render(); }); chips.append(b); });
   const subChips=document.getElementById('subChips');
   function buildSubs(){
@@ -384,18 +389,30 @@ button:focus-visible{outline:none}
   }
   buildSubs();
   document.getElementById('clearGenres').addEventListener('click',()=>{ state.genres=[]; state.subs=[]; save(); chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); buildSubs(); render(); });
+  // Type: hoofdsplitsing Muziek / Overig (standaard: Muziek), daaronder subtypes
+  const MAINS={muziek:{label:'Muziek', kinds:['concert','club','festival']}, overig:{label:'Overig', kinds:['talk','other']}};
   const KINDS={concert:'Concert',club:'Clubnacht / feest',festival:'Festival',talk:'Talk / lezing',other:'Overig (quiz, film, kids)'};
-  const kindChips=document.getElementById('kindChips');
-  Object.entries(KINDS).forEach(([k,l])=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=l; b.setAttribute('aria-pressed', state.kinds.includes(k));
-    b.addEventListener('click',()=>{ state.kinds=state.kinds.includes(k)?state.kinds.filter(x=>x!==k):[...state.kinds,k]; b.setAttribute('aria-pressed', state.kinds.includes(k)); save(); render(); }); kindChips.append(b); });
-  document.getElementById('clearKinds').addEventListener('click',()=>{ state.kinds=[]; save(); kindChips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); render(); });
+  if (!Array.isArray(state.mains)) state.mains=['muziek'];
+  const mainChips=document.getElementById('mainChips'), kindChips=document.getElementById('kindChips');
+  function buildKinds(){
+    kindChips.innerHTML='';
+    const allowed=state.mains.flatMap(m=>MAINS[m]?MAINS[m].kinds:[]);
+    document.getElementById('kindBlock').hidden = !allowed.length;
+    state.kinds = state.kinds.filter(k=>allowed.includes(k));
+    allowed.forEach(k=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=KINDS[k]; b.setAttribute('aria-pressed', state.kinds.includes(k));
+      b.addEventListener('click',()=>{ state.kinds=state.kinds.includes(k)?state.kinds.filter(x=>x!==k):[...state.kinds,k]; b.setAttribute('aria-pressed', state.kinds.includes(k)); save(); render(); }); kindChips.append(b); });
+  }
+  Object.entries(MAINS).forEach(([m,def])=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=def.label; b.setAttribute('aria-pressed', state.mains.includes(m));
+    b.addEventListener('click',()=>{ state.mains=state.mains.includes(m)?state.mains.filter(x=>x!==m):[...state.mains,m]; b.setAttribute('aria-pressed', state.mains.includes(m)); save(); buildKinds(); render(); }); mainChips.append(b); });
+  buildKinds();
+  document.getElementById('clearKinds').addEventListener('click',()=>{ state.mains=['muziek']; state.kinds=[]; save(); mainChips.querySelectorAll('.chip').forEach((c,i)=>c.setAttribute('aria-pressed', i===0)); buildKinds(); render(); });
   // omvang: totale capaciteit per podium (uit venues.yaml -> report.venues[].capacity)
   const CAP={}; REPORT.venues.forEach(v=>{ CAP[v.name]=v.capacity||null; });
   const SIZES={s:'Klein (tot 400)',m:'Middel (400–1000)',l:'Groot (1000–2500)',xl:'Zeer groot (2500+)',u:'Onbekend'};
   const sizeOf=cap=>!cap?'u':cap<400?'s':cap<1000?'m':cap<2500?'l':'xl';
   if (!Array.isArray(state.sizes)) state.sizes=[];
   const sizeChips=document.getElementById('sizeChips');
-  Object.entries(SIZES).forEach(([k,l])=>{ const n=REPORT.venues.filter(v=>v.ok&&sizeOf(v.capacity)===k).length; const b=document.createElement('button'); b.className='chip'; b.innerHTML=`${l} <span style="color:var(--ink-3)">${n}</span>`; b.setAttribute('aria-pressed', state.sizes.includes(k));
+  Object.entries(SIZES).forEach(([k,l])=>{ const n=REPORT.venues.filter(v=>v.ok&&sizeOf(v.capacity)===k).length; const b=document.createElement('button'); b.className='chip'; b.textContent=l; b.setAttribute('aria-pressed', state.sizes.includes(k));
     b.addEventListener('click',()=>{ state.sizes=state.sizes.includes(k)?state.sizes.filter(x=>x!==k):[...state.sizes,k]; b.setAttribute('aria-pressed', state.sizes.includes(k)); save(); render(); }); sizeChips.append(b); });
   document.getElementById('clearSizes').addEventListener('click',()=>{ state.sizes=[]; save(); sizeChips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); render(); });
   // bereik: alleen poppodia of alles
@@ -446,7 +463,7 @@ button:focus-visible{outline:none}
       if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
       if (state.venuesOff.includes(e.venue)) return false;
       if (state.scope!=='all' && (e.section||'poppodium')!=='poppodium') return false;
-      if (state.kinds.length && !state.kinds.includes(e.kind||'concert')) return false;
+      { const k=e.kind||'concert'; const allowed=state.mains.flatMap(m=>MAINS[m]?MAINS[m].kinds:[]); if (state.mains.length && !allowed.includes(k)) return false; if (state.kinds.length && !state.kinds.includes(k)) return false; }
       if (state.sizes.length && !state.sizes.includes(sizeOf(CAP[e.venue]))) return false;
       if (state.genres.length && !(e.genre_norm||[]).some(g=>state.genres.includes(g))) return false;
       if (state.subs.length && !(e.genres||[]).some(g=>state.subs.includes(g))) return false;
@@ -490,7 +507,7 @@ button:focus-visible{outline:none}
     const vc=document.getElementById('venueCnt'); vc.hidden=!state.venuesOff.length; vc.textContent=REPORT.venues.length-state.venuesOff.length;
     const gc=document.getElementById('genreCnt'); gc.hidden=!(state.genres.length+state.subs.length); gc.textContent=state.genres.length+state.subs.length;
     const kc=document.getElementById('kindCnt'); kc.hidden=!state.kinds.length; kc.textContent=state.kinds.length;
-    document.getElementById('kindBtn').classList.toggle('active', !!state.kinds.length);
+    document.getElementById('kindBtn').classList.toggle('active', !!state.kinds.length || state.mains.length!==1 || state.mains[0]!=='muziek');
     const sc=document.getElementById('sizeCnt'); sc.hidden=!state.sizes.length; sc.textContent=state.sizes.length;
     document.getElementById('sizeBtn').classList.toggle('active', !!state.sizes.length);
     document.getElementById('venueBtn').classList.toggle('active', !!state.venuesOff.length);
