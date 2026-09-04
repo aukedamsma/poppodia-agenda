@@ -201,6 +201,14 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     </div>
   </div>
   <div class="pop">
+    <button class="fbtn" id="sizeBtn" aria-expanded="false" aria-controls="sizePanel">Omvang <span class="cnt" id="sizeCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
+    <div class="panel" id="sizePanel" hidden style="min-width:240px">
+      <div class="row">Zaalcapaciteit <button id="clearSizes">wissen</button></div>
+      <div class="chips" id="sizeChips"></div>
+      <p style="margin:10px 0 0;color:var(--ink-3);font-size:11.5px">Totale capaciteit van het podium (VNPF-overzicht). Podia zonder opgave vallen onder "onbekend".</p>
+    </div>
+  </div>
+  <div class="pop">
     <button class="fbtn" id="genreBtn" aria-expanded="false" aria-controls="genrePanel">Genre <span class="cnt" id="genreCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="genrePanel" hidden>
       <div class="row">Hoofdgenre <button id="clearGenres">wissen</button></div>
@@ -241,7 +249,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   const NEW_SINCE = plusDays(-7);
   const PAGE = 40; // dagen per keer renderen
 
-  let state = { view:'all', q:'', venuesOff:[], genres:[], subs:[], kinds:[], scope:'poppodium', day:TODAY };
+  let state = { view:'all', q:'', venuesOff:[], genres:[], subs:[], kinds:[], sizes:[], scope:'poppodium', day:TODAY };
   let saved = new Set();
   try { saved = new Set(JSON.parse(localStorage.getItem('podiumagenda_saved') || '[]')); } catch(e){}
   const saveSaved = () => { try { localStorage.setItem('podiumagenda_saved', JSON.stringify([...saved])); } catch(e){} };
@@ -277,6 +285,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       const c=document.createElement('input'); c.type='checkbox'; c.dataset.venue=v.name; c.checked=!state.venuesOff.includes(v.name);
       if (v.section && v.section!=='poppodium') l.title='Geen VNPF-poppodium; zichtbaar onder "Alles"';
       const n=document.createElement('span'); n.className='n'; n.textContent = v.ok ? (byVenue[v.name]||0) : (v.strategy==='disabled'?'binnenkort':'geen data');
+      if (v.capacity) l.title=(l.title?l.title+' · ':'')+'capaciteit '+v.capacity;
       l.append(c, document.createTextNode(v.name), n); vs.append(l);
       c.addEventListener('change', () => { toggleVenue(v.name, c.checked); sync(); render(); });
     });
@@ -314,6 +323,15 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   Object.entries(KINDS).forEach(([k,l])=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=l; b.setAttribute('aria-pressed', state.kinds.includes(k));
     b.addEventListener('click',()=>{ state.kinds=state.kinds.includes(k)?state.kinds.filter(x=>x!==k):[...state.kinds,k]; b.setAttribute('aria-pressed', state.kinds.includes(k)); save(); render(); }); kindChips.append(b); });
   document.getElementById('clearKinds').addEventListener('click',()=>{ state.kinds=[]; save(); kindChips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); render(); });
+  // omvang: totale capaciteit per podium (uit venues.yaml -> report.venues[].capacity)
+  const CAP={}; REPORT.venues.forEach(v=>{ CAP[v.name]=v.capacity||null; });
+  const SIZES={s:'Klein (tot 400)',m:'Middel (400–1000)',l:'Groot (1000–2500)',xl:'Zeer groot (2500+)',u:'Onbekend'};
+  const sizeOf=cap=>!cap?'u':cap<400?'s':cap<1000?'m':cap<2500?'l':'xl';
+  if (!Array.isArray(state.sizes)) state.sizes=[];
+  const sizeChips=document.getElementById('sizeChips');
+  Object.entries(SIZES).forEach(([k,l])=>{ const n=REPORT.venues.filter(v=>v.ok&&sizeOf(v.capacity)===k).length; const b=document.createElement('button'); b.className='chip'; b.innerHTML=`${l} <span style="color:var(--ink-3)">${n}</span>`; b.setAttribute('aria-pressed', state.sizes.includes(k));
+    b.addEventListener('click',()=>{ state.sizes=state.sizes.includes(k)?state.sizes.filter(x=>x!==k):[...state.sizes,k]; b.setAttribute('aria-pressed', state.sizes.includes(k)); save(); render(); }); sizeChips.append(b); });
+  document.getElementById('clearSizes').addEventListener('click',()=>{ state.sizes=[]; save(); sizeChips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); render(); });
   // bereik: alleen poppodia of alles
   document.querySelectorAll('[data-scope]').forEach(b=>{ b.setAttribute('aria-pressed', b.dataset.scope===state.scope);
     b.addEventListener('click',()=>{ state.scope=b.dataset.scope; save(); document.querySelectorAll('[data-scope]').forEach(x=>x.setAttribute('aria-pressed', x===b)); render(); }); });
@@ -355,6 +373,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       if (state.venuesOff.includes(e.venue)) return false;
       if (state.scope!=='all' && (e.section||'poppodium')!=='poppodium') return false;
       if (state.kinds.length && !state.kinds.includes(e.kind||'concert')) return false;
+      if (state.sizes.length && !state.sizes.includes(sizeOf(CAP[e.venue]))) return false;
       if (state.genres.length && !(e.genre_norm||[]).some(g=>state.genres.includes(g))) return false;
       if (state.subs.length && !(e.genres||[]).some(g=>state.subs.includes(g))) return false;
       if (qq && !fold([e.title,e.subtitle,e.venue,e.city,(e.genres||[]).join(' ')].join(' ')).includes(qq)) return false;
@@ -373,7 +392,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       <span class="side"><span class="date">${fmtCard(e.start)}</span>${time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:''}${e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:''}</span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${e.subtitle?esc(e.subtitle):''}</div>
-      <div class="w"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
+      <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
       <div class="g">${g}</div>
       <button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
     </a>`;
@@ -386,6 +405,8 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     const gc=document.getElementById('genreCnt'); gc.hidden=!(state.genres.length+state.subs.length); gc.textContent=state.genres.length+state.subs.length;
     const kc=document.getElementById('kindCnt'); kc.hidden=!state.kinds.length; kc.textContent=state.kinds.length;
     document.getElementById('kindBtn').classList.toggle('active', !!state.kinds.length);
+    const sc=document.getElementById('sizeCnt'); sc.hidden=!state.sizes.length; sc.textContent=state.sizes.length;
+    document.getElementById('sizeBtn').classList.toggle('active', !!state.sizes.length);
     document.getElementById('venueBtn').classList.toggle('active', !!state.venuesOff.length);
     document.getElementById('genreBtn').classList.toggle('active', !!(state.genres.length+state.subs.length));
     const list=document.getElementById('list');
