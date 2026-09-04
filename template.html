@@ -526,7 +526,7 @@ button:focus-visible{outline:none}
     document.getElementById('genreBtn').classList.toggle('active', !!(state.genres.length+state.subs.length));
     const list=document.getElementById('list');
     if (!rows.length && !['week','month','search'].includes(state.view)){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':state.view==='all'?'Geen concerten op deze dag met deze filters.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
-    if (state.view==='search'){ renderSearch(rows, list); wireSaves(); return; }
+    if (state.view==='search'){ renderSearch(EVENTS.filter(e=>e.start.slice(0,10)>=TODAY && e.status!=='afgelast'), list); wireSaves(); return; }
     if (state.view==='week'){ renderWeeks(rows, list); wireSaves(); return; }
     if (state.view==='month'){ renderMonths(rows, list); wireSaves(); return; }
     // groeperen per dag (in tab Nieuw: per aankondigdag, nieuwste eerst)
@@ -552,7 +552,7 @@ button:focus-visible{outline:none}
   // artiesten zoeken: hele agenda, gegroepeerd per artiest
   function renderSearch(rows, list){
     const q=fold(state.aq||'').trim();
-    if (q.length<2){ list.innerHTML='<p class="empty">Typ minstens twee letters in het zoekveld bovenin. Je zoekt in alle artiesten van alle podia, ongeacht datum.</p>'; return; }
+    if (q.length<2){ list.innerHTML='<p class="empty">Typ minstens twee letters in het zoekveld bovenin. Je zoekt in alle artiesten van alle podia, ongeacht datum en filters.</p>'; return; }
     const byArtist=new Map();
     rows.forEach(e=>{ const names=(e.artists&&e.artists.length)?e.artists:[e.title]; names.forEach(a=>{ if(fold(a).includes(q)){ const k=fold(a); if(!byArtist.has(k)) byArtist.set(k,{name:a,evs:[]}); const g=byArtist.get(k); if(a!==a.toUpperCase() && g.name===g.name.toUpperCase()) g.name=a; g.evs.push(e); } }); });
     const groups=[...byArtist.values()].sort((a,b)=>b.evs.length-a.evs.length||a.name.localeCompare(b.name,'nl')).slice(0,40);
