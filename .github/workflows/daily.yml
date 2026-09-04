@@ -37,5 +37,9 @@ jobs:
           git config user.name "agenda-bot"
           git config user.email "agenda-bot@users.noreply.github.com"
           git add data state docs
-          git diff --cached --quiet && echo "geen wijzigingen" || git commit -m "Agenda bijgewerkt $(date -u +%Y-%m-%d)"
-          git push
+          git commit -m "Agenda bijgewerkt $(date -u +%F)" || { echo "geen wijzigingen"; exit 0; }
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin main && git push && exit 0
+            echo "push mislukt, opnieuw (poging $i)"; sleep 15
+          done
+          exit 1
