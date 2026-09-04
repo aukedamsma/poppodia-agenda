@@ -49,6 +49,7 @@ h1 span{color:var(--accent)}
 .tabs button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .tabs button .n{font-size:11px;color:inherit;opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}
+.tabs button.ico{display:inline-flex;align-items:center;gap:2px;padding:6px 9px}.tabs button.ico svg{display:block}
 .fbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink-2);background:var(--card);box-shadow:var(--shadow)}
 .fbtn[aria-expanded="true"],.fbtn.active{border-color:var(--ink);color:var(--ink)}
 .fbtn .cnt{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;padding:0 6px;line-height:16px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -175,7 +176,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     <button data-view="week" aria-pressed="false">Per week</button>
     <button data-view="month" aria-pressed="false">Per maand</button>
     <button data-view="new" aria-pressed="false">Nieuw<span class="n" id="newCount"></span></button>
-    <button data-view="saved" aria-pressed="false">Mijn lijstje<span class="n" id="savedCount"></span></button>
+    <button data-view="saved" aria-pressed="false" class="ico" aria-label="Mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg><span class="n" id="savedCount"></span></button>
   </div>
   <div class="daynav" id="daynav" hidden>
     <input class="fbtn" type="date" id="dayPick" title="Spring naar dag">
