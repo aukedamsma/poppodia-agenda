@@ -98,7 +98,8 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .pnav button:disabled{opacity:.35}
 .pnav .plabel{position:relative;padding:0 12px;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pnav .plabel small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:6px}
-.daynav{display:inline-flex;align-items:center;position:relative;padding-left:6px}
+.daynav{display:inline-flex;align-items:center;position:relative;padding-left:10px}
+.daynav .dow{font-size:13px;font-weight:500;color:var(--ink-2);margin-right:6px}
 .daynav input{font:inherit;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);background:transparent;border:0;padding:0 8px 0 0;height:31px;box-sizing:border-box;border-radius:6px}
 .save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
 .save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
@@ -117,8 +118,7 @@ main{padding:6px 0 60px}
 .wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:start}
 .wcol{min-height:60px;min-width:0}
 .wcards{display:grid;gap:8px}
-.wgrid .card .date{display:none}
-.wgrid .card .t,.wgrid .card .s,.wgrid .card .w{padding-right:52px}
+.wgrid .card .s{display:none}
 .wcol h3{font-size:12px;font-weight:600;margin:0 0 6px;padding:0 2px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:baseline}
 .wcol h3 .dn{font-size:11px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .wcol.today h3{color:var(--accent)}
@@ -160,14 +160,18 @@ main{padding:6px 0 60px}
 .card{display:block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px 8px;text-decoration:none;box-shadow:var(--shadow);position:relative;min-width:0}
 .card:hover{border-color:var(--ink)}
 .card:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
-.card .t{font-weight:600;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:70px}
-.card .s{color:var(--ink-2);font-size:12px;text-transform:lowercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.4em;padding-right:70px}
-.card .w{color:var(--ink-2);font-size:12.5px;margin-top:3px;padding-right:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .t{font-weight:600;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .s{color:var(--ink-2);font-size:12px;text-transform:lowercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.4em}
+.card .w{color:var(--ink-2);font-size:12.5px;margin-top:3px;display:flex;justify-content:space-between;gap:10px}
+.card .wl,.card .gl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.card .wr,.card .gr{flex-shrink:0;white-space:nowrap;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.card .wr .time{color:var(--ink);font-weight:500} .card .wr .pr{color:var(--ink-2)}
+.card .gr{padding-right:24px}
+.card .gr:empty{padding-right:0}
 .card .w b{font-weight:500;color:var(--ink)}
-.card .g{color:var(--ink-3);font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;min-height:1.4em}
+.card .g{color:var(--ink-3);font-size:12px;margin-top:1px;display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums;min-height:1.4em}
 .card .g .price{color:var(--ink-2)}
-.card .side{position:absolute;top:9px;right:11px;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:12px;font-variant-numeric:tabular-nums;line-height:1.4}
-.card .date{color:var(--ink-2);font-weight:500}
+.card .date{color:var(--ink-2)}
 .card .time{color:var(--ink-3)}
 .card .pr{color:var(--ink-2)}
 .card .est{color:var(--ink-3);font-style:italic}
@@ -232,7 +236,7 @@ button:focus-visible{outline:none}
     <button id="nextP" aria-label="Volgende">›</button>
     <button id="todayP">Vandaag</button>
     <span class="plabel" id="plabel"></span>
-    <span class="daynav" id="daynav" hidden><input type="date" id="dayPick" title="Spring naar dag"></span>
+    <span class="daynav" id="daynav" hidden><span class="dow" id="dow"></span><input type="date" id="dayPick" title="Spring naar dag"></span>
   </div>
   <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
   <div class="filters">
@@ -448,16 +452,19 @@ button:focus-visible{outline:none}
   function fmtCard(iso){ const d=new Date(iso.slice(0,10)+'T12:00:00'); return `${DOWS[d.getDay()]} ${d.getDate()} ${MONS[d.getMonth()]}`; }
   function card(e){
     const time = e.start.length>10 && e.start.slice(11,16)!=='00:00' ? e.start.slice(11,16) : '';
-    const badges = (isNew(e)?'<span class="badge new">nieuw</span>':'') + (e.status?`<span class="badge status">${esc(e.status)}</span>`:'');
+    const badges = isNew(e)?'<span class="badge new">nieuw</span>':'';
     const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(e.genres||[]).filter(t=>!main.some(m=>m.toLowerCase()===t.toLowerCase())).slice(0,3);
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const price = e.price ? `<span class="price">${esc(e.price)}</span>` : '';
+    const showDate = ['search','saved','new'].includes(state.view);   // in Dag/Week/Maand staat de datum al boven de kolom
+    const tp = [time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:'',
+                e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:''].filter(Boolean).join(' · ');
+    const sub = e.subtitle ? esc(e.subtitle) : (e.lineup&&e.lineup.length>1 ? 'met '+esc(e.lineup.slice(0,6).join(', ')) : '');
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-      <span class="side"><span class="date">${fmtCard(e.start)}</span>${time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:''}${e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:''}</span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
-      <div class="s">${e.subtitle?esc(e.subtitle):''}</div>
-      <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
-      <div class="g">${g}</div>
+      <div class="s">${sub}</div>
+      <div class="w"><span class="wl" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</span><span class="wr">${tp}</span></div>
+      <div class="g"><span class="gl">${g}</span><span class="gr">${showDate?`<span class="date">${fmtCard(e.start)}</span>`:''}</span></div>
       <button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
     </a>`;
   }
@@ -490,7 +497,8 @@ button:focus-visible{outline:none}
       if (state.view==='new'){ label = k===TODAY ? 'vandaag aangekondigd' : k===plusDays(-1) ? 'gisteren aangekondigd' : `aangekondigd ${dt.getDate()} ${MON[dt.getMonth()]}`; }
       else { label=`${DOWL[dt.getDay()]} ${dt.getDate()} ${MON[dt.getMonth()]}${dt.getFullYear()!==today.getFullYear()?' '+dt.getFullYear():''}`; rel = k===TODAY?'vandaag':k===plusDays(1)?'morgen':''; }
       if (state.view==='new') evs.sort((a,b)=>a.start.localeCompare(b.start));
-      html.push(`<section class="day" id="${state.view==='new'?'n-':'d-'}${k}"><h2 class="dayhead">${label}${rel?` <span class="rel">${rel}</span>`:''}<span class="cnt">${evs.length}</span></h2><div class="grid">${evs.map(card).join('')}</div></section>`);
+      const head = state.view==='all' ? '' : `<h2 class="dayhead">${label}${rel?` <span class="rel">${rel}</span>`:''}<span class="cnt">${evs.length}</span></h2>`;
+      html.push(`<section class="day" id="${state.view==='new'?'n-':'d-'}${k}">${head}<div class="grid">${evs.map(card).join('')}</div></section>`);
     });
     if (keys.length>shownDays) html.push(`<button class="more" id="more">Meer dagen laden (${keys.length-shownDays} resterend)</button>`);
     list.innerHTML=html.join('');
@@ -528,8 +536,8 @@ button:focus-visible{outline:none}
       const cols=days.map((d,i)=>{ const k=isoOf(d); const evs=byDay.get(k)||[];
         const items = evs.length ? `<div class="wcards">${evs.map(card).join('')}</div>`
           : '<div class="none">—</div>';
-        return `<div class="wcol${k===TODAY?' today':''}${k<TODAY?' past':''}"><h3><a href="#" data-goto="${k}" title="Open deze dag in Per dag">${DOW[i]} ${d.getDate()}</a>${k===TODAY?' <span class="dn">vandaag</span>':`<span class="dn">${evs.length||''}</span>`}</h3>${items}</div>`; }).join('');
-      html.push(`<section class="week"><h2 class="weekhead">week ${isoWeek(a)} <span class="rng">${rng}</span><span class="cnt">${total}</span></h2><div class="wgrid">${cols}</div></section>`);
+        return `<div class="wcol${k===TODAY?' today':''}${k<TODAY?' past':''}"><h3><a href="#" data-goto="${k}" title="Open deze dag in Dag">${DOW[i]} ${d.getDate()} ${MONS[d.getMonth()]}</a>${k===TODAY?' <span class="dn">vandaag</span>':`<span class="dn">${evs.length||''}</span>`}</h3>${items}</div>`; }).join('');
+      html.push(`<section class="week"><div class="wgrid">${cols}</div></section>`);
     });
     list.innerHTML=html.join('');
   }
@@ -553,7 +561,7 @@ button:focus-visible{outline:none}
           return `<div class="mcell${inM?'':' out'}${k===TODAY?' today':''}${k<TODAY?' past':''}"><a class="dnum" href="#" data-goto="${k}">${x.getDate()}</a>${items}${more}</div>`; }).join('');
         weeks.push(`<div class="wk">${isoWeek(days[0])}</div>${cells}`);
       }
-      html.push(`<section class="month"><h2 class="weekhead">${MON[m.getMonth()]} ${m.getFullYear()}<span class="cnt">${total}</span></h2><div class="mgrid"><div class="wk"></div>${['ma','di','wo','do','vr','za','zo'].map(d=>`<div class="mh">${d}</div>`).join('')}${weeks.join('')}</div></section>`);
+      html.push(`<section class="month"><div class="mgrid"><div class="wk"></div>${['ma','di','wo','do','vr','za','zo'].map(d=>`<div class="mh">${d}</div>`).join('')}${weeks.join('')}</div></section>`);
     });
     list.innerHTML=html.join('');
   }
@@ -581,6 +589,7 @@ button:focus-visible{outline:none}
     document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
 document.querySelector('.search').hidden = state.view==='search';
     const pl=document.getElementById('plabel');
+    if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = DOWS[dd.getDay()]; }
     if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getDate()} ${MONS[d0.getMonth()]} – ${d6.getDate()} ${MONS[d6.getMonth()]}</small>`; pl.hidden=false; }
     else if (state.view==='month'){ const m=new Date((state.mo||isoOf(new Date(today.getFullYear(),today.getMonth(),1)))+'T12:00:00'); pl.textContent=`${MON[m.getMonth()]} ${m.getFullYear()}`; pl.hidden=false; }
     else pl.hidden=true;
