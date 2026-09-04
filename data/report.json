@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-04T17:04:50",
+ "generated": "2026-09-04T17:32:44",
  "venues": [
   {
    "name": "TivoliVredenburg",
@@ -93,7 +93,7 @@
    "city": "Amsterdam",
    "url": "https://www.melkweg.nl/nl/agenda",
    "strategy": "embedded",
-   "events": 235,
+   "events": 236,
    "note": "",
    "ok": true,
    "audit": {
@@ -1060,11 +1060,26 @@
    "name": "Bolwerk (Poort)",
    "city": "Sneek",
    "url": "https://ontdekpoort.nl/programma/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
-   "audit": {},
+   "strategy": "wp_event",
+   "events": 135,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://ontdekpoort.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.91,
+     "price": 1.0,
+     "genre": 0.72
+    }
+   },
    "section": "poppodium",
    "capacity": 650
   },
@@ -1122,11 +1137,17 @@
    "name": "Estrado",
    "city": "Harderwijk",
    "url": "https://www.estrado.nl/agenda",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
-   "audit": {},
+   "strategy": "jsonld_detail",
+   "events": 12,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 401 Client Error: Unauthorized for url: https://www.estrado.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 12 events",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 0.0,
+     "price": 1.0,
+     "genre": 0.58
+    }
+   },
    "section": "poppodium",
    "capacity": 420
   },
@@ -1359,7 +1380,7 @@
     "coverage": {
      "time": 0.98,
      "price": 0.85,
-     "genre": 0.26
+     "genre": 0.5
     }
    },
    "section": "poppodium",
@@ -1899,7 +1920,7 @@
    "url": "https://muziekpodiumdjs.nl/",
    "strategy": "none",
    "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: 0 events; jsonld_detail: 0 events",
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events",
    "ok": false,
    "audit": {},
    "section": "overig",
@@ -2171,7 +2192,7 @@
    "capacity": null
   }
  ],
- "series": 4682,
+ "series": 4701,
  "estimated": {
   "price": 10,
   "time": 6,
@@ -2188,6 +2209,8 @@
   "Popcultureel programma": 9,
   "Activiteit": 9,
   "Multidisciplinair": 7,
+  "Toneel": 7,
+  "Theatercollege": 6,
   "Clubnight": 6,
   "BUS 12": 5,
   "EKKO40": 5,
@@ -2199,6 +2222,7 @@
   "front": 5,
   "Cultuureducatie & talentontwikkeling": 4,
   "Productie": 4,
+  "Musical": 4,
   "Talentontwikkeling": 4,
   "Diep In De Groef": 3,
   "Le Guess Who?": 3,
@@ -2299,12 +2323,13 @@
   "Beeldende kunst": 1,
   "€ 10": 1,
   "00 - € 16": 1,
+  "Schoolvoorstelling": 1,
   "Café": 1,
   "Neurodivergent": 1,
   "Phoenix Academy": 1,
   "Jasper Somsen Invites ...": 1
  },
- "artists": 4221,
+ "artists": 4327,
  "genre_groups": {
   "pop": "Pop",
   "rock": "Rock",
@@ -2332,10 +2357,10 @@
   "overig": "Overig"
  },
  "kinds": {
-  "concert": 4459,
-  "club": 450,
-  "festival": 124,
-  "other": 219
+  "concert": 4571,
+  "club": 454,
+  "festival": 128,
+  "other": 229
  },
- "total_events": 5335
+ "total_events": 5483
 }
