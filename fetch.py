@@ -912,9 +912,13 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
         return None
     # blok = dit event t/m het volgende event-object; anders lekken velden (startMain, prijs) van "gerelateerde events"
     tail = clean_html[m.end(): m.end() + 4000]
-    nxt = re.search(r'"__typename":\s*"event_\w+_Entry"', tail)
+    nxt = re.search(r'"__typename":\s*"event_\w+_Entry"|"(?:relatedEvents|related|highlightedItems|upcoming|events)":\s*\[', tail)
     block = clean_html[m.start(): m.end() + (nxt.start() if nxt else 2500)]
     head = clean_html[m.start(): m.end()]  # id t/m startDateTime: hier staan titel, ondertitel en line-up
+    # tijdvelden staan direct na startDateTime (date, doorsOpen, doorsClose, startMain); "startMain":null betekent: geen aparte aanvang
+    near = tail[:600]
+    sm = re.search(r'"startMain":\s*(?:"([^"]*)"|null)', near)
+    start_main = sm.group(1) if sm and sm.group(1) else None
 
     def _unesc(v: str) -> str:  # JSON-escapes in de RSC-payload: \u0026 -> &, \/ -> /
         return re.sub(r"\\u([0-9a-fA-F]{4})", lambda mm: chr(int(mm.group(1), 16)), v).replace("\\/", "/")
@@ -923,7 +927,7 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
         mm = re.search(r'"%s":\s*"([^"]*)"' % name, block)
         return clean(_unesc(mm.group(1))) if mm else None
 
-    start = parse_dt(fld("startMain") or m.group(1))  # startMain = aanvang hoofdact; startDateTime is vaak de deurtijd
+    start = parse_dt(start_main or m.group(1))  # startMain = aanvang hoofdact (alleen uit dit event zelf); anders startDateTime
     if not start:
         return None
     title = fld("title") or "?"
