@@ -108,7 +108,7 @@ def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
 def clean(s: str | None) -> str | None:
     if s is None:
         return None
-    s = unescape(str(s))
+    s = unescape(unescape(str(s)))  # WP REST levert soms dubbel gecodeerde titels ("&amp;#038;")
     s = re.sub(r"<[^>]+>", " ", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s or None
@@ -699,7 +699,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
     return out
 
 
-CACHE_VERSION = 2  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 3  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
@@ -755,7 +755,8 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         if v.get("lineup") and not ev.lineup:
             ev.lineup = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])], ev.title)
         if not ev.genres:
-            ev.genres = genre_hints(txt[:1500])
+            hints = genre_hints(txt[:1500], limit=4)
+            ev.genres = hints if len(hints) <= 2 else []  # >2 treffers = waarschijnlijk een genremenu op de pagina (Tivoli), geen beschrijving
         # aanvang gaat vóór deuren-open: als de gevonden tijd gelijk is aan de deurtijd en er staat een aanvang, neem die
         st = datetime.fromisoformat(ev.start)
         if tstart and (((st.hour, st.minute) == (0, 0)) or (tdoors and (st.hour, st.minute) == tdoors and tstart != tdoors)):
@@ -1011,7 +1012,8 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
     if v.get("lineup") and not extra.get("lineup"):
         extra["lineup"] = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])])
     if not extra.get("ld_genres"):
-        extra["hint_genres"] = genre_hints(txt[:1500])
+        hints = genre_hints(txt[:1500], limit=4)
+        extra["hint_genres"] = hints if len(hints) <= 2 else []
     cache[key] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "extra": extra}
     return extra
 

@@ -162,6 +162,7 @@ main{padding:6px 0 60px}
 .card:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
 .card .t{font-weight:600;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:70px}
 .card.compact .t{padding-right:0}
+.card .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:2px}
 .card.compact .dt{padding-right:0;color:var(--ink-3);align-items:center} .card.compact .dt .date{color:var(--ink-2);font-weight:500} .card.compact .dt .time{color:var(--ink)}
 .card.compact .save{position:static;width:22px;height:22px;margin:-3px -4px -3px 0;flex-shrink:0}
 .card .s{color:var(--ink-2);font-size:12px;text-transform:lowercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.4em;padding-right:70px}
@@ -484,9 +485,9 @@ button:focus-visible{outline:none}
     if (compact){
       // weekweergave, vier regels: titel · podium + stad · datum + tijd + prijs + bookmark · genre
       return `<a class="card compact${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-        <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
+        <div class="t" title="${esc(e.title)}${isNew(e)?' · nieuw aangekondigd':''}">${isNew(e)?'<span class="dot"></span>':''}${esc(e.title)}</div>
         <div class="w"><span class="wl"><b>${esc(e.venue)}</b> · ${esc(e.city)}</span></div>
-        <div class="w dt"><span class="wl">${[`<span class="date">${fmtCard(e.start)}</span>`,tm,pr].filter(Boolean).join(' · ')}</span>${saveBtn}</div>
+        <div class="w dt"><span class="wl">${[tm,pr].filter(Boolean).join(' · ')||' '}</span>${saveBtn}</div>
         <div class="g"><span class="gl">${g}</span></div>
       </a>`;
     }
