@@ -419,6 +419,31 @@ def test_facetwp_bibelot():
     assert evs[2].start.startswith(FUT2) and evs[0].genres == ["concert"]
 
 
+def test_stager_api_strategy():
+    """Stager-shop-API: shopId uit data-flags, anonieme sessie, events per 20, prijs uit tickets-overview."""
+    page = '<html><script src="/public/shop/shop-bundle.js" data-flags="{&quot;shopId&quot;:301}"></script></html>'
+    evs_p1 = [{"eventId": 1, "name": "Outerspass", "startsOn": FUT + "T19:45:00Z", "soldOut": False},
+              {"eventId": 2, "name": "Gratis Jam", "startsOn": FUT2 + "T18:00:00Z", "soldOut": True}]
+    class S:
+        headers = {}
+        def get(self, url, params=None, headers=None, **kw):
+            if url.endswith("/shop/default/events"): return FakeResp(text=page)
+            if url.endswith("/shop/v1/events"): return FakeResp(json_=evs_p1 if params["offset"] == 0 else [])
+            if url.endswith("/1/tickets-overview"): return FakeResp(json_={"ticketGroups": [{"name": "Leden", "weight": 0, "priceInCents": 500}, {"name": "Voorverkoop", "weight": 1, "priceInCents": 2000}]})
+            if url.endswith("/2/tickets-overview"): return FakeResp(json_={"ticketGroups": [{"name": "Gratis", "priceInCents": 0}]})
+            raise fetch.requests.ConnectionError("no route " + url)
+        def post(self, url, params=None, json=None, **kw):
+            assert url.endswith("/shop/v1/session/new") and params["shopId"] == 301
+            return FakeResp(json_={"accessToken": {"jwt": "abc"}})
+    fetch.SESSION = S()
+    v = {"name": "Simplon", "city": "Groningen", "url": "https://simplon.stager.co/shop/default/events", "type": "stager", "enrich": False, "min_events": 1}
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert strat == "stager" and len(evs) == 2, (strat, note)
+    a, b = evs
+    assert a.start == FUT + "T21:45" and a.price == "€ 20" and a.url.endswith("/events/1") and a.status is None
+    assert b.price == "gratis" and b.status == "uitverkocht"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

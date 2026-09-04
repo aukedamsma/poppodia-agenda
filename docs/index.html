@@ -193,6 +193,7 @@ main{padding:6px 0 60px}
 .badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 5px;line-height:14px;vertical-align:2px;margin-right:5px}
 .badge.new{background:var(--accent);color:var(--accent-ink)}
 .badge.status{background:var(--warn-soft);color:var(--warn)}
+.pr.soldout{color:var(--warn);font-weight:600}
 .card.cancelled .t{text-decoration:line-through;color:var(--muted-strike)}
 .empty{padding:60px 0;text-align:center;color:var(--ink-3)}
 .anav{padding:2px 10px}
@@ -455,9 +456,10 @@ button:focus-visible{outline:none}
 
   // status
   const st=document.getElementById('statusList');
-  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); const cov=(v.audit||{}).coverage; const warn=(v.audit||{}).time_shift||(v.audit||{}).date_cluster_removed||(v.audit||{}).many_late;
+  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); const a=v.audit||{}; const cov=a.coverage; const warn=a.time_shift||a.date_cluster_removed||a.many_late||a.thin;
     const pct=x=>Math.round((x||0)*100)+'%';
-    li.innerHTML=`<span class="${v.ok?(warn?'warn':'ok'):'fail'}">${v.ok?(warn?'!':'✓'):'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+(cov?` · tijd ${pct(cov.time)} · prijs ${pct(cov.price)} · genre ${pct(cov.genre)}`:'') : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`;
+    const hor=a.horizon?` · tot ${a.horizon.slice(8,10)}-${a.horizon.slice(5,7)}-${a.horizon.slice(2,4)}`:''; const wk=(a.weekend!=null)?` · vr/za ${a.weekend}/16`:'';
+    li.innerHTML=`<span class="${v.ok?(warn?'warn':'ok'):'fail'}">${v.ok?(warn?'!':'✓'):'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+(cov?` · tijd ${pct(cov.time)} · prijs ${pct(cov.price)} · genre ${pct(cov.genre)}`:'')+wk+hor : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`;
     li.title=(v.strategy||'')+(v.note?' — '+v.note:''); st.append(li); });
 
   // render
@@ -491,7 +493,7 @@ button:focus-visible{outline:none}
     const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=subsOf(e).map(k=>SUBL[k]||k).slice(0,3);   // alleen canonieke subgenres, nooit ruwe tags
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const tm = time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:'';
-    const pr = e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:'';
+    const pr = e.status==='uitverkocht'?`<span class="pr soldout">uitverkocht</span>`:e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:'';
     const sub = e.subtitle ? esc(e.subtitle) : (e.lineup&&e.lineup.length>1 ? 'met '+esc(e.lineup.slice(0,6).join(', ')) : '');
     const saveBtn = `<button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>`;
     if (compact){
@@ -504,7 +506,7 @@ button:focus-visible{outline:none}
       </a>`;
     }
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-      <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.price_est?' est':''}">${e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span></span>
+      <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.status==='uitverkocht'?' soldout':e.price_est?' est':''}">${e.status==='uitverkocht'?'uitverkocht':e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span></span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${sub}</div>
       <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>

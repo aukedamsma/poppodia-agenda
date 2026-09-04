@@ -840,6 +840,85 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
     return out
 
 
+def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
+    """Stager-ticketshop (<podium>.stager.co) via de shop-API die de webshop zelf gebruikt. Veel poppodia verkopen via
+    Stager (Vera, Simplon, Boerderij, So What!, Bibelot, Willemeen, Hall of Fame, Muziekgieterij…). De shoppagina heeft
+    JSON-LD met 50 events (zonder prijs); de API geeft álle komende events én per event de ticketprijzen:
+      1. GET  /shop/default/events            -> data-flags {"shopId": 301}
+      2. POST /shop/v1/session/new?shopId=301&locale=NL&hasOrderToken=false  (body {})  -> accessToken.jwt (anonieme sessie)
+      3. GET  /shop/v1/events?offset=0&limit=20  (Bearer)  -> eventId, name, startsOn (UTC), soldOut; doorgaan tot leeg
+      4. GET  /shop/v1/events/{id}/tickets-overview -> ticketGroups[{name, priceInCents}] -> reguliere online prijs
+    Lukt de sessie niet, dan valt de aanroeper terug op de JSON-LD van de shoppagina (type: jsonld)."""
+    root = f"{urlparse(base).scheme}://{urlparse(base).netloc}"
+    html = get(f"{root}/shop/default/events", delay=0.3).text
+    m = re.search(r'data-flags="([^"]+)"', html)
+    if not m:
+        raise ValueError("Stager: geen data-flags/shopId op de shoppagina")
+    import html as _html
+    flags = json.loads(_html.unescape(m.group(1)))
+    shop_id = flags.get("shopId")
+    r = SESSION.post(f"{root}/shop/v1/session/new", params={"shopId": shop_id, "locale": "NL", "hasOrderToken": "false"},
+                     json={}, timeout=TIMEOUT)
+    r.raise_for_status()
+    token = r.json()["accessToken"]["jwt"]
+    hdr = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    items = []
+    offset = 0
+    while offset < 2000:
+        rr = SESSION.get(f"{root}/shop/v1/events", params={"offset": offset, "limit": 20}, headers=hdr, timeout=TIMEOUT)
+        rr.raise_for_status()
+        chunk = rr.json()
+        if not isinstance(chunk, list) or not chunk:
+            break
+        items += chunk
+        offset += len(chunk)
+        time.sleep(0.3)
+    out = []
+    for it in items:
+        start = parse_dt(it.get("startsOn"))
+        if not start or not it.get("eventId"):
+            continue
+        url = f"{root}/shop/default/events/{it['eventId']}"
+        # prijs per event, één keer per dag gecached
+        ck = "stager|" + url
+        c = cache.get(ck)
+        if c and c.get("fetched") == TODAY.isoformat():
+            price = c.get("price")
+        else:
+            price = None
+            try:
+                tv = SESSION.get(f"{root}/shop/v1/events/{it['eventId']}/tickets-overview", headers=hdr, timeout=TIMEOUT)
+                time.sleep(0.25)
+                if tv.ok:
+                    price = _stager_price(tv.json().get("ticketGroups") or [])
+            except (requests.RequestException, ValueError):
+                pass
+            cache[ck] = {"fetched": TODAY.isoformat(), "price": price}
+        out.append(Event(venue=v["name"], city=v["city"], title=clean(it.get("name")) or "?", start=start.isoformat(timespec="minutes"),
+                         url=url, price=price, status="uitverkocht" if it.get("soldOut") else None, source="stager"))
+    return out
+
+
+def _stager_price(groups: list[dict]) -> str | None:
+    """Reguliere online prijs uit Stager-ticketgroepen: kortingsgroepen (leden, studenten, early bird, deur) vallen af als
+    er andere zijn; daarna 'voorverkoop/regulier' vóór de rest; alles 0 = gratis."""
+    cands = []
+    for g in groups:
+        if not isinstance(g, dict) or g.get("priceInCents") is None:
+            continue
+        cands.append((int(g.get("weight") or 0), g.get("name") or "", int(g["priceInCents"])))
+    if not cands:
+        return None
+    cands.sort()
+    paid = [c for c in cands if c[2] > 0]
+    if not paid:
+        return "gratis"
+    regular = [c for c in paid if not _DISCOUNT_CTX.search(c[1])] or paid
+    online = [c for c in regular if re.search(r"voorverkoop|vvk|presale|pre-?sale|online", c[1], re.I)]
+    pref = online or [c for c in regular if _PREFERRED_CTX.search(c[1])] or regular
+    return fmt_price(pref[0][2] / 100)
+
+
 # --- eventlinks volgen + JSON-LD op detailpagina --------------------------------
 
 NON_EVENT_PATH = re.compile(r"/page/?\d+/?$|/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|/agenda/(concerten|exposities?|expo|film|films|kids|jeugd|kidsjeugd|theater|cabaret|comedy|dans|workshops?|cursussen|festivals?|clubs?|party|feesten|overig|alles|all)/?$|\.(pdf|jpe?g|png|ics)$", re.I)
@@ -1606,14 +1685,14 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         return [], "disabled", "uitgeschakeld in venues.yaml", {}
 
     html = ""
-    if t not in ("tribe", "sitemap_detail", "json_api") and not (t == "html" and v.get("api")):
+    if t not in ("tribe", "sitemap_detail", "json_api", "stager") and not (t == "html" and v.get("api")):
         html = get(base, delay=float(v.get("crawl_delay", 0))).text
 
     order = {
         "auto": ["jsonld", "microdata", "embedded", "html_preset", "tribe", "wp_event", "jsonld_detail"],
         "microdata": ["microdata"],
         "jsonld": ["jsonld"], "embedded": ["embedded"], "nextdata": ["embedded"],
-        "tribe": ["tribe"], "wp_event": ["wp_event"], "json_api": ["json_api"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
+        "tribe": ["tribe"], "wp_event": ["wp_event"], "json_api": ["json_api"], "stager": ["stager"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
         "sitemap_detail": ["sitemap_detail"],
     }.get(t, [t])
     notes = []
@@ -1632,6 +1711,12 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 evs = strat_wp_event(v, base, cache)
             elif strat == "json_api":
                 evs = strat_json_api(v, base, cache)
+            elif strat == "stager":
+                try:
+                    evs = strat_stager(v, base, cache)
+                except Exception as ex:  # noqa: BLE001 — API veranderd? dan de JSON-LD van de shoppagina
+                    notes.append(f"stager-api: {type(ex).__name__} {str(ex)[:80]} -> JSON-LD")
+                    evs = strat_jsonld(v, html or get(base).text)
             elif strat == "jsonld_detail":
                 evs = strat_jsonld_detail(v, html, base, cache)
             elif strat == "html":
@@ -1691,7 +1776,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         for e in evs[:60]:
             shops.update(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (e.url or "") + " " + str(cache.get(e.url, {}).get("event") or "")))
         for slug in sorted(shops)[:2]:
-            src = {"url": f"https://{slug}.stager.co/shop/default/events", "type": "jsonld", "enrich": False}
+            src = {"url": f"https://{slug}.stager.co/shop/default/events", "type": "stager", "enrich": False}
             if src["url"] not in [x.get("url") for x in as_list(v.get("extra_sources") or [])]:
                 v = {**v, "extra_sources": as_list(v.get("extra_sources") or []) + [src]}
                 notes.append(f"ticketshop herkend: {slug}.stager.co")
@@ -1918,6 +2003,18 @@ def main(only: list[str] | None = None) -> int:
     with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8"))) as pool:
         results = list(pool.map(run_one, todo))
     for v, evs, strat, note, audit in results:
+        # volledigheidsindicatoren: weekenddekking (vr/za met minstens één event in de komende 8 weken, van 16) en horizon
+        # (verste datum). Een podium met 400+ plaatsen heeft normaal (bijna) elk weekend iets: minder dan 11/16 is verdacht dun.
+        wk_days = {e.start[:10] for e in evs if TODAY <= date.fromisoformat(e.start[:10]) < TODAY + timedelta(weeks=8)
+                   and date.fromisoformat(e.start[:10]).weekday() in (4, 5)}
+        horizon = max((e.start[:10] for e in evs), default=None)
+        audit = dict(audit or {})
+        audit["weekend"] = len(wk_days)
+        audit["horizon"] = horizon
+        cap = v.get("capacity") or 0
+        if evs and cap >= 400 and len(wk_days) < 11:
+            audit["thin"] = True
+            note = (note + "; " if note else "") + f"dun programma: {len(wk_days)}/16 weekenddagen met een event (podium van {cap} plaatsen)"
         report["venues"].append({"name": v["name"], "city": v["city"], "url": v["url"], "strategy": strat,
                                  "events": len(evs), "note": note, "ok": len(evs) > 0, "audit": audit})
         all_events.extend(evs)

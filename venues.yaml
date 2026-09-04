@@ -10,7 +10,8 @@
 # Pas als dat niets oplevert hoef je zelf iets in te vullen: type: html + CSS-selectors (zie README).
 #
 # Optionele velden:
-#   type          auto | jsonld | embedded | tribe | wp_event | json_api | jsonld_detail | sitemap_detail | html | disabled
+#   type          auto | jsonld | embedded | tribe | wp_event | json_api | stager | jsonld_detail | sitemap_detail | html | disabled
+#                 stager = Stager-ticketshop-API (<podium>.stager.co): alle komende events met tijd, prijs en uitverkocht-status
 #   api / items / fields / page_param   json_api: eigen JSON-eindpunt met veldafbeelding (zie fetch.strat_json_api)
 #   only_genres   alleen events met een van deze genres/typen houden (bijv. [Muziek, Clubnacht])
 #   time_is_local ISO-tijden van dit podium als Nederlandse lokale tijd lezen, ook al staat er +00:00/Z achter
@@ -238,7 +239,7 @@
   notes: "WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; de site toont maar ~3 weken vooruit (21 events), de Stager-ticketshop 50 events tot 3 maanden vooruit (JSON-LD ItemList) -> extra bron. Zonder lang=nl komt de Engelse versie (lang=en in links)"
   url: https://www.vera-groningen.nl/programma/?category=all&history=0&lang=nl
   extra_sources:
-    - {url: "https://vera.stager.co/shop/default/events", type: jsonld, enrich: false}
+    - {url: "https://vera.stager.co/shop/default/events", type: stager, enrich: false}
   category_pages:
     url: "https://www.vera-groningen.nl/programma/?category={slug}&history=0&lang=nl"
     tags: {concert: Concert, dansen: Clubnacht, festival: Festival, zienema: Film}
@@ -367,7 +368,7 @@
   api: "https://poppodiumboerderij.nl/includes/ajax/events.php?filters=&search=&limit=69420&offset=0&lang_id=1&rooms=2,1&month=&year="
   fields: {title: title, subtitle: subtitle, date: event_date, url: "https://poppodiumboerderij.nl/programma/{seo_slug}/", status: label.title}
   extra_sources:
-    - {url: "https://boerderij.stager.co/shop/default/events", type: jsonld, enrich: false}
+    - {url: "https://boerderij.stager.co/shop/default/events", type: stager, enrich: false}
   notes: agenda wordt via AJAX geladen (JSON met title/subtitle/event_date/seo_slug/stage); tijd en prijs staan op de eventpagina ("Deuren open 19:30 Aanvang 20:30 Voorverkoop € 29,50"); JSON-LD daar heeft een lege startDate
 - {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/", capacity: 220}
 - name: Rotown
@@ -444,7 +445,7 @@
   city: Tilburg
   url: https://hall-fame.stager.co/shop/default/events
   capacity: 400
-  type: jsonld
+  type: stager
   enrich: false
   notes: "site hall-fame.nl is een Nuxt-SPA zonder server-side eventdata (10 events live, detailpagina's leeg); de Stager-ticketshop heeft alle 43 komende events als JSON-LD ItemList (met tijd, zonder prijs). Event-URL's wijzen dus naar de ticketshop"
 - name: Muziekgieterij
@@ -604,7 +605,7 @@
   api: "https://www.so-what.nl/wp-json/wp/v2/event?per_page=100&_embed=1"
   genre_taxonomies: [customer_interest, event_type]
   extra_sources:
-    - {url: "https://so-what.stager.co/shop/default/events", type: jsonld, enrich: false}
+    - {url: "https://so-what.stager.co/shop/default/events", type: stager, enrich: false}
   notes: "Cloudflare weigert onze user-agent (403) -> browser-fallback; WP REST 'event' zonder datum, datum/tijd/prijs op de eventpagina ('Datum Sat 5 Sep 2026 Deuren open 22:30 Start 22:30 … Leden: € 5,00 Regulier: € 10,00 Voorverkoop Regulier: € 8,00'); Stager-shop als extra bron"
 - {name: Kroepoekfabriek, city: Vlaardingen, url: "https://kroepoekfabriek.nl/agenda/", capacity: 300}
 - {name: Manifesto, city: Hoorn, url: "https://manifesto-hoorn.nl/", capacity: 300}
