@@ -167,6 +167,11 @@ def classify_kind_ex(title: str, subtitle: str | None, raw_tags: list[str], genr
         return "talk", True
     if "kids" in genre_norm:
         return "other", True
+    # handmatige correcties uit genres.yaml (kind_tag_overrides) gaan vóór geleerde koppelingen
+    ov = _kind_overrides()
+    for t in tags:
+        if t in ov:
+            return ov[t], True
     # geleerde koppeling: een podiumtag die eerder consequent bij één type hoorde (bv. Tivoli "Kennis & Debat" -> talk)
     if learned:
         acc = learned.get("accepted", {})
@@ -188,18 +193,42 @@ def learn_kinds(learned: dict, raw_tags: list[str], kind: str) -> None:
             v[kind] = v.get(kind, 0) + 1
 
 
+NON_MUSIC_GROUPS = {"overig", "party", "kids", "comedy", "spokenword"}
+
+
+@lru_cache(maxsize=1)
+def _kind_overrides() -> dict:
+    y = yaml.safe_load((ROOT / "genres.yaml").read_text(encoding="utf-8"))
+    return {_fold(k): v for k, v in (y.get("kind_tag_overrides") or {}).items()}
+
+
 def promote_kinds(learned: dict, min_obs: int = 5, min_share: float = 0.85) -> int:
-    """Tags die >= min_obs keer zijn gezien en in >= min_share van de gevallen bij één type: vanaf nu bepalend."""
+    """Tags die >= min_obs keer zijn gezien en in >= min_share van de gevallen bij één type: vanaf nu bepalend.
+    Beveiligingen: een tag die zelf een muziekgenre is ("elektronische muziek", "live concert") leert nooit een
+    niet-muziektype; handmatige correcties in genres.yaml (kind_tag_overrides) gaan altijd voor."""
     accepted = learned.setdefault("accepted", {})
+    overrides = _kind_overrides()
     n = 0
+    for f in list(accepted):  # eerder geleerde koppelingen die tegen de beveiligingen ingaan, opruimen
+        g = normalize_tag(f)
+        if f in overrides or (g and g not in NON_MUSIC_GROUPS and accepted[f].get("kind") in ("talk", "other")):
+            del accepted[f]
     for f, v in learned.get("votes", {}).items():
         total = sum(v.values())
-        if total < min_obs or f in accepted:
+        if total < min_obs or f in accepted or f in overrides:
             continue
+        g = normalize_tag(f)
         k, c = max(v.items(), key=lambda x: x[1])
-        if c / total >= min_share and k != "concert":  # alleen niet-muziek leren; concert is al de standaard
+        if k == "concert":
+            continue  # concert is al de standaard
+        if g and g not in NON_MUSIC_GROUPS and k in ("talk", "other"):
+            continue  # een muziekgenre-tag kan geen talk/overig leren
+        if c / total >= min_share:
             accepted[f] = {"kind": k, "obs": total}
             n += 1
+    for f, k in overrides.items():  # handmatige correcties als vaste koppelingen (concert = geen koppeling nodig)
+        if k in ("club", "festival", "talk", "other"):
+            accepted[f] = {"kind": k, "obs": 0, "manual": True}
     return n
 
 

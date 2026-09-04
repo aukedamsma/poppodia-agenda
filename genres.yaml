@@ -100,6 +100,25 @@ kinds:
     strong: [clubnacht, afterparty, "silent disco", "dj set"]
     # zwakke termen (ook bandnamen: "Jungle By Night", "Two Door Cinema Club"): alleen als het event laat begint
     weak:   [club, night, nights, disco, sessions, dance, late]
+# Handmatige correcties op geleerde tag->type-koppelingen (state/kind_learn.json): deze winnen altijd.
+# concert = muziek; club/festival/talk/other = de andere typen.
+kind_tag_overrides:
+  "elektronische muziek": concert
+  "live concert": concert
+  "hardcore": concert          # het genre, geen feest
+  "drum & bass": concert       # genre-tag; een clubnacht blijkt uit titel/tijd
+  "jungle": concert
+  "dancehall": concert
+  "house": concert
+  "techno": concert
+  "electronic": concert
+  "hits": concert
+  "groovy": concert
+  "getting on stage": concert  # talentprogramma (SPOT): live muziek
+  "ppl gratis entree": concert
+  "presentatie": other
+  "voordracht": talk
+  "workshop": other
 # Aanvangstijd: een event dat om 23:00 of later begint is een feest, tenzij de titel/tags anders zeggen.
 kind_time:
   club_from: "23:00"
