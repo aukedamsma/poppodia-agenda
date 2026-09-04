@@ -29,6 +29,7 @@
   --warn:#E6A23C; --warn-soft:#3A2E17; --muted-strike:#6C6F79; --shadow:none; color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.4}
 a{color:inherit}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -74,6 +75,13 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
+.daynav{display:flex;gap:4px;align-items:center}
+.daynav input{font-size:13px;color:var(--ink)}
+.save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
+.save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
+.save:hover{color:var(--accent);background:var(--accent-soft)}
+.save[aria-pressed="true"]{color:var(--accent)} .save[aria-pressed="true"] svg{fill:currentColor}
+.card .g{padding-right:30px}
 /* dagen en kaartjes */
 main{padding:6px 0 60px}
 .day{padding:18px 0 6px}
@@ -126,7 +134,16 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     <button data-view="month" aria-pressed="false">30 dagen</button>
     <button data-view="all" aria-pressed="true">Alles</button>
     <button data-view="new" aria-pressed="false">Nieuw<span class="n" id="newCount"></span></button>
+    <button data-view="day" aria-pressed="false">Per dag</button>
+    <button data-view="saved" aria-pressed="false">Mijn lijstje<span class="n" id="savedCount"></span></button>
   </div>
+  <div class="daynav" id="daynav" hidden>
+    <button class="fbtn" id="prevDay" aria-label="Vorige dag">‹</button>
+    <input class="fbtn" type="date" id="dayPick">
+    <button class="fbtn" id="nextDay" aria-label="Volgende dag">›</button>
+    <button class="fbtn" id="todayBtn">Vandaag</button>
+  </div>
+  <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
   <div class="pop">
     <button class="fbtn" id="venueBtn" aria-expanded="false" aria-controls="venuePanel">Podia <span class="cnt" id="venueCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="venuePanel" hidden>
@@ -171,8 +188,13 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   const NEW_SINCE = plusDays(-7);
   const PAGE = 40; // dagen per keer renderen
 
-  let state = { view:'all', q:'', venuesOff:[], genres:[] };
+  let state = { view:'all', q:'', venuesOff:[], genres:[], day:TODAY };
+  let saved = new Set();
+  try { saved = new Set(JSON.parse(localStorage.getItem('podiumagenda_saved') || '[]')); } catch(e){}
+  const saveSaved = () => { try { localStorage.setItem('podiumagenda_saved', JSON.stringify([...saved])); } catch(e){} };
+  const keyOfEv = e => e.venue + '|' + e.url;
   try { Object.assign(state, JSON.parse(localStorage.getItem('podiumagenda2') || '{}')); } catch(e){}
+  if (!state.day || state.day < TODAY) state.day = TODAY;
   const save = () => { try { localStorage.setItem('podiumagenda2', JSON.stringify(state)); } catch(e){} };
   const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const fold = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -246,6 +268,8 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       const d=e.start.slice(0,10);
       if (d < TODAY || d > limit) return false;
       if (state.view==='new' && !isNew(e)) return false;
+      if (state.view==='day' && d !== state.day) return false;
+      if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
       if (state.venuesOff.includes(e.venue)) return false;
       if (state.genres.length && !(e.genres||[]).some(g=>state.genres.includes(g))) return false;
       if (qq && !fold([e.title,e.subtitle,e.venue,e.city,(e.genres||[]).join(' ')].join(' ')).includes(qq)) return false;
@@ -263,6 +287,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       ${e.subtitle?`<div class="s">${esc(e.subtitle)}</div>`:''}
       <div class="w"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
       ${(g||price)?`<div class="g">${g}${g&&price?' · ':''}${price}</div>`:''}
+      <button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
     </a>`;
   }
   function render(reset=true){
@@ -274,7 +299,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     document.getElementById('venueBtn').classList.toggle('active', !!state.venuesOff.length);
     document.getElementById('genreBtn').classList.toggle('active', !!state.genres.length);
     const list=document.getElementById('list');
-    if (!rows.length){ list.innerHTML='<p class="empty">Niets gevonden met deze filters.</p>'; return; }
+    if (!rows.length){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':state.view==='day'?'Geen concerten op deze dag met deze filters.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
     // groeperen per dag (in tab Nieuw: per aankondigdag, nieuwste eerst)
     const groups = new Map();
     const keyOf = state.view==='new' ? (e=>e.first_seen) : (e=>e.start.slice(0,10));
@@ -292,7 +317,41 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     if (keys.length>shownDays) html.push(`<button class="more" id="more">Meer dagen laden (${keys.length-shownDays} resterend)</button>`);
     list.innerHTML=html.join('');
     const more=document.getElementById('more'); if(more) more.addEventListener('click',()=>{ shownDays+=PAGE; render(false); });
+    wireSaves();
   }
+  function wireSaves(){
+    document.querySelectorAll('.save').forEach(b => b.addEventListener('click', ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      const k=b.dataset.key; if (saved.has(k)) saved.delete(k); else saved.add(k);
+      saveSaved(); b.setAttribute('aria-pressed', saved.has(k)); updateSavedCount();
+      if (state.view==='saved') render(false);
+    }));
+    updateSavedCount();
+    document.getElementById('daynav').hidden = state.view!=='day';
+    document.getElementById('exportSaved').hidden = state.view!=='saved' || !saved.size;
+  }
+  function updateSavedCount(){ const n=[...saved].filter(k=>EVENTS.some(e=>keyOfEv(e)===k && e.start.slice(0,10)>=TODAY)).length; document.getElementById('savedCount').textContent = n||''; }
+  // dag-navigatie
+  const dayPick=document.getElementById('dayPick'); dayPick.value=state.day; dayPick.min=TODAY;
+  const setDay = d => { state.day=d; dayPick.value=d; save(); render(); };
+  dayPick.addEventListener('change', ()=> setDay(dayPick.value||TODAY));
+  document.getElementById('prevDay').addEventListener('click', ()=>{ const d=new Date(state.day+'T12:00:00'); d.setDate(d.getDate()-1); if (isoOf(d)>=TODAY) setDay(isoOf(d)); });
+  document.getElementById('nextDay').addEventListener('click', ()=>{ const d=new Date(state.day+'T12:00:00'); d.setDate(d.getDate()+1); setDay(isoOf(d)); });
+  document.getElementById('todayBtn').addEventListener('click', ()=> setDay(TODAY));
+  // lijstje exporteren als .ics
+  document.getElementById('exportSaved').addEventListener('click', ()=>{
+    const rows=EVENTS.filter(e=>saved.has(keyOfEv(e)));
+    const pad=n=>String(n).padStart(2,'0'); const fmt=iso=>{ const d=new Date(iso); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00'; };
+    const escI=s=>String(s||'').replace(/([,;\\])/g,'\\$1');
+    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//podiumagenda//mijn lijstje//NL','X-WR-CALNAME:Mijn lijstje (podiumagenda)'];
+    rows.forEach(e=>{ const allDay=e.start.slice(11,16)==='00:00'||e.start.length<=10; const st=new Date(e.start.length<=10?e.start+'T20:00':e.start); const en=e.end?new Date(e.end):new Date(st.getTime()+3*3600e3);
+      lines.push('BEGIN:VEVENT','UID:'+keyOfEv(e).replace(/[^A-Za-z0-9]/g,'').slice(-60)+'@podiumagenda',
+        allDay?`DTSTART;VALUE=DATE:${e.start.slice(0,10).replace(/-/g,'')}`:`DTSTART;TZID=Europe/Amsterdam:${fmt(st)}`,
+        allDay?'':`DTEND;TZID=Europe/Amsterdam:${fmt(en)}`,
+        'SUMMARY:'+escI(e.title+' — '+e.venue),'LOCATION:'+escI(e.venue+', '+e.city),'URL:'+e.url,'END:VEVENT'); });
+    lines.push('END:VCALENDAR');
+    const blob=new Blob([lines.filter(Boolean).join('\r\n')],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='mijn-lijstje.ics'; a.click();
+  });
   render();
 })();
 </script>

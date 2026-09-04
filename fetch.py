@@ -15,6 +15,7 @@ Een falend podium blokkeert nooit de rest; de uitkomst per podium staat in data/
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -568,7 +569,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         if date.fromisoformat(c["fetched"]) > TODAY - timedelta(days=ttl):
             return Event(**c["event"]) if c.get("event") else None
     try:
-        html = get(url, delay=float(v.get("crawl_delay", 1.0))).text
+        html = get(url, delay=float(v.get("crawl_delay", 0.6))).text
     except requests.RequestException as ex:
         cache[url] = {"fetched": TODAY.isoformat(), "event": None, "error": str(ex)[:200]}
         return None
@@ -811,10 +812,7 @@ def main(only: list[str] | None = None) -> int:
 
     all_events: list[Event] = []
     report = {"generated": datetime.now().isoformat(timespec="seconds"), "venues": []}
-    for v in venues:
-        if only and v["name"] not in only:
-            continue
-        log(f"== {v['name']} ({v['city']})")
+    def run_one(v):
         t0 = time.time()
         try:
             evs, strat, note = fetch_venue(v, cache)
@@ -822,7 +820,15 @@ def main(only: list[str] | None = None) -> int:
             evs, strat, note = [], "error", f"{type(ex).__name__}: {str(ex)[:200]}"
             traceback.print_exc()
         evs = dedupe(evs)
-        log(f"   -> {len(evs)} events via {strat} ({time.time()-t0:.1f}s) {note}")
+        log(f"== {v['name']} ({v['city']}): {len(evs)} events via {strat} ({time.time()-t0:.0f}s) {note}")
+        return v, evs, strat, note
+
+    todo = [v for v in venues if not only or v["name"] in only]
+    # podia parallel (elk podium zelf netjes sequentieel met zijn eigen crawl_delay)
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8"))) as pool:
+        results = list(pool.map(run_one, todo))
+    for v, evs, strat, note in results:
         report["venues"].append({"name": v["name"], "city": v["city"], "url": v["url"], "strategy": strat,
                                  "events": len(evs), "note": note, "ok": len(evs) > 0})
         all_events.extend(evs)
