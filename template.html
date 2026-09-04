@@ -90,6 +90,39 @@ main{padding:6px 0 60px}
 .day{padding:18px 0 6px}
 .dayhead{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-size:24px;text-transform:uppercase;letter-spacing:.01em;line-height:1}
 .dayhead .rel{font-family:var(--sans);font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--accent);font-weight:600}
+.week{padding:18px 0 6px}
+.weekhead{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-size:20px;text-transform:uppercase;letter-spacing:.01em;line-height:1}
+.weekhead .rng{font-family:var(--sans);font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:400}
+.weekhead .cnt{font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
+.wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:start}
+.wcol{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px 4px;min-height:90px;box-shadow:var(--shadow);min-width:0}
+.wcol h3{font-size:12px;font-weight:600;margin:0 0 4px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:baseline}
+.wcol h3 .dn{font-size:11px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.wcol.today h3{color:var(--accent)}
+.wcol.past{opacity:.45}
+.wi{display:block;padding:5px 0;border-top:1px solid var(--line);font-size:12px;text-decoration:none;color:var(--ink);line-height:1.35;min-width:0}
+.wi .tt{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wi .tm{color:var(--ink-3);font-variant-numeric:tabular-nums;font-weight:400;margin-right:4px}
+.wi .vn{color:var(--ink-2);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wi.cancelled .tt{text-decoration:line-through;color:var(--muted-strike)}
+.wi .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:1px}
+.wi .bm{color:var(--accent);margin-right:3px}
+.month{padding:18px 0 6px}
+.mgrid{display:grid;grid-template-columns:28px repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mgrid > div{background:var(--card);min-width:0}
+.mgrid .mh{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;padding:6px 8px}
+.mgrid .wk{font-size:11px;color:var(--ink-3);padding:6px 4px;text-align:center;background:var(--paper)}
+.mcell{padding:5px 6px 6px;min-height:104px;display:flex;flex-direction:column;gap:2px}
+.mcell.out{background:var(--paper)} .mcell.out .dnum{color:var(--ink-3)} .mcell.past{opacity:.5}
+.mcell .dnum{font-size:12px;font-weight:600;color:var(--ink);text-decoration:none;align-self:flex-start;padding:1px 5px;border-radius:999px;margin-bottom:2px}
+.mcell.today .dnum{background:var(--accent);color:var(--accent-ink)}
+.mi{display:block;font-size:11.5px;line-height:1.3;color:var(--ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0}
+.mi .tm{color:var(--ink-3);font-variant-numeric:tabular-nums;margin-right:3px}
+.mi .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:1px}
+.mi.cancelled{text-decoration:line-through;color:var(--muted-strike)}
+.mi.plus{color:var(--accent);font-weight:600}
+.wcol h3 a{color:inherit;text-decoration:none} .wcol h3 a:hover{text-decoration:underline}
+.wcol .none{color:var(--ink-3);font-size:11.5px;padding:4px 0}
 .dayhead .cnt{font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .card{display:block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px 8px;text-decoration:none;box-shadow:var(--shadow);position:relative;min-width:0}
@@ -120,7 +153,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 .statuslist .how{color:var(--ink-3);margin-left:auto}
 
 @media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
-@media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .wgrid{grid-template-columns:1fr} .wcol{min-height:0} .mgrid{grid-template-columns:repeat(7,minmax(0,1fr))} .mgrid .wk{display:none} .mcell{min-height:60px} .mi{display:none} .mi.plus{display:block} }
 @media (max-width:560px){
   .grid{grid-template-columns:1fr} h1{font-size:32px} .meta{margin-left:0}
   .venues{grid-template-columns:1fr} .panel{left:auto;right:0;max-width:calc(100vw - 40px)} .count{display:none}
@@ -137,15 +170,14 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 
 <div class="bar" role="region" aria-label="Filters">
   <div class="tabs" role="group" aria-label="Weergave">
-    <button data-view="all" aria-pressed="true">Agenda</button>
+    <button data-view="all" aria-pressed="true">Per dag</button>
+    <button data-view="week" aria-pressed="false">Per week</button>
+    <button data-view="month" aria-pressed="false">Per maand</button>
     <button data-view="new" aria-pressed="false">Nieuw<span class="n" id="newCount"></span></button>
-    <button data-view="day" aria-pressed="false">Per dag</button>
     <button data-view="saved" aria-pressed="false">Mijn lijstje<span class="n" id="savedCount"></span></button>
   </div>
   <div class="daynav" id="daynav" hidden>
-    <button class="fbtn" id="prevDay" aria-label="Vorige dag">‹</button>
-    <input class="fbtn" type="date" id="dayPick">
-    <button class="fbtn" id="nextDay" aria-label="Volgende dag">›</button>
+    <input class="fbtn" type="date" id="dayPick" title="Spring naar dag">
     <button class="fbtn" id="todayBtn">Vandaag</button>
   </div>
   <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
@@ -216,6 +248,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   try { Object.assign(state, JSON.parse(localStorage.getItem('podiumagenda2') || '{}')); } catch(e){}
   if (['week','month'].includes(state.view)) state.view='all';
   if (!state.day || state.day < TODAY) state.day = TODAY;
+  if (state.view==='day') state.view='all';
   const save = () => { try { localStorage.setItem('podiumagenda2', JSON.stringify(state)); } catch(e){} };
   const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const fold = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -306,7 +339,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   REPORT.venues.forEach(v=>{ const li=document.createElement('li'); li.innerHTML=`<span class="${v.ok?'ok':'fail'}">${v.ok?'✓':'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+' · '+esc(v.strategy) : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`; li.title=v.note||''; st.append(li); });
 
   // render
-  let shownDays = PAGE;
+  let shownDays = PAGE; const PAGE_W = 8; let shownWeeks = PAGE_W; const PAGE_M = 3; let shownMonths = PAGE_M;
   function filtered(){
     const limit = '9999';
     const qq=fold(state.q).trim();
@@ -314,7 +347,6 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       const d=e.start.slice(0,10);
       if (d < TODAY || d > limit) return false;
       if (state.view==='new' && !isNew(e)) return false;
-      if (state.view==='day' && d !== state.day) return false;
       if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
       if (state.venuesOff.includes(e.venue)) return false;
       if (state.scope!=='all' && (e.section||'poppodium')!=='poppodium') return false;
@@ -343,7 +375,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     </a>`;
   }
   function render(reset=true){
-    if (reset) shownDays = PAGE;
+    if (reset) { shownDays = PAGE; shownWeeks = PAGE_W; shownMonths = PAGE_M; }
     const rows = filtered();
     document.getElementById('count').textContent = rows.length + (rows.length===1?' concert':' concerten');
     const vc=document.getElementById('venueCnt'); vc.hidden=!state.venuesOff.length; vc.textContent=REPORT.venues.length-state.venuesOff.length;
@@ -353,7 +385,9 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     document.getElementById('venueBtn').classList.toggle('active', !!state.venuesOff.length);
     document.getElementById('genreBtn').classList.toggle('active', !!(state.genres.length+state.subs.length));
     const list=document.getElementById('list');
-    if (!rows.length){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':state.view==='day'?'Geen concerten op deze dag met deze filters.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
+    if (!rows.length){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
+    if (state.view==='week'){ renderWeeks(rows, list); wireSaves(); return; }
+    if (state.view==='month'){ renderMonths(rows, list); wireSaves(); return; }
     // groeperen per dag (in tab Nieuw: per aankondigdag, nieuwste eerst)
     const groups = new Map();
     const keyOf = state.view==='new' ? (e=>e.first_seen) : (e=>e.start.slice(0,10));
@@ -366,13 +400,61 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       if (state.view==='new'){ label = k===TODAY ? 'vandaag aangekondigd' : k===plusDays(-1) ? 'gisteren aangekondigd' : `aangekondigd ${dt.getDate()} ${MON[dt.getMonth()]}`; }
       else { label=`${DOWL[dt.getDay()]} ${dt.getDate()} ${MON[dt.getMonth()]}${dt.getFullYear()!==today.getFullYear()?' '+dt.getFullYear():''}`; rel = k===TODAY?'vandaag':k===plusDays(1)?'morgen':''; }
       if (state.view==='new') evs.sort((a,b)=>a.start.localeCompare(b.start));
-      html.push(`<section class="day"><h2 class="dayhead">${label}${rel?` <span class="rel">${rel}</span>`:''}<span class="cnt">${evs.length}</span></h2><div class="grid">${evs.map(card).join('')}</div></section>`);
+      html.push(`<section class="day" id="${state.view==='new'?'n-':'d-'}${k}"><h2 class="dayhead">${label}${rel?` <span class="rel">${rel}</span>`:''}<span class="cnt">${evs.length}</span></h2><div class="grid">${evs.map(card).join('')}</div></section>`);
     });
     if (keys.length>shownDays) html.push(`<button class="more" id="more">Meer dagen laden (${keys.length-shownDays} resterend)</button>`);
     list.innerHTML=html.join('');
     const more=document.getElementById('more'); if(more) more.addEventListener('click',()=>{ shownDays+=PAGE; render(false); });
     wireSaves();
   }
+  function renderWeeks(rows, list){
+    const byDay = new Map(); rows.forEach(e=>{ const k=e.start.slice(0,10); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); });
+    const last = rows.reduce((m,e)=>e.start.slice(0,10)>m?e.start.slice(0,10):m, TODAY);
+    const mon = new Date(today); mon.setDate(mon.getDate() - ((mon.getDay()+6)%7));
+    const weeks=[]; for (let d=new Date(mon); isoOf(d)<=last; d.setDate(d.getDate()+7)) weeks.push(new Date(d));
+    const DOW=['ma','di','wo','do','vr','za','zo'];
+    const html=[];
+    weeks.slice(0,shownWeeks).forEach(w=>{
+      const days=[...Array(7)].map((_,i)=>{ const d=new Date(w); d.setDate(d.getDate()+i); return d; });
+      const total=days.reduce((n,d)=>n+(byDay.get(isoOf(d))||[]).length,0);
+      const a=days[0], b=days[6];
+      const rng=`${a.getDate()} ${MON[a.getMonth()]}${a.getMonth()!==b.getMonth()?'':''} – ${b.getDate()} ${MON[b.getMonth()]}${b.getFullYear()!==today.getFullYear()?' '+b.getFullYear():''}`;
+      const cols=days.map((d,i)=>{ const k=isoOf(d); const evs=byDay.get(k)||[];
+        const items = evs.length ? evs.map(e=>{ const t=e.start.length>10&&e.start.slice(11,16)!=='00:00'?e.start.slice(11,16):'';
+          return `<a class="wi${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener" title="${esc(e.title)} · ${esc(e.venue)}${e.price?' · '+esc(e.price):''}"><span class="tt">${saved.has(keyOfEv(e))?'<span class="bm">&#9873;</span>':''}${isNew(e)?'<span class="dot"></span>':''}${t?`<span class="tm">${t}</span>`:''}${esc(e.title)}</span><span class="vn">${esc(e.venue)} · ${esc(e.city)}</span></a>`; }).join('')
+          : '<div class="none">—</div>';
+        return `<div class="wcol${k===TODAY?' today':''}${k<TODAY?' past':''}"><h3><a href="#" data-goto="${k}" title="Open deze dag in Per dag">${DOW[i]} ${d.getDate()}</a>${k===TODAY?' <span class="dn">vandaag</span>':`<span class="dn">${evs.length||''}</span>`}</h3>${items}</div>`; }).join('');
+      html.push(`<section class="week"><h2 class="weekhead">week ${isoWeek(a)} <span class="rng">${rng}</span><span class="cnt">${total}</span></h2><div class="wgrid">${cols}</div></section>`);
+    });
+    if (weeks.length>shownWeeks) html.push(`<button class="more" id="more">Meer weken laden (${weeks.length-shownWeeks} resterend)</button>`);
+    list.innerHTML=html.join('');
+    const more=document.getElementById('more'); if(more) more.addEventListener('click',()=>{ shownWeeks+=PAGE_W; render(false); });
+  }
+  function renderMonths(rows, list){
+    const byDay = new Map(); rows.forEach(e=>{ const k=e.start.slice(0,10); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); });
+    const last = rows.reduce((m,e)=>e.start.slice(0,10)>m?e.start.slice(0,10):m, TODAY);
+    const months=[]; for (let m=new Date(today.getFullYear(),today.getMonth(),1); isoOf(m)<=last; m.setMonth(m.getMonth()+1)) months.push(new Date(m));
+    const MAX=4, html=[];
+    months.slice(0,shownMonths).forEach(m=>{
+      const first=new Date(m), start=new Date(m); start.setDate(1-((first.getDay()+6)%7));
+      const endM=new Date(m.getFullYear(),m.getMonth()+1,0); const end=new Date(endM); end.setDate(endM.getDate()+(7-((endM.getDay()+6)%7))%7);
+      let total=0; const weeks=[];
+      for (let d=new Date(start); d<=end; d.setDate(d.getDate()+7)){
+        const days=[...Array(7)].map((_,i)=>{ const x=new Date(d); x.setDate(x.getDate()+i); return x; });
+        const cells=days.map(x=>{ const k=isoOf(x); const evs=byDay.get(k)||[]; const inM=x.getMonth()===m.getMonth(); if(inM) total+=evs.length;
+          const items=evs.slice(0,MAX).map(e=>{ const t=e.start.length>10&&e.start.slice(11,16)!=='00:00'?e.start.slice(11,16):'';
+            return `<a class="mi${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener" title="${esc(e.title)} · ${esc(e.venue)}">${isNew(e)?'<span class="dot"></span>':''}${t?`<span class="tm">${t}</span>`:''}${esc(e.title)}</a>`; }).join('');
+          const more = evs.length>MAX ? `<a class="mi plus" href="#" data-goto="${k}">+ ${evs.length-MAX} meer</a>` : '';
+          return `<div class="mcell${inM?'':' out'}${k===TODAY?' today':''}${k<TODAY?' past':''}"><a class="dnum" href="#" data-goto="${k}">${x.getDate()}</a>${items}${more}</div>`; }).join('');
+        weeks.push(`<div class="wk">${isoWeek(days[0])}</div>${cells}`);
+      }
+      html.push(`<section class="month"><h2 class="weekhead">${MON[m.getMonth()]} ${m.getFullYear()}<span class="cnt">${total}</span></h2><div class="mgrid"><div class="wk"></div>${['ma','di','wo','do','vr','za','zo'].map(d=>`<div class="mh">${d}</div>`).join('')}${weeks.join('')}</div></section>`);
+    });
+    if (months.length>shownMonths) html.push(`<button class="more" id="more">Meer maanden laden (${months.length-shownMonths} resterend)</button>`);
+    list.innerHTML=html.join('');
+    const more=document.getElementById('more'); if(more) more.addEventListener('click',()=>{ shownMonths+=PAGE_M; render(false); });
+  }
+  function isoWeek(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-dn); const y=new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t-y)/864e5+1)/7); }
   function wireSaves(){
     document.querySelectorAll('.save').forEach(b => b.addEventListener('click', ev => {
       ev.preventDefault(); ev.stopPropagation();
@@ -381,17 +463,25 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       if (state.view==='saved') render(false);
     }));
     updateSavedCount();
-    document.getElementById('daynav').hidden = state.view!=='day';
+    document.getElementById('daynav').hidden = state.view!=='all';
     document.getElementById('exportSaved').hidden = state.view!=='saved' || !saved.size;
   }
   function updateSavedCount(){ const n=[...saved].filter(k=>EVENTS.some(e=>keyOfEv(e)===k && e.start.slice(0,10)>=TODAY)).length; document.getElementById('savedCount').textContent = n||''; }
   // dag-navigatie
   const dayPick=document.getElementById('dayPick'); dayPick.value=state.day; dayPick.min=TODAY;
-  const setDay = d => { state.day=d; dayPick.value=d; save(); render(); };
-  dayPick.addEventListener('change', ()=> setDay(dayPick.value||TODAY));
-  document.getElementById('prevDay').addEventListener('click', ()=>{ const d=new Date(state.day+'T12:00:00'); d.setDate(d.getDate()-1); if (isoOf(d)>=TODAY) setDay(isoOf(d)); });
-  document.getElementById('nextDay').addEventListener('click', ()=>{ const d=new Date(state.day+'T12:00:00'); d.setDate(d.getDate()+1); setDay(isoOf(d)); });
-  document.getElementById('todayBtn').addEventListener('click', ()=> setDay(TODAY));
+  // springen naar een dag in de weergave Per dag (ook vanuit week/maand)
+  function goToDay(d){
+    state.view='all'; state.day=d; dayPick.value=d; save();
+    document.querySelectorAll('.tabs [data-view]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view==='all'));
+    shownDays = PAGE; render(false);
+    let sec=document.getElementById('d-'+d);
+    while(!sec && document.getElementById('more')){ shownDays+=PAGE; render(false); sec=document.getElementById('d-'+d); }
+    if(!sec){ const all=[...document.querySelectorAll('.day[id]')]; sec=all.find(x=>x.id.slice(2)>=d)||all[all.length-1]; }
+    if(sec){ const y=sec.getBoundingClientRect().top+window.scrollY-document.querySelector('.bar').offsetHeight-8; window.scrollTo({top:y}); }
+  }
+  dayPick.addEventListener('change', ()=> goToDay(dayPick.value||TODAY));
+  document.getElementById('todayBtn').addEventListener('click', ()=> goToDay(TODAY));
+  document.getElementById('list').addEventListener('click', ev=>{ const j=ev.target.closest('[data-goto]'); if(j){ ev.preventDefault(); goToDay(j.dataset.goto); } });
   // lijstje exporteren als .ics
   document.getElementById('exportSaved').addEventListener('click', ()=>{
     const rows=EVENTS.filter(e=>saved.has(keyOfEv(e)));
