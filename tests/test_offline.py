@@ -270,6 +270,50 @@ def test_classify_kind():
 
 
 
+def test_category_pages_tags():
+    """Podiumfilters (Tivoli ?sf_genre=…): eventlinks per categorie -> tags vooraan in e.genres; paginering stopt bij 404."""
+    v = {"name": "Tivoli", "url": "https://www.tivolivredenburg.nl/agenda/", "link_pattern": r"tivolivredenburg\.nl/agenda/\d+/",
+         "crawl_delay": 0,
+         "category_pages": {"url": "https://www.tivolivredenburg.nl/agenda/?sf_genre={slug}",
+                            "paged": "https://www.tivolivredenburg.nl/agenda/page/{n}/?sf_genre={slug}",
+                            "tags": {"pop": "Pop", "kennis-debat": "Kennis & debat", "soul-funk-jazz": ["Soul", "Funk", "Jazz"]}}}
+    def page(links):
+        return "".join(f'<a href="https://www.tivolivredenburg.nl/agenda/{i}/">x</a>' for i in links)
+    class R:
+        def __init__(self, status, text=""): self.status_code = status; self.text = text
+    def fake_get(url, timeout=None):
+        if "sf_genre=pop" in url:
+            if "/page/" not in url: return R(200, page([101, 102]))
+            if "/page/2/" in url: return R(200, page([103]))
+            return R(404)
+        if "sf_genre=kennis-debat" in url:
+            return R(200, page([102])) if "/page/" not in url else R(404)
+        if "sf_genre=soul-funk-jazz" in url:
+            return R(200, page([104])) if "/page/" not in url else R(404)
+        return R(404)
+    class S:
+        headers = {}
+        def get(self, url, **kw): return fake_get(url)
+    old = fetch.SESSION; fetch.SESSION = S()
+    try:
+        cache = {}
+        cats = fetch.category_tags(v, cache)
+        assert cats["https://www.tivolivredenburg.nl/agenda/101"] == {"Pop"}
+        assert cats["https://www.tivolivredenburg.nl/agenda/102"] == {"Pop", "Kennis & debat"}
+        assert cats["https://www.tivolivredenburg.nl/agenda/103"] == {"Pop"}
+        assert cats["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
+        assert "catpages|Tivoli" in cache
+        evs = [fetch.Event(venue="Tivoli", city="Utrecht", title="A", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/102/", genres=["Live"]),
+               fetch.Event(venue="Tivoli", city="Utrecht", title="B", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/999/", genres=[])]
+        n = fetch.apply_category_tags(evs, cats)
+        assert n == 1 and evs[0].genres == ["Kennis & debat", "Pop", "Live"] and evs[1].genres == []
+        # tweede aanroep komt uit de cache (geen netwerk)
+        fetch.SESSION = None
+        assert fetch.category_tags(v, cache)["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
+    finally:
+        fetch.SESSION = old
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

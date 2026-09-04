@@ -43,6 +43,53 @@
   capacity: 2650
   notes: "JSON-LD MusicEvent per eventpagina; agenda is gepagineerd (~50 pagina's x 20), event-sitemap is leeg; WP REST afgeschermd"
   lineup: ".accordion__title h2"
+  # eigen genrefilters van Tivoli (agenda-zijbalk, ?sf_genre=…): de indeling van de programmeurs zelf, gepagineerd per 20
+  category_pages:
+    url: "https://www.tivolivredenburg.nl/agenda/?sf_genre={slug}"
+    paged: "https://www.tivolivredenburg.nl/agenda/page/{n}/?sf_genre={slug}"
+    max_pages: 40
+    tags:
+      pop: Pop
+      rock: Rock
+      indie: Indie
+      singer-songwriter: Singer-songwriter
+      roots-blues-americana: [Roots, Blues, Americana]
+      metal-punk-heavy: [Metal, Punk]
+      hiphop-rb-1: [Hiphop, R&B]
+      classic-pop-60s-90s: Classic pop
+      nederlands: Nederlandstalig
+      global-1-pop-rock: [Wereldmuziek, Pop, Rock]
+      soul-funk-jazz: [Soul, Funk, Jazz]
+      reggae-ska: [Reggae, Ska]
+      neoklassiek: Neoklassiek
+      electronic-1: Electronic
+      electronic: Electronic
+      house-techno: [House, Techno]
+      drum-n-bass-trap: [Drum & bass, Trap]
+      symfonisch: Symfonisch
+      kamermuziek: Kamermuziek
+      oude-muziek: Oude muziek
+      strijkkwartet: Strijkkwartet
+      vocaal: Vocaal
+      piano: Piano
+      viool-altviool-cello: Strijkers
+      blaasinstrumenten: Blaasinstrumenten
+      minimal-music: Minimal music
+      filmmuziek: Filmmuziek
+      nieuwe-muziek: Nieuwe muziek
+      jazz: Jazz
+      classics-80s-90s-00s: [Classics, 80s, 90s]
+      indie-pop-alternative: [Indie pop, Alternative]
+      hiphop-rb-soul: [Hiphop, R&B, Soul]
+      global-1: Wereldmuziek
+      koerdisch: Koerdisch
+      latijns-amerikaans-caribbean: [Latin, Caribbean]
+      turks: Turks
+      midden-oosten-noord-afrika: [Midden-Oosten, Noord-Afrika]
+      kennis-debat: Kennis & debat
+      familie: Familie
+      comedy: Comedy
+      lhbtqia: LHBTQIA+
 
 - name: EKKO
   city: Utrecht

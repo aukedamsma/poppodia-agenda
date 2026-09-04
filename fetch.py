@@ -1322,6 +1322,12 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 enrich_from_detail(v, evs, cache)
             except Exception as ex:  # noqa: BLE001
                 notes.append(f"enrich: {type(ex).__name__}")
+        if v.get("category_pages"):
+            try:
+                tagged = apply_category_tags(evs, category_tags(v, cache))
+                notes.append(f"{tagged} events getagd via podiumfilters")
+            except Exception as ex:  # noqa: BLE001
+                notes.append(f"podiumfilters: {type(ex).__name__} {str(ex)[:80]}")
         audit = {}
         try:
             audit = audit_venue(v, evs, cache)
@@ -1335,6 +1341,74 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             notes.append(f"{int(audit['many_late']*100)}% van de events begint na 23:00")
         return evs, strat, "; ".join(notes), audit
     return [], "none", "; ".join(notes), {}
+
+
+def category_tags(v: dict, cache: dict) -> dict[str, set[str]]:
+    """Podium-eigen genre-/typefilters als bron van tags (venues.yaml -> category_pages).
+
+    Veel podia hebben op hun agenda een filter per genre of type (Tivoli: ?sf_genre=pop, ?sf_genre=kennis-debat …).
+    Die indeling is door de programmeurs zelf gemaakt en dus betrouwbaarder dan woorden uit de beschrijving.
+    Per filter (slug) worden de overzichtspagina('s) opgehaald en de eventlinks verzameld; het resultaat is
+    eventurl -> {tags}. De tags gaan door dezelfde regels (genres.yaml) als andere podiumtags en sturen zo
+    hoofdgenre, subgenre én type (Muziek/Overig). Eén keer per dag per podium (cache-sleutel catpages|<podium>).
+
+      category_pages:
+        url:   "https://…/agenda/?sf_genre={slug}"            # eerste pagina
+        paged: "https://…/agenda/page/{n}/?sf_genre={slug}"   # optioneel: vervolgpagina's (n >= 2), stop bij 404/geen nieuwe links
+        max_pages: 30
+        tags: {pop: Pop, "kennis-debat": "Kennis & debat", "soul-funk-jazz": [Soul, Funk, Jazz]}
+    """
+    cfg = v.get("category_pages")
+    if not cfg or not cfg.get("url") or not cfg.get("tags"):
+        return {}
+    key = f"catpages|{v['name']}"
+    c = cache.get(key)
+    if c and c.get("fetched") == TODAY.isoformat() and c.get("map"):
+        return {u: set(t) for u, t in c["map"].items()}
+    base = v["url"]
+    out: dict[str, set[str]] = {}
+    delay = float(v.get("crawl_delay", 0.6))
+    pages_read = 0
+    for slug, labels in cfg["tags"].items():
+        labels = as_list(labels)
+        seen: set[str] = set()
+        for n in range(1, int(cfg.get("max_pages", 30)) + 1):
+            if n == 1:
+                page_url = cfg["url"].format(slug=slug)
+            elif cfg.get("paged"):
+                page_url = cfg["paged"].format(slug=slug, n=n)
+            else:
+                break
+            try:
+                r = SESSION.get(page_url, timeout=TIMEOUT)
+            except requests.RequestException:
+                break
+            time.sleep(delay)
+            if r.status_code != 200:
+                break
+            pages_read += 1
+            links = event_links(v, r.text, base)
+            new = [l for l in links if l not in seen]
+            if not new:
+                break
+            seen.update(new)
+            for l in new:
+                out.setdefault(l.rstrip("/"), set()).update(labels)
+    log(f"    podiumfilters: {len(cfg['tags'])} categorieën, {pages_read} pagina's, {len(out)} events getagd")
+    cache[key] = {"fetched": TODAY.isoformat(), "map": {u: sorted(t) for u, t in out.items()}}
+    return out
+
+
+def apply_category_tags(evs: list[Event], cats: dict[str, set[str]]) -> int:
+    """Voegt de podiumfilter-tags toe aan e.genres (vooraan: ze zijn betrouwbaarder dan tekst-hints). Geeft aantal getagde events."""
+    n = 0
+    for e in evs:
+        tags = cats.get((e.url or "").rstrip("/"))
+        if not tags:
+            continue
+        n += 1
+        e.genres = sorted(tags) + [g for g in e.genres if g not in tags]
+    return n
 
 
 def dedupe(events: list[Event]) -> list[Event]:
