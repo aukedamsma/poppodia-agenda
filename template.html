@@ -180,9 +180,9 @@ main{padding:6px 0 60px}
 .badge.status{background:var(--warn-soft);color:var(--warn)}
 .card.cancelled .t{text-decoration:line-through;color:var(--muted-strike)}
 .empty{padding:60px 0;text-align:center;color:var(--ink-3)}
-.bigsearch{display:flex;align-items:center;gap:10px;margin:14px auto 6px;max-width:640px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;box-shadow:var(--shadow);color:var(--ink-3)}
-.bigsearch input{flex:1;font:inherit;font-size:16px;border:0;background:transparent;color:var(--ink);outline:none}
-.srch .hint{text-align:center;color:var(--ink-3);font-size:12.5px;margin:4px 0 6px}
+.anav{padding:2px 10px}
+.asearch{display:flex;align-items:center;gap:8px;color:var(--ink-3);height:31px;width:340px}
+.asearch input{flex:1;font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--ink);outline:none}
 .srch .dayhead{font-family:var(--sans);text-transform:none;font-weight:600;font-size:16px;letter-spacing:0}
 .more{display:block;margin:24px auto 0;padding:9px 18px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-weight:500}
 
@@ -231,6 +231,7 @@ button:focus-visible{outline:none}
     <button data-view="search" aria-pressed="false" class="ico" aria-label="Artiesten zoeken" title="Artiesten zoeken"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></button>
     <button data-view="saved" aria-pressed="false" class="ico" aria-label="Mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg><span class="n" id="savedCount"></span></button>
   </div>
+  <div class="tabs anav" id="artistnav" hidden><label class="asearch"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><input id="aq" type="search" placeholder="Zoek een artiest in de hele agenda…" autocomplete="off"></label></div>
   <div class="tabs pnav" id="periodnav" hidden>
     <button id="prevP" aria-label="Vorige">‹</button>
     <button id="nextP" aria-label="Volgende">›</button>
@@ -508,18 +509,16 @@ button:focus-visible{outline:none}
   // artiesten zoeken: hele agenda, gegroepeerd per artiest
   function renderSearch(rows, list){
     const q=fold(state.aq||'').trim();
-    let html=`<section class="srch"><label class="bigsearch"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><input id="aq" type="search" placeholder="Zoek een artiest in de hele agenda…" autocomplete="off" value="${esc(state.aq||'')}"></label>`;
-    if (q.length<2){ html+=`<p class="empty">Typ minstens twee letters. Je zoekt in alle artiesten van alle podia, ongeacht datum.</p></section>`; list.innerHTML=html; wireSearch(); return; }
+    if (q.length<2){ list.innerHTML='<p class="empty">Typ minstens twee letters in het zoekveld bovenin. Je zoekt in alle artiesten van alle podia, ongeacht datum.</p>'; return; }
     const byArtist=new Map();
     rows.forEach(e=>{ const names=(e.artists&&e.artists.length)?e.artists:[e.title]; names.forEach(a=>{ if(fold(a).includes(q)){ const k=fold(a); if(!byArtist.has(k)) byArtist.set(k,{name:a,evs:[]}); const g=byArtist.get(k); if(a!==a.toUpperCase() && g.name===g.name.toUpperCase()) g.name=a; g.evs.push(e); } }); });
     const groups=[...byArtist.values()].sort((a,b)=>b.evs.length-a.evs.length||a.name.localeCompare(b.name,'nl')).slice(0,40);
-    if (!groups.length){ html+=`<p class="empty">Geen artiest gevonden voor "${esc(state.aq)}".</p></section>`; list.innerHTML=html; wireSearch(); return; }
-    html+=`<p class="hint">${groups.length} artiest${groups.length===1?'':'en'} · ${groups.reduce((n,g)=>n+g.evs.length,0)} concerten</p>`;
+    if (!groups.length){ list.innerHTML=`<p class="empty">Geen artiest gevonden voor "${esc(state.aq)}".</p>`; return; }
+    let html='<section class="srch">';
     groups.forEach(g=>{ g.evs.sort((a,b)=>a.start.localeCompare(b.start)); html+=`<section class="day"><h2 class="dayhead">${esc(g.name)}<span class="cnt">${g.evs.length}</span></h2><div class="grid">${g.evs.map(card).join('')}</div></section>`; });
-    list.innerHTML=html+'</section>'; wireSearch();
+    list.innerHTML=html+'</section>';
   }
-  function wireSearch(){ const i=document.getElementById('aq'); if(!i) return; i.focus(); i.setSelectionRange(i.value.length,i.value.length);
-    let t; i.addEventListener('input',()=>{ state.aq=i.value; save(); clearTimeout(t); t=setTimeout(()=>render(false),160); }); }
+  (function(){ const i=document.getElementById('aq'); i.value=state.aq||''; let t; i.addEventListener('input',()=>{ state.aq=i.value; save(); clearTimeout(t); t=setTimeout(()=>render(false),160); }); })();
   function renderWeeks(rows, list){
     const byDay = new Map(); rows.forEach(e=>{ const k=e.start.slice(0,10); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); });
     const last = rows.reduce((m,e)=>e.start.slice(0,10)>m?e.start.slice(0,10):m, TODAY);
@@ -587,7 +586,8 @@ button:focus-visible{outline:none}
     updateSavedCount();
     document.getElementById('daynav').hidden = state.view!=='all';
     document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
-document.querySelector('.search').hidden = state.view==='search';
+    document.querySelector('.search').hidden = state.view==='search';
+    const an=document.getElementById('artistnav'); const wasHidden=an.hidden; an.hidden = state.view!=='search'; if (!an.hidden && wasHidden) setTimeout(()=>document.getElementById('aq').focus(),0);
     const pl=document.getElementById('plabel');
     if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = DOWS[dd.getDay()]; }
     if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getDate()} ${MONS[d0.getMonth()]} – ${d6.getDate()} ${MONS[d6.getMonth()]}</small>`; pl.hidden=false; }
