@@ -1,0 +1,134 @@
+# Poppodia die de agenda volgt.
+#
+# Een podium toevoegen = een blok met minimaal `name`, `city` en `url` (de agendapagina).
+# Zonder `type` (of met type: auto) probeert de fetcher automatisch, in deze volgorde:
+#   jsonld         schema.org Event-objecten op de agendapagina zelf
+#   embedded       JSON in de pagina (__NEXT_DATA__, Angular ng-state, andere application/json)
+#   tribe          The Events Calendar API (/wp-json/tribe/events/v1/events)
+#   wp_event       WordPress REST API voor het event-posttype
+#   jsonld_detail  eventlinks op de agendapagina volgen en per eventpagina de JSON-LD lezen
+# Pas als dat niets oplevert hoef je zelf iets in te vullen: type: html + CSS-selectors (zie README).
+#
+# Optionele velden:
+#   type          auto | jsonld | embedded | tribe | wp_event | jsonld_detail | html | disabled
+#   api           expliciete API-URL (tribe / wp_event)
+#   list_pages    extra overzichtspagina's (bijv. paginering) voor jsonld_detail
+#   link_pattern  regex waaraan eventlinks moeten voldoen (jsonld_detail)
+#   max_detail    max. aantal eventpagina's per run (jsonld_detail; standaard 80, gecached 10 dagen)
+#   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
+#   min_events    minimum aantal events voordat een strategie als geslaagd geldt (standaard 3)
+#   item/title/date/link/genre/subtitle  CSS-selectors voor type: html
+#   date_from_url true -> haal DD-MM-YYYY (of DD-MM-YY) uit de event-URL als datum ontbreekt
+#   notes         vrije opmerking, wordt niet gebruikt
+
+# ---------------- Utrecht ----------------
+- name: TivoliVredenburg
+  city: Utrecht
+  url: https://www.tivolivredenburg.nl/agenda/
+  type: jsonld_detail
+  list_pages:
+    - https://www.tivolivredenburg.nl/agenda/
+    - https://www.tivolivredenburg.nl/agenda/page/2/
+    - https://www.tivolivredenburg.nl/agenda/page/3/
+    - https://www.tivolivredenburg.nl/agenda/page/4/
+    - https://www.tivolivredenburg.nl/agenda/page/5/
+  link_pattern: "tivolivredenburg\\.nl/agenda/\\d+/"
+  max_detail: 250
+  notes: JSON-LD MusicEvent per eventpagina; WP REST is afgeschermd (401)
+
+- name: EKKO
+  city: Utrecht
+  url: https://www.ekko.nl/agenda/
+  type: wp_event
+  api: https://www.ekko.nl/wp-json/wp/v2/event?per_page=100&lang=nl&_embed=1
+  notes: datum in acf.date_time
+
+- name: dB's
+  city: Utrecht
+  url: https://www.dbstudio.nl/agenda/
+  type: tribe
+  api: https://www.dbstudio.nl/wp-json/tribe/events/v1/events
+  notes: The Events Calendar; genres als categorieën
+
+- name: De Helling
+  city: Utrecht
+  url: https://www.dehelling.nl/agenda/
+  type: jsonld
+  notes: ~70 Event-objecten als JSON-LD op de agendapagina
+
+# ---------------- Amsterdam ----------------
+- name: Melkweg
+  city: Amsterdam
+  url: https://www.melkweg.nl/nl/agenda
+  type: embedded
+  notes: __NEXT_DATA__ met alle events (incl. tags, status, announcedAt)
+
+- name: Bitterzoet
+  city: Amsterdam
+  url: https://www.bitterzoet.com/agenda/
+  type: wp_event
+  api: https://www.bitterzoet.com/wp-json/wp/v2/event?per_page=100
+  max_detail: 60
+  notes: API geeft alleen titel/URL; datum wordt van de eventpagina gelezen (gecached)
+
+- name: Paradiso
+  city: Amsterdam
+  url: https://www.paradiso.nl/
+  type: disabled
+  notes: v2 — Next.js/GraphQL zonder JSON-LD; vraagt eigen fetcher of headless browser
+
+- name: Tolhuistuin
+  city: Amsterdam
+  url: https://tolhuistuin.nl/agenda
+  type: disabled
+  notes: v2 — Vue-app, datum alleen als dagkop zonder jaar; vraagt headless browser
+
+# ---------------- Landelijk ----------------
+- name: "013"
+  city: Tilburg
+  url: https://www.013.nl/programma
+  type: jsonld_detail
+  link_pattern: "013\\.nl/programma/\\d+/"
+  max_detail: 200
+  notes: JSON-LD MusicEvent per eventpagina (Craft CMS)
+
+- name: Doornroosje
+  city: Nijmegen
+  url: https://www.doornroosje.nl/programma/
+  type: jsonld_detail
+  link_pattern: "doornroosje\\.nl/event/[^/]+/?$"
+  max_detail: 250
+  notes: JSON-LD Event per eventpagina; WP REST heeft geen event-type
+
+- name: Patronaat
+  city: Haarlem
+  url: https://www.patronaat.nl/programma/
+  type: html
+  item: ".event-program"
+  title: ".event-program__name"
+  date: ".event-program__date"
+  link: ".event-program__name a"
+  subtitle: ".event-program__subtitle"
+  genre: ".event-program__genres, .event-program__tags, .event-program__labels"
+  date_from_url: true
+  crawl_delay: 10
+  notes: geen JSON-LD, nette BEM-classes; robots.txt vraagt crawl-delay
+
+- name: PAARD
+  city: Den Haag
+  url: https://www.paard.nl/event/
+  type: jsonld
+  notes: /agenda is leeg zonder JS, maar /event/ bevat alle ~170 events als JSON-LD
+
+- name: Hedon
+  city: Zwolle
+  url: https://www.hedon-zwolle.nl/
+  type: embedded
+  url_template: "https://www.hedon-zwolle.nl/voorstelling/{id}"
+  notes: Angular ng-state JSON met alle events (eventDate, genres, price, publishFromDate)
+
+- name: Effenaar
+  city: Eindhoven
+  url: https://www.effenaar.nl/agenda
+  type: embedded
+  notes: __NEXT_DATA__ (react-query) met alle events; date.machine + times.starts_at
