@@ -1150,7 +1150,7 @@ def strat_jsonld_detail(v: dict, html: str, base: str, cache: dict) -> list[Even
         seen_links = set(event_links(v, html, base))
         for n in range(2, int(v.get("list_pages_max", 60)) + 1):
             try:
-                r = SESSION.get(v["list_pages_template"].format(n=n), timeout=TIMEOUT)
+                r = SESSION.get(v["list_pages_template"].format(n=n + int(v.get("list_pages_offset", 0))), timeout=TIMEOUT)
             except requests.RequestException:
                 break
             time.sleep(float(v.get("crawl_delay", 0.6)))
@@ -1324,8 +1324,10 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 notes.append(f"enrich: {type(ex).__name__}")
         if v.get("category_pages"):
             try:
-                tagged = apply_category_tags(evs, category_tags(v, cache))
-                notes.append(f"{tagged} events getagd via podiumfilters")
+                cats, excl = category_tags(v, cache)
+                before = len(evs)
+                evs, tagged = apply_category_tags(evs, cats, excl)
+                notes.append(f"{tagged} events getagd via podiumfilters" + (f", {before - len(evs)} uitgesloten (andere locatie)" if before != len(evs) else ""))
             except Exception as ex:  # noqa: BLE001
                 notes.append(f"podiumfilters: {type(ex).__name__} {str(ex)[:80]}")
         audit = {}
@@ -1343,40 +1345,49 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     return [], "none", "; ".join(notes), {}
 
 
-def category_tags(v: dict, cache: dict) -> dict[str, set[str]]:
-    """Podium-eigen genre-/typefilters als bron van tags (venues.yaml -> category_pages).
+def category_tags(v: dict, cache: dict) -> tuple[dict[str, set[str]], set[str]]:
+    """Podium-eigen genre-/type-/locatiefilters als bron van tags (venues.yaml -> category_pages).
 
-    Veel podia hebben op hun agenda een filter per genre of type (Tivoli: ?sf_genre=pop, ?sf_genre=kennis-debat …).
-    Die indeling is door de programmeurs zelf gemaakt en dus betrouwbaarder dan woorden uit de beschrijving.
-    Per filter (slug) worden de overzichtspagina('s) opgehaald en de eventlinks verzameld; het resultaat is
-    eventurl -> {tags}. De tags gaan door dezelfde regels (genres.yaml) als andere podiumtags en sturen zo
-    hoofdgenre, subgenre én type (Muziek/Overig). Eén keer per dag per podium (cache-sleutel catpages|<podium>).
+    Veel podia hebben op hun agenda een filter per genre, type of locatie (Tivoli: ?sf_genre=pop, Doornroosje: ?genre=metal
+    en ?location=de-vereeniging, FLUOR: /programma/categorie/dance/). Die indeling is door de programmeurs zelf gemaakt en
+    dus betrouwbaarder dan woorden uit de beschrijving. Per filter (slug) worden de overzichtspagina('s) opgehaald en de
+    eventlinks verzameld. Resultaat: (eventurl -> {tags}, uit te sluiten eventurls). De tags gaan door dezelfde regels
+    (genres.yaml) als andere podiumtags en sturen zo hoofdgenre, subgenre én type (Muziek/Overig); `exclude`-slugs
+    (bv. een locatiefilter voor een ander gebouw dat al als eigen podium in venues.yaml staat) verwijderen events.
+    Eén keer per dag per podium gecached (cache-sleutel catpages|<podium>). Eén filtergroep of een lijst:
 
       category_pages:
-        url:   "https://…/agenda/?sf_genre={slug}"            # eerste pagina
-        paged: "https://…/agenda/page/{n}/?sf_genre={slug}"   # optioneel: vervolgpagina's (n >= 2), stop bij 404/geen nieuwe links
-        max_pages: 30
-        tags: {pop: Pop, "kennis-debat": "Kennis & debat", "soul-funk-jazz": [Soul, Funk, Jazz]}
+        - url:   "https://…/programma/?genre={slug}"            # eerste pagina
+          paged: "https://…/programma/page/{n}/?genre={slug}"   # optioneel: vervolgpagina's (n >= 2); stop bij 404/geen nieuwe links
+          max_pages: 30
+          link_pattern: "…"                                     # optioneel: alleen voor deze pagina's (anders die van het podium)
+          tags: {pop: Pop, "kennis-debat": "Kennis & debat", "soul-funk-jazz": [Soul, Funk, Jazz]}
+        - url: "https://…/programma/?location={slug}"
+          exclude: [de-vereeniging, waalhalla]
     """
-    cfg = v.get("category_pages")
-    if not cfg or not cfg.get("url") or not cfg.get("tags"):
-        return {}
+    cfgs = as_list(v.get("category_pages") or [])
+    cfgs = [c for c in cfgs if c.get("url") and (c.get("tags") or c.get("exclude"))]
+    if not cfgs:
+        return {}, set()
     key = f"catpages|{v['name']}"
     c = cache.get(key)
-    if c and c.get("fetched") == TODAY.isoformat() and c.get("map"):
-        return {u: set(t) for u, t in c["map"].items()}
+    if c and c.get("fetched") == TODAY.isoformat() and "map" in c:
+        return {u: set(t) for u, t in c["map"].items()}, set(c.get("exclude", []))
     base = v["url"]
     out: dict[str, set[str]] = {}
+    excl: set[str] = set()
     delay = float(v.get("crawl_delay", 0.6))
-    pages_read = 0
-    for slug, labels in cfg["tags"].items():
-        labels = as_list(labels)
+    pages_read = n_cat = 0
+
+    def links_for(cfg: dict, slug: str) -> set[str]:
+        nonlocal pages_read
+        vv = dict(v, link_pattern=cfg["link_pattern"]) if cfg.get("link_pattern") else v
         seen: set[str] = set()
         for n in range(1, int(cfg.get("max_pages", 30)) + 1):
             if n == 1:
                 page_url = cfg["url"].format(slug=slug)
             elif cfg.get("paged"):
-                page_url = cfg["paged"].format(slug=slug, n=n)
+                page_url = cfg["paged"].format(slug=slug, n=n + int(cfg.get("page_offset", 0)))
             else:
                 break
             try:
@@ -1387,28 +1398,41 @@ def category_tags(v: dict, cache: dict) -> dict[str, set[str]]:
             if r.status_code != 200:
                 break
             pages_read += 1
-            links = event_links(v, r.text, base)
-            new = [l for l in links if l not in seen]
+            new = [l for l in event_links(vv, r.text, base) if l not in seen]
             if not new:
                 break
             seen.update(new)
-            for l in new:
-                out.setdefault(l.rstrip("/"), set()).update(labels)
-    log(f"    podiumfilters: {len(cfg['tags'])} categorieën, {pages_read} pagina's, {len(out)} events getagd")
-    cache[key] = {"fetched": TODAY.isoformat(), "map": {u: sorted(t) for u, t in out.items()}}
-    return out
+        return {l.rstrip("/") for l in seen}
+
+    for cfg in cfgs:
+        for slug, labels in (cfg.get("tags") or {}).items():
+            n_cat += 1
+            for l in links_for(cfg, slug):
+                out.setdefault(l, set()).update(as_list(labels))
+        for slug in as_list(cfg.get("exclude") or []):
+            n_cat += 1
+            excl.update(links_for(cfg, slug))
+    log(f"    podiumfilters: {n_cat} categorieën, {pages_read} pagina's, {len(out)} events getagd, {len(excl)} uitgesloten")
+    cache[key] = {"fetched": TODAY.isoformat(), "map": {u: sorted(t) for u, t in out.items()}, "exclude": sorted(excl)}
+    return out, excl
 
 
-def apply_category_tags(evs: list[Event], cats: dict[str, set[str]]) -> int:
-    """Voegt de podiumfilter-tags toe aan e.genres (vooraan: ze zijn betrouwbaarder dan tekst-hints). Geeft aantal getagde events."""
+def apply_category_tags(evs: list[Event], cats: dict[str, set[str]], exclude: set[str] | None = None) -> tuple[list[Event], int]:
+    """Voegt de podiumfilter-tags toe aan e.genres (vooraan: ze zijn betrouwbaarder dan tekst-hints) en verwijdert
+    uitgesloten events. Geeft (events, aantal getagde events)."""
     n = 0
+    kept = []
     for e in evs:
-        tags = cats.get((e.url or "").rstrip("/"))
+        u = (e.url or "").rstrip("/")
+        if exclude and u in exclude:
+            continue
+        kept.append(e)
+        tags = cats.get(u)
         if not tags:
             continue
         n += 1
         e.genres = sorted(tags) + [g for g in e.genres if g not in tags]
-    return n
+    return kept, n
 
 
 def dedupe(events: list[Event]) -> list[Event]:

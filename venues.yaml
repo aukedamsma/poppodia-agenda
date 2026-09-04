@@ -20,6 +20,8 @@
 #   detail_ttl_days  hoe lang een gelezen eventpagina in de cache blijft (standaard 10)
 #   api           expliciete API-URL (tribe / wp_event)
 #   list_pages    extra overzichtspagina's (bijv. paginering) voor jsonld_detail
+#   list_pages_template / list_pages_max / list_pages_offset   paginering: URL met {n} (n=2,3,… + offset), tot 404 of geen nieuwe links
+#   category_pages  eigen genre-/type-/locatiefilters van het podium als tagbron (zie fetch.category_tags en README)
 #   link_pattern  regex waaraan eventlinks moeten voldoen (jsonld_detail)
 #   max_detail    max. aantal eventpagina's per run (jsonld_detail; standaard 80, gecached 10 dagen)
 #   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
@@ -172,6 +174,14 @@
   max_detail: 250
   time_is_local: true
   notes: JSON-LD Event per eventpagina; startDate is lokale tijd met foutieve +00:00 (anders 1-2 uur te laat)
+  # eigen filters (?genre=, ?location=); Doornroosje programmeert ook in De Vereeniging en het Goffert (eigen podia in deze lijst)
+  category_pages:
+    - url: "https://www.doornroosje.nl/programma/?genre={slug}"
+      tags: {pop: Pop, rock: Rock, hip-hop: Hiphop, metal: Metal, folk: Folk, singer-songwriter: Singer-songwriter, punk: Punk,
+             soul: Soul, jazz: Jazz, reggae: Reggae, at-night: Clubnacht, latin: Latin, neo-klassiek-2: Neoklassiek, roots: Roots,
+             house: House, techno: Techno, afro: Afro, amapiano: Amapiano, disco-2: Disco, drum-bass: "Drum & bass"}
+    - url: "https://www.doornroosje.nl/programma/?location={slug}"
+      exclude: [de-vereeniging, openluchttheater-de-goffert]
 
 - name: Patronaat
   city: Haarlem
@@ -222,6 +232,9 @@
   title: ".artist"
   date: ".date"
   notes: WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; datum Engels zonder jaar
+  category_pages:
+    url: "https://www.vera-groningen.nl/programma/?category={slug}&history=0&lang=nl"
+    tags: {concert: Concert, dansen: Clubnacht, festival: Festival, zienema: Film}
 - name: Simplon
   city: Groningen
   capacity: 600
@@ -252,7 +265,13 @@
 - {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", capacity: 500, type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
 - {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma", capacity: 450}
 - {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda", capacity: 1000}
-- {name: FLUOR, city: Amersfoort, url: "https://fluor033.nl/programma/", capacity: 800}
+- name: FLUOR
+  city: Amersfoort
+  url: https://fluor033.nl/programma/
+  capacity: 800
+  category_pages:
+    url: "https://fluor033.nl/programma/categorie/{slug}/"
+    tags: {concerten: Concert, dance: Clubnacht, en-de-rest: Overig}
 - {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
 - {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda", capacity: 680}
 - {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl", capacity: 1100}
@@ -369,11 +388,61 @@
 - {name: PX, city: Volendam, url: "https://pxvolendam.nl/evenementen/"}
 - {name: De Gelderlandfabriek, city: Culemborg, url: "https://degelderlandfabriek.nl/agenda/", capacity: 410}
 - {name: Bolwerk (Poort), city: Sneek, url: "https://ontdekpoort.nl/programma/", capacity: 650, notes: "Bolwerk is opgegaan in Poort; programma gecombineerd met theater"}
-- {name: "'t Beest", city: Goes, url: "https://tbeest.nl/evenementen/", capacity: 450}
+- name: "'t Beest"
+  city: Goes
+  url: https://tbeest.nl/evenementen/
+  capacity: 450
+  category_pages:
+    url: "https://tbeest.nl/evenementen/?category={slug}"
+    link_pattern: "tbeest\\.nl/productie/[^/?#]+/?$"
+    tags: {concert: Concert, dance: Clubnacht, film: Film, overige: Overig}
 - {name: De Pul, city: Uden, url: "https://www.livepul.com/agenda", capacity: 750}
 - {name: De Piek, city: Vlissingen, url: "https://depiek.nl/", capacity: 200}
 - {name: Estrado, city: Harderwijk, url: "https://www.estrado.nl/agenda", capacity: 420}
-- {name: Volt, city: Sittard, url: "https://www.poppodium-volt.nl/programma", capacity: 600}
+- name: Volt
+  city: Sittard
+  url: https://www.poppodium-volt.nl/programma
+  capacity: 600
+  type: jsonld_detail
+  link_pattern: "poppodium-volt\\.nl/activiteit/[^/?#]+"
+  list_pages_template: "https://www.poppodium-volt.nl/programma?page={n}"
+  list_pages_offset: -1        # Drupal: ?page=1 is de tweede pagina
+  notes: Drupal met facetfilters (?f[0]=activity_type:21); 24 events per pagina
+  category_pages:
+    url: "https://www.poppodium-volt.nl/programma?f[0]={slug}"
+    paged: "https://www.poppodium-volt.nl/programma?f[0]={slug}&page={n}"
+    page_offset: -1
+    tags:
+      "activity_type:21": Clubnacht
+      "activity_type:35": Pubquiz
+      "activity_itix_genres:67": Alternative rock
+      "activity_itix_genres:6": Americana
+      "activity_itix_genres:76": Black metal
+      "activity_itix_genres:28": Blues
+      "activity_itix_genres:10": Clubnacht
+      "activity_itix_genres:81": Country
+      "activity_itix_genres:44": Dance
+      "activity_itix_genres:57": Feest
+      "activity_itix_genres:8": Folk
+      "activity_itix_genres:87": Grunge
+      "activity_itix_genres:39": Hardrock
+      "activity_itix_genres:88": House
+      "activity_itix_genres:41": [Indie, Alternative]
+      "activity_itix_genres:86": Indierock
+      "activity_itix_genres:9": Metal
+      "activity_itix_genres:27": New wave
+      "activity_itix_genres:84": Noise rock
+      "activity_itix_genres:2": Pop
+      "activity_itix_genres:59": Postpunk
+      "activity_itix_genres:79": Psychedelic rock
+      "activity_itix_genres:5": Pubquiz
+      "activity_itix_genres:37": [Reggae, Ska]
+      "activity_itix_genres:7": Rock
+      "activity_itix_genres:78": Shoegaze
+      "activity_itix_genres:32": Soul
+      "activity_itix_genres:80": Stoner rock
+      "activity_itix_genres:85": Thrash metal
+      "activity_itix_genres:1": Tribute
 - {name: De Spot, city: Middelburg, url: "https://www.despotmiddelburg.nl/agenda", capacity: 400}
 - {name: De Bosuil, city: Weert, url: "https://www.debosuil.nl/programma/", capacity: 800}
 - {name: Het Podium, city: Hoogeveen, url: "https://www.hetpodium.nl/agenda", capacity: 375}
@@ -399,7 +468,24 @@
 - {name: Kroepoekfabriek, city: Vlaardingen, url: "https://kroepoekfabriek.nl/agenda/", capacity: 300}
 - {name: Manifesto, city: Hoorn, url: "https://manifesto-hoorn.nl/", capacity: 300}
 - {name: De Flux, city: Zaandam, url: "https://www.podiumdeflux.nl/agenda/", capacity: 350}
-- {name: Cpunt, city: Hoofddorp, url: "https://www.cpunt.nl/agenda/concerten", capacity: 900}
+- name: Cpunt
+  city: Hoofddorp
+  url: https://www.cpunt.nl/agenda/concerten
+  capacity: 900
+  type: jsonld_detail
+  link_pattern: "cpunt\\.nl/agenda/(?!(voorstellingen|concerten|clubdance|film|exposities|cursussen|overig|alles)$)[a-z0-9-]+$"
+  list_pages: ["https://www.cpunt.nl/agenda/concerten", "https://www.cpunt.nl/agenda/clubdance"]
+  list_pages_template: "https://www.cpunt.nl/agenda/concerten?page={n}"
+  notes: theater + poppodium; concerten zijn gepagineerd (22 per pagina), clubnachten staan apart onder /agenda/clubdance
+  category_pages:
+    - url: "https://www.cpunt.nl/agenda/{slug}"
+      tags: {clubdance: Clubnacht}
+    - url: "https://www.cpunt.nl/agenda/concerten?genre={slug}"
+      paged: "https://www.cpunt.nl/agenda/concerten?genre={slug}&page={n}"
+      tags: {wereldfolk: [Wereldmuziek, Folk], poprock: [Pop, Rock], bluesroots: [Blues, Roots], covertribute: Tribute,
+             nederlandstalig: Nederlandstalig, urbanhiphoprb: [Hiphop, R&B], countryamericana: [Country, Americana], klassiek: Klassiek,
+             chansonssinger-songwriter: [Chanson, Singer-songwriter], globalfolk: [Wereldmuziek, Folk], metalpunkheavy: [Metal, Punk],
+             classicretro: Classics, soulfunkjazz: [Soul, Funk, Jazz], skareggae: [Ska, Reggae], indiealternative: [Indie, Alternative]}
 - {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/", capacity: 400}
 - {name: Groene Engel, city: Oss, url: "https://www.groene-engel.nl/programma/", capacity: 650}
 - {name: De Cacaofabriek, city: Helmond, url: "https://www.cacaofabriek.nl/agenda", capacity: 550, notes: "gemengd programma (film/concert/expo)"}

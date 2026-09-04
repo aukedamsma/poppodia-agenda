@@ -297,7 +297,8 @@ def test_category_pages_tags():
     old = fetch.SESSION; fetch.SESSION = S()
     try:
         cache = {}
-        cats = fetch.category_tags(v, cache)
+        cats, excl = fetch.category_tags(v, cache)
+        assert excl == set()
         assert cats["https://www.tivolivredenburg.nl/agenda/101"] == {"Pop"}
         assert cats["https://www.tivolivredenburg.nl/agenda/102"] == {"Pop", "Kennis & debat"}
         assert cats["https://www.tivolivredenburg.nl/agenda/103"] == {"Pop"}
@@ -305,11 +306,13 @@ def test_category_pages_tags():
         assert "catpages|Tivoli" in cache
         evs = [fetch.Event(venue="Tivoli", city="Utrecht", title="A", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/102/", genres=["Live"]),
                fetch.Event(venue="Tivoli", city="Utrecht", title="B", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/999/", genres=[])]
-        n = fetch.apply_category_tags(evs, cats)
+        evs, n = fetch.apply_category_tags(evs, cats, {"https://www.tivolivredenburg.nl/agenda/999"})
+        assert len(evs) == 1
+        evs.append(fetch.Event(venue="Tivoli", city="Utrecht", title="B", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/998/", genres=[]))
         assert n == 1 and evs[0].genres == ["Kennis & debat", "Pop", "Live"] and evs[1].genres == []
         # tweede aanroep komt uit de cache (geen netwerk)
         fetch.SESSION = None
-        assert fetch.category_tags(v, cache)["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
+        assert fetch.category_tags(v, cache)[0]["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
     finally:
         fetch.SESSION = old
 
