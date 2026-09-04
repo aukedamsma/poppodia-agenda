@@ -12,7 +12,10 @@
 # Optionele velden:
 #   type          auto | jsonld | embedded | tribe | wp_event | jsonld_detail | sitemap_detail | html | disabled
 #   only_genres   alleen events met een van deze genres/typen houden (bijv. [Muziek, Clubnacht])
+#   time_is_local ISO-tijden van dit podium als Nederlandse lokale tijd lezen, ook al staat er +00:00/Z achter
 #   sitemap / sitemap_pattern / last_files   voor sitemap_detail: sitemap-index, regex voor eventbestanden, hoeveel laatste bestanden
+#   lineup        CSS-selector op de eventpagina voor de line-up (artiestnamen), bv. ".accordion__title h2"
+#   sitemap_recent_days   alleen sitemap-URL's met een lastmod in de laatste N dagen (aankomende events worden bijgewerkt)
 #   detail_ttl_days  hoe lang een gelezen eventpagina in de cache blijft (standaard 10)
 #   api           expliciete API-URL (tribe / wp_event)
 #   list_pages    extra overzichtspagina's (bijv. paginering) voor jsonld_detail
@@ -38,6 +41,7 @@
   detail_ttl_days: 14
   capacity: 2650
   notes: "JSON-LD MusicEvent per eventpagina; agenda is gepagineerd (~50 pagina's x 20), event-sitemap is leeg; WP REST afgeschermd"
+  lineup: ".accordion__title h2"
 
 - name: EKKO
   city: Utrecht
@@ -85,12 +89,13 @@
   type: sitemap_detail
   sitemap: https://www.paradiso.nl/sitemap.xml
   sitemap_pattern: "/sitemap/event_\\d+\\.xml"
-  last_files: 7
+  last_files: 60
+  sitemap_recent_days: 120
   link_pattern: "paradiso\\.nl/programma/[^/]+/\\d+$"
-  max_detail: 700
+  max_detail: 900
   detail_ttl_days: 30
-  crawl_delay: 1
-  notes: geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml is op id gesorteerd, de laatste ~7 bestanden bevatten de komende events. Eerste run zwaar (~700 pagina's), daarna incrementeel.
+  crawl_delay: 0.7
+  notes: geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml (364 bestanden à 30 URL's) is op id gesorteerd, NIET op datum; daarom de laatste 60 bestanden lezen en alleen URL's houden met een lastmod in de laatste 120 dagen (aankomende events worden bijgewerkt). Eerste run zwaar, daarna gecached.
 
 - name: Tolhuistuin
   city: Amsterdam
@@ -117,7 +122,8 @@
   type: jsonld_detail
   link_pattern: "doornroosje\\.nl/event/[^/]+/?$"
   max_detail: 250
-  notes: JSON-LD Event per eventpagina; WP REST heeft geen event-type
+  time_is_local: true
+  notes: JSON-LD Event per eventpagina; startDate is lokale tijd met foutieve +00:00 (anders 1-2 uur te laat)
 
 - name: Patronaat
   city: Haarlem
@@ -307,7 +313,19 @@
 - {name: Het Podium, city: Hoogeveen, url: "https://www.hetpodium.nl/agenda", capacity: 375}
 - {name: De Pit, city: Terneuzen, url: "https://www.poppodiumdepit.nl/programma/", capacity: 350}
 - {name: Porgy en Bess, city: Terneuzen, url: "https://www.porgyenbess.nl/programma/", capacity: 250}
-- {name: ECI Cultuurfabriek, city: Roermond, url: "https://www.ecicultuurfabriek.nl/agenda", capacity: 600, notes: "gemengd programma (film/theater/muziek)"}
+- name: ECI Cultuurfabriek
+  city: Roermond
+  capacity: 600
+  url: https://ecicultuurfabriek.nl/muziek/
+  type: html
+  item: .fdf-agenda__content
+  title: .fdf-agenda__top h5
+  date: .fdf-agenda__top p
+  link: .fdf-agenda__top
+  subtitle: .fdf-agenda__subtitle
+  genre: .fdf-agenda__genre p
+  enrich: false
+  notes: "gemengd programma; alleen de muziekpagina (de algemene agenda toont 3 dagen film/theater). Datum als 'ZO 6 SEPTEMBER 15:00', prijs in het item"
 - {name: De Peppel, city: Zeist, url: "https://peppel-zeist.nl/", capacity: 350}
 - {name: Capsloc, city: Capelle aan den IJssel, url: "https://www.capsloc.nl/programma/", capacity: 280}
 - {name: Gebouw-T, city: Bergen op Zoom, url: "https://www.gebouw-t.nl/agenda", capacity: 700}

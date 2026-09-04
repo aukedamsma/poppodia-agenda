@@ -87,18 +87,77 @@ def normalize_genres(raw: list[str], title: str = "", subtitle: str = "") -> tup
     return out, unknown
 
 
-KIND_FESTIVAL = re.compile(r"\bfestival\b|\bfest\b|weekender|\bdagen\b", re.I)
-KIND_CLUB = re.compile(r"\bclub(nacht|night|avond)?\b|\bnight\b|\bnacht\b|\bparty\b|\bfeest\b|\bdj[- ]?set\b|\bdj'?s\b|\brave\b|\bdisco\b|\bdansen\b|all night", re.I)
-KIND_OTHER = re.compile(r"\bquiz\b|\bbingo\b|\bkaraoke\b|\blezing\b|\btalk\b|\bcomedy\b|\bcabaret\b|\bfilm\b|\bexpo\b|\bmarkt\b|\bworkshop\b|\bopen mic\b|\bjam\b|\bpodcast\b|\bbenefiet\b", re.I)
+# genre-woorden die in een beschrijving veilig genoeg zijn om als tag te gebruiken (geen 'pop', 'rock', 'club', 'house'…)
+_HINT_SKIP = {"pop", "rock", "club", "dance", "house", "live", "show", "muziek", "music", "concert", "wave", "bass", "roots", "world",
+              "global", "urban", "swing", "acid", "minimal", "breaks", "trap", "drill", "loud", "heavy", "psych", "prog", "garage",
+              "glam", "surf", "western", "country", "singer", "songwriter", "folk", "soul", "funk", "jazz", "blues", "disco", "koor",
+              "ensemble", "orkest", "opera", "kids", "familie", "family", "college", "talk", "feest", "party", "hits", "classics",
+              "legends", "tribute", "covers", "retro", "fout", "foute", "nederlands", "hollandse", "brazil", "mali", "afro", "latin"}
 
 
-def classify_kind(title: str, subtitle: str | None, raw_tags: list[str], genre_norm: list[str]) -> str:
-    txt = f"{title} {subtitle or ''} {' '.join(raw_tags or [])}"
-    if KIND_FESTIVAL.search(txt):
-        return "festival"
-    if "talk" in genre_norm or "kids" in genre_norm or KIND_OTHER.search(txt):
+def genre_hints(text: str, limit: int = 3) -> list[str]:
+    """Genre-woorden uit een beschrijving ('Garagerock, postpunk, punk, sleaze, fuzz, wave' -> ['garagerock', 'postpunk', 'punk']).
+    Alleen specifieke termen uit genres.yaml; algemene woorden (pop, rock, club…) worden overgeslagen."""
+    f = _fold(text or "")
+    if not f:
+        return []
+    out: list[str] = []
+    for m, g in _taxonomy()[1]:
+        if g in ("overig", "party", "talk", "kids") or len(m) < 4 or m in _HINT_SKIP:
+            continue
+        if re.search(rf"(?<![a-z0-9]){re.escape(m)}(?![a-z0-9])", f) and m not in out:
+            out.append(m)
+            if len(out) >= limit:
+                break
+    return out
+
+
+KIND_ORDER = ("festival", "talk", "other", "club")
+KIND_LABELS = {"concert": "Concert", "club": "Clubnacht / feest", "festival": "Festival", "talk": "Talk / lezing", "other": "Overig (quiz, film, kids)"}
+
+
+@lru_cache(maxsize=1)
+def _kind_rules():
+    y = yaml.safe_load((ROOT / "genres.yaml").read_text(encoding="utf-8"))
+    out = {}
+    for kind, spec in y.get("kinds", {}).items():
+        def rx(terms):
+            terms = [_fold(x) for x in (terms or []) if _fold(x)]
+            return re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(x) for x in sorted(terms, key=len, reverse=True)) + r")(?![a-z0-9])") if terms else None
+        out[kind] = (rx(spec.get("title")), {_fold(x) for x in spec.get("tags", [])}, rx(spec.get("strong")), rx(spec.get("weak")))
+    kt = y.get("kind_time", {})
+    out["_time"] = (kt.get("club_from", "23:00"), kt.get("weak_from", "21:30"))
+    return out
+
+
+def classify_kind(title: str, subtitle: str | None, raw_tags: list[str], genre_norm: list[str], start: str | None = None) -> str:
+    """concert | club | festival | talk | other. Titel en podium-tags wegen; de ondertitel alleen voor sterke termen;
+    zwakke feest-termen en een late aanvang (start "YYYY-MM-DDTHH:MM") tellen alleen samen."""
+    ft, fs = _fold(title), _fold(subtitle or "")
+    time = start[11:16] if start and len(start) > 10 and start[11:16] != "00:00" else None
+    tags = {_fold(x) for x in (raw_tags or [])}
+    tagwords = set()
+    for x in tags:
+        tagwords.update(x.split())
+    rules = _kind_rules()
+    club_from, weak_from = rules["_time"]
+    for kind in KIND_ORDER:
+        if kind not in rules:
+            continue
+        title_rx, tag_set, strong_rx, weak_rx = rules[kind]
+        if title_rx and title_rx.search(ft):
+            return kind
+        if tag_set & (tags | tagwords):
+            return kind
+        if strong_rx and strong_rx.search(fs):
+            return kind
+        if weak_rx and time and time >= weak_from and weak_rx.search(ft):
+            return kind
+    if "talk" in genre_norm:
+        return "talk"
+    if "kids" in genre_norm:
         return "other"
-    if "party" in genre_norm or KIND_CLUB.search(txt) or any(t.lower() in ("clubnacht", "club", "dance", "nacht") for t in raw_tags or []):
+    if time and time >= club_from:
         return "club"
     return "concert"
 

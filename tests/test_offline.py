@@ -219,11 +219,27 @@ def test_series_memory():
     import series as s
     db, seen = {}, set()
     for i, (p, t) in enumerate([("€ 7,50", "2026-09-05T20:00"), ("€ 7,50", "2026-09-12T20:00"), ("€ 8", "2026-09-19T20:30")]):
-        s.record(db, seen, "Vera", f"Jazz Jam #{i}", f"k{i}", p, t)
-    s.record(db, seen, "Vera", "Jazz Jam #0", "k0", "€ 99", "2026-09-05T20:00")  # dubbel event telt niet
-    assert s.guess(db, "Vera", "Jazz Jam #9") == ("€ 7,50", "20:00")
-    assert s.guess(db, "Vera", "Onbekend") == (None, None)
+        s.record(db, seen, "Vera", f"Jazz Jam #{i}", f"k{i}", p, t, "other")
+    s.record(db, seen, "Vera", "Jazz Jam #0", "k0", "€ 99", "2026-09-05T20:00", "club")  # dubbel event telt niet
+    assert s.guess(db, "Vera", "Jazz Jam #9") == ("€ 7,50", "20:00", "other")
+    assert s.guess(db, "Vera", "Onbekend") == (None, None, None)
     assert s.series_key("Melkweg", "Cheeky Monday: MURDOCK!") == "melkweg|cheeky monday"
+
+
+def test_classify_kind():
+    from taxonomy import classify_kind as ck
+    assert ck("Two Door Cinema Club", None, [], [], "2026-10-01T20:00") == "concert"
+    assert ck("Jungle By Night", None, [], [], "2026-10-01T20:30") == "concert"
+    assert ck("Club EKKO", None, [], [], "2026-10-01T23:30") == "club"
+    assert ck("Library Card", None, [], [], "2026-12-17T23:30") == "club"      # laat = feest, tenzij anders bekend
+    assert ck("Library Card", None, [], [], "2026-12-17T22:00") == "concert"
+    assert ck("Podcast: Klassieke Klets", None, [], [], None) == "talk"
+    assert ck("Science Café: Hoe politiek is een popster?", None, [], [], None) == "talk"
+    assert ck("Is This It? De Popquiz", None, [], [], None) == "other"
+    assert ck("Akira (1988)", "film", ["Film"], [], None) == "other"
+    assert ck("Eindhoven Metal Meeting 2026 - Day 1", None, ["heavy"], ["metal"], None) == "festival"
+    assert ck("Paardcafé: Hard & Heavy", None, [], [], "2026-10-01T21:30") == "club"
+    assert ck("DeWolff", "Full moon ritual | in Theater de Spiegel", ["Rock", "Theater"], ["rock"], "2026-10-01T20:30") == "concert"
 
 
 

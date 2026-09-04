@@ -309,7 +309,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   }
   buildSubs();
   document.getElementById('clearGenres').addEventListener('click',()=>{ state.genres=[]; state.subs=[]; save(); chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); buildSubs(); render(); });
-  const KINDS={concert:'Concert',club:'Clubnacht / feest',festival:'Festival',other:'Overig (talk, quiz, film)'};
+  const KINDS={concert:'Concert',club:'Clubnacht / feest',festival:'Festival',talk:'Talk / lezing',other:'Overig (quiz, film, kids)'};
   const kindChips=document.getElementById('kindChips');
   Object.entries(KINDS).forEach(([k,l])=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=l; b.setAttribute('aria-pressed', state.kinds.includes(k));
     b.addEventListener('click',()=>{ state.kinds=state.kinds.includes(k)?state.kinds.filter(x=>x!==k):[...state.kinds,k]; b.setAttribute('aria-pressed', state.kinds.includes(k)); save(); render(); }); kindChips.append(b); });

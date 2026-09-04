@@ -33,7 +33,7 @@ from dateutil import parser as dtparser
 
 import artists as artistdb
 import series as seriesdb
-from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, group_label, _taxonomy
+from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
@@ -80,6 +80,7 @@ class Event:
     kind: str = "concert"          # concert | club | festival | other
     price_num: float | None = None
     free: bool = False
+    lineup: list[str] = field(default_factory=list)       # line-up van de eventpagina (JSON-LD performer of `lineup`-selector)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
     section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
@@ -176,7 +177,7 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
         if dt.date() < TODAY - timedelta(days=30):
             dt = dt.replace(year=dt.year + 1)
         return dt
-    m = re.search(r"(\d{1,2})\s+([a-z]+)\.?\s*(\d{4})?(?:\D+(\d{1,2})[:.](\d{2}))?", low)
+    m = re.search(r"(\d{1,2})\s+([a-z]+)\.?\s*(\d{4})?(?:\D*?(\d{1,2})[:.](\d{2})(?!\d))?", low)
     if m and m.group(2) in NL_MONTHS:
         d, mo = int(m.group(1)), NL_MONTHS[m.group(2)]
         y = int(m.group(3)) if m.group(3) else (default_year or TODAY.year)
@@ -260,7 +261,14 @@ def jsonld_events(html: str) -> list[dict]:
     return [n for n in jsonld_blocks(html) if "Event" in str(n.get("@type", ""))]
 
 
+def _strip_tz(val):
+    """Voor podia die lokale tijd met een verkeerde tijdzone publiceren (bv. "22:00:00+00:00" voor 22:00 NL)."""
+    return re.sub(r"(Z|[+-]\d{2}:?\d{2})$", "", str(val).strip()) if isinstance(val, str) else val
+
+
 def event_from_jsonld(n: dict, v: dict, page_url: str, source: str) -> Event | None:
+    if v.get("time_is_local"):
+        n = {**n, "startDate": _strip_tz(n.get("startDate")), "endDate": _strip_tz(n.get("endDate")), "doorTime": _strip_tz(n.get("doorTime"))}
     start = parse_dt(n.get("startDate"))
     if not start:
         return None
@@ -281,13 +289,17 @@ def event_from_jsonld(n: dict, v: dict, page_url: str, source: str) -> Event | N
     genres = [clean(g) for g in as_list(n.get("genre")) + as_list(n.get("keywords")) if clean(g)]
     if len(genres) == 1 and "," in genres[0]:
         genres = [g.strip() for g in genres[0].split(",")]
-    perf = ", ".join(clean(p.get("name")) for p in as_list(n.get("performer")) if isinstance(p, dict) and clean(p.get("name"))) or None
+    lineup = [clean(p.get("name")) if isinstance(p, dict) else clean(str(p)) for p in as_list(n.get("performer"))]
+    lineup = [x for x in lineup if x and len(x) <= 60]
+    perf = ", ".join(lineup) or None
+    if not genres and n.get("description"):
+        genres = genre_hints(str(n.get("description")))
     return Event(
         venue=v["name"], city=v["city"], title=clean(n.get("name")) or "(zonder titel)",
         start=start.isoformat(timespec="minutes"), url=urljoin(page_url, str(url)),
         end=(parse_dt(n.get("endDate")) or start).isoformat(timespec="minutes") if n.get("endDate") else None,
         subtitle=perf if perf and perf.lower() != (clean(n.get("name")) or "").lower() else None,
-        genres=genres, price=price, status=status, source=source,
+        genres=genres, price=price, status=status, source=source, lineup=lineup,
     )
 
 
@@ -619,7 +631,7 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
 
 # --- eventlinks volgen + JSON-LD op detailpagina --------------------------------
 
-NON_EVENT_PATH = re.compile(r"/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|\.(pdf|jpe?g|png|ics)$", re.I)
+NON_EVENT_PATH = re.compile(r"/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|/agenda/(concerten|exposities?|expo|film|films|kids|jeugd|kidsjeugd|theater|cabaret|comedy|dans|workshops?|cursussen|festivals?|clubs?|party|feesten|overig|alles|all)/?$|\.(pdf|jpe?g|png|ics)$", re.I)
 
 
 def event_links(v: dict, html: str, base: str) -> list[str]:
@@ -694,6 +706,10 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         if title is None:
             og = s.find("meta", property="og:title")
             title = re.split(r"\s[|–-]\s", clean(og["content"]))[0] if og and og.get("content") else None
+        # datum uit losse tekst is onbetrouwbaar als die precies vandaag is zonder tijd: veel sites tonen de
+        # datum van vandaag in een header/agenda-widget (ECI: 74 "voorstellingen" op één dag)
+        if tdt and tdt.date() == TODAY and not (tstart or tdoors):
+            tdt = None
         dt = (parse_dt(t["datetime"]) if t else None) or date_from_url(url) or tdt
         if dt and (dt.hour, dt.minute) == (0, 0) and (tstart or tdoors):
             dt = dt.replace(hour=(tstart or tdoors)[0], minute=(tstart or tdoors)[1])
@@ -701,6 +717,11 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev = Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=url,
                        price=tprice, source="detail_text")
     if ev is not None:
+        if v.get("lineup") and not ev.lineup:
+            names = [clean(x.get_text()) for x in soup_of(html).select(v["lineup"])]
+            ev.lineup = [x for x in dict.fromkeys(names) if x and 1 < len(x) <= 60 and x.lower() != ev.title.lower()][:20]
+        if not ev.genres:
+            ev.genres = genre_hints(txt[:1500])
         # aanvang gaat vóór deuren-open: als de gevonden tijd gelijk is aan de deurtijd en er staat een aanvang, neem die
         st = datetime.fromisoformat(ev.start)
         if tstart and (((st.hour, st.minute) == (0, 0)) or (tdoors and (st.hour, st.minute) == tdoors and tstart != tdoors)):
@@ -805,12 +826,26 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
 
     files.sort(key=num)
     files = files[-int(v.get("last_files", 6)):] or [sitemap]
+    # per URL de lastmod meenemen: aankomende events worden bijgewerkt (ticketstatus), oude niet meer.
+    recent_days = int(v.get("sitemap_recent_days", 0))
+    cutoff = (TODAY - timedelta(days=recent_days)).isoformat() if recent_days else None
     urls: list[str] = []
     for f in files:
         try:
-            urls += [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", get(f, delay=0.5).text)]
+            xml = get(f, delay=0.5).text
         except requests.RequestException as ex:
             log(f"    sitemap mislukt {f}: {ex}")
+            continue
+        for m in re.finditer(r"<url>(.*?)</url>", xml, re.S):
+            loc = re.search(r"<loc>(.*?)</loc>", m.group(1))
+            mod = re.search(r"<lastmod>(.*?)</lastmod>", m.group(1))
+            if not loc:
+                continue
+            if cutoff and mod and mod.group(1)[:10] < cutoff:
+                continue
+            urls.append(loc.group(1))
+        if not re.search(r"<url>", xml):  # sitemap zonder <url>-blokken: alleen <loc>
+            urls += [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", xml)]
     lp = re.compile(v["link_pattern"]) if v.get("link_pattern") else None
     urls = [u for u in dict.fromkeys(urls) if not lp or lp.search(u)]
     urls = urls[-int(v.get("max_detail", 600)):]
@@ -1132,10 +1167,15 @@ def main(only: list[str] | None = None) -> int:
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.artists = extract_artists(e.title, e.subtitle)
+        if e.lineup:
+            known = {artist_key(a) for a in e.artists}
+            e.artists += [a for a in e.lineup if artist_key(a) not in known and len(artist_key(a)) > 1][: 15 - len(e.artists)]
+            if not e.subtitle and len(e.lineup) > 1:
+                e.subtitle = "met " + ", ".join(e.lineup[:8]) + (" e.a." if len(e.lineup) > 8 else "")
         e.genre_norm, unk = normalize_genres(e.genres, e.title, e.subtitle or "")
         for u in unk:
             unknown_genres[u] = unknown_genres.get(u, 0) + 1
-        e.kind = classify_kind(e.title, e.subtitle, e.genres, e.genre_norm)
+        e.kind = classify_kind(e.title, e.subtitle, e.genres, e.genre_norm, e.start)
         e.price_num = price_number(e.price)
         e.free = e.price_num == 0.0
         if e.kind in ("concert", "festival", "club"):
@@ -1162,12 +1202,16 @@ def main(only: list[str] | None = None) -> int:
     # --- reeksengeheugen: prijs/tijd van terugkerende events onthouden en aanvullen ---
     sdb, sseen = seriesdb.load()
     for e in all_events:
-        seriesdb.record(sdb, sseen, e.venue, e.title, f"{e.venue}|{e.url}", e.price, e.start)
-    est_p = est_t = 0
+        seriesdb.record(sdb, sseen, e.venue, e.title, f"{e.venue}|{e.url}", e.price, e.start, e.kind)
+    est_p = est_t = est_k = 0
     for e in all_events:
+        gp, gt, gk = seriesdb.guess(sdb, e.venue, e.title)
+        # type: een reeks die eerder duidelijk als feest/talk/… herkend werd, corrigeert het standaardtype "concert"
+        if gk and gk != e.kind and e.kind == "concert":
+            e.kind = gk
+            est_k += 1
         if e.price and (len(e.start) > 10 and e.start[11:16] != "00:00"):
             continue
-        gp, gt = seriesdb.guess(sdb, e.venue, e.title)
         if not e.price and gp:
             e.price, e.price_est = gp, True
             e.price_num = price_number(gp)
@@ -1177,9 +1221,9 @@ def main(only: list[str] | None = None) -> int:
             e.start, e.time_est = f"{e.start[:10]}T{gt}", True
             est_t += 1
     seriesdb.save(sdb, sseen)
-    log(f"Reeksengeheugen: {len(sdb)} reeksen; {est_p} prijzen en {est_t} tijden geschat uit eerdere edities")
+    log(f"Reeksengeheugen: {len(sdb)} reeksen; {est_p} prijzen, {est_t} tijden en {est_k} typen overgenomen uit eerdere edities")
     report["series"] = len(sdb)
-    report["estimated"] = {"price": est_p, "time": est_t}
+    report["estimated"] = {"price": est_p, "time": est_t, "kind": est_k}
     report["unknown_genres"] = dict(sorted(unknown_genres.items(), key=lambda x: -x[1])[:150])
     report["artists"] = len(adb)
     report["genre_groups"] = {k: v["label"] for k, v in _taxonomy()[0].items()}

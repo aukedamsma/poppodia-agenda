@@ -61,7 +61,36 @@ rules:
   - {group: folk,          match: [singer-songwriter, singer, songwriter, indiefolk, indie folk, folkpop, singer songwriter, songwriter, folk, akoestisch, acoustic, unplugged, troubadour, liedjes, ballad]}
   - {group: klassiek,      match: [klassiek, classical, neo-klassiek, neoklassiek, neo-classical, neoclassical, kamermuziek, orkest, orchestra, ensemble, oude muziek, early music, baroque, barok, opera, koor, choir, filmmuziek, soundtrack, minimal music, piano solo]}
   - {group: experimenteel, match: [experimental, experimenteel, avant-garde, avantgarde, noise, industrial, drone, krautrock, kraut, sound art, free improvisation, free-jazz, free jazz, musique concrete, post-industrial, harsh, power electronics, cringecore, weird]}
-  - {group: rock,          match: [psychedelisch, progrock, bluesrock, blues-rock, loud, hardrock, hard rock, classic rock, psychedelic, psych, prog, progressive rock, stoner, garage, grunge, glam, southern rock, blues rock, folkrock, folk rock, poprock, pop rock, pop-rock, arena rock, aor, rock]}
+  - {group: rock,          match: [garagerock, garage rock, garage punk, psychedelisch, progrock, bluesrock, blues-rock, loud, hardrock, hard rock, classic rock, psychedelic, psych, prog, progressive rock, stoner, garage, grunge, glam, southern rock, blues rock, folkrock, folk rock, poprock, pop rock, pop-rock, arena rock, aor, rock]}
   - {group: pop,           match: [dancepop, dance-pop, teenpop, teen pop, synthpop, synth-pop, electropop, electro-pop, dreampop, popmuziek, pop, indie pop, bedroom pop, chamber pop, power pop]}
   # --- eventtypes ---
   - {group: overig,        match: [muziekdocumentaire, documentaire, anime, sci-fi, theater, cinematisch, melodic, groovy, nights, upcoming, alles, queer, lgbtq, lgbtqia, 18+, nachtleven, concert, live, muziek, music, optreden, show, evenement, event, overig, diversen, divers, festival, releaseparty, release party, release show, presentatie, open mic, jam, jamsessie, sessie, workshop, film, expo, expositie, markt, dansen, dans]}
+
+# ---------------------------------------------------------------------------------------------
+# Eventtype (event.kind): concert | club | festival | talk | other
+# Regels worden getest op de TITEL (en op de ruwe tags van het podium); de ondertitel telt alleen
+# mee voor `strong`-termen, omdat beschrijvingen vaak woorden als "theatraal" of "feestje" bevatten.
+# Volgorde: festival > talk > other > club; wat overblijft is concert. Late aanvang (kind_time) telt ook mee. Het reeksengeheugen
+# (state/series.json) onthoudt per terugkerend event het type en corrigeert twijfelgevallen.
+kinds:
+  festival:
+    title:  [festival, fest, weekender, meeting, "dag 1", "dag 2", "day 1", "day 2", "day 3", popronde, kunstnacht, museumnacht]
+    tags:   [festival]
+  talk:
+    title:  [lezing, lecture, talk, talks, talkshow, podcast, college, "science café", "science cafe", zweefcafe, debat, gesprek, interview, congres, symposium, boekpresentatie, boekfest, "book talks", literatuur, poetry, poëzie, "spoken word", slam, verhalen, verkiezing, "q&a", masterclass, workshop, cursus, rondleiding, "backstage", meet-up, meetup, netwerk, pitch, comedy, cabaret, "stand-up", standup, "stand up", filosof, wetenschap]
+    tags:   [talk, lezing, podcast, comedy, cabaret, literatuur, debat, college, toneel, voorstelling]
+    strong: [podcast, lezing, comedy, cabaret, talkshow, congres, symposium]
+  other:
+    title:  [quiz, pubquiz, popquiz, kwis, bingo, karaoke, "open mic", "mic drop", jam, jamsessie, sessie, yoga, zwemmen, brunch, lunch, diner, dinner, proeverij, markt, market, beurs, film, documentaire, expo, expositie, tentoonstelling, borrel, besloten, "private", schoolfeest, lustrum, kinder, kids, familie, peuter, kleuter, jeugd, meezing, meezingerij, singalong, "sing along", meezingen, kerstmarkt, sinterklaas, benefiet, veiling, auditie, repetitie, "try-out", tryout, theatervoorstelling, voorstelling, toneel, dansvoorstelling, musical, opera, ballet]
+    tags:   [quiz, bingo, karaoke, film, expo, workshop, kids, familie, jeugd, markt, besloten, "open mic", jam, sport, eten]
+    strong: [pubquiz, popquiz, bingo, karaoke, "open mic", documentaire]
+  club:
+    title:  [clubnacht, "club night", clubnight, nacht, party, feest, feestje, fuif, afterparty, "after party", "dj set", "dj-set", djset, "dj's", djs, rave, disco, dansen, jukebox, "salsa on", bachata, kizomba, "all night", "all nighter", "80s", "90s", "00s", "70s", "60s", eighties, nineties, zeroes, throwback, "guilty pleasures", "foute", verantwoord, "dune sessions", "paardcafé", "paardcafe", techno, house, "drum & bass", dnb, hardstyle, gabber, "silent disco", "vroegzat", "vroeg zat"]
+    tags:   [clubnacht, club, nachtleven, nights, night, party, feest, dance, "18+", dj]
+    strong: [clubnacht, afterparty, "silent disco", "dj set"]
+    # zwakke termen (ook bandnamen: "Jungle By Night", "Two Door Cinema Club"): alleen als het event laat begint
+    weak:   [club, night, nights, disco, sessions, dance, late]
+# Aanvangstijd: een event dat om 23:00 of later begint is een feest, tenzij de titel/tags anders zeggen.
+kind_time:
+  club_from: "23:00"
+  weak_from: "21:30"

@@ -5,6 +5,7 @@ Voorbeelden van reeksen: "VroegZat" (FLUOR), "Paardcafé: …" (PAARD), "Kelderb
   title      voorbeeldtitel
   prices     {prijsstring: aantal waarnemingen}     bv. {"€ 7,50": 9, "gratis": 1}
   times      {"HH:MM": aantal}                      aanvangstijden
+  kinds      {type: aantal}                         eventtype (concert/club/festival/talk/other)
   seen       aantal afzonderlijke events, first_seen, last_seen
 
 Gebruik: events zonder prijs (of zonder tijd) krijgen de dominante waarde uit de reeks, mits die minstens
@@ -71,22 +72,25 @@ def save(db: dict, seen: set) -> None:
     SEEN_PATH.write_text(json.dumps(sorted(seen)[-40000:]))
 
 
-def record(db: dict, seen: set, venue: str, title: str, event_key: str, price: str | None, start: str) -> None:
-    """Neem een waargenomen (echte, niet geschatte) prijs/tijd op. Elk event telt één keer."""
+def record(db: dict, seen: set, venue: str, title: str, event_key: str, price: str | None, start: str, kind: str | None = None) -> None:
+    """Neem een waargenomen (echte, niet geschatte) prijs/tijd/type op. Elk event telt één keer."""
     key = series_key(venue, title)
     if not key or event_key in seen:
         return
     time = start[11:16] if len(start) > 10 and start[11:16] != "00:00" else None
-    if not price and not time:
+    if not price and not time and not kind:
         return
     seen.add(event_key)
-    s = db.setdefault(key, {"title": title, "prices": {}, "times": {}, "seen": 0, "first_seen": TODAY, "last_seen": TODAY})
+    s = db.setdefault(key, {"title": title, "prices": {}, "times": {}, "kinds": {}, "seen": 0, "first_seen": TODAY, "last_seen": TODAY})
     s["seen"] += 1
     s["last_seen"] = TODAY
     if price:
         s["prices"][price] = s["prices"].get(price, 0) + 1
     if time:
         s["times"][time] = s["times"].get(time, 0) + 1
+    if kind:
+        s.setdefault("kinds", {})
+        s["kinds"][kind] = s["kinds"].get(kind, 0) + 1
 
 
 def _dominant(counts: dict) -> str | None:
@@ -97,10 +101,10 @@ def _dominant(counts: dict) -> str | None:
     return val if n / total >= MIN_SHARE and n >= MIN_OBS else None
 
 
-def guess(db: dict, venue: str, title: str) -> tuple[str | None, str | None]:
-    """(prijs, tijd) uit het reeksengeheugen, of (None, None)."""
+def guess(db: dict, venue: str, title: str) -> tuple[str | None, str | None, str | None]:
+    """(prijs, tijd, type) uit het reeksengeheugen, of (None, None, None)."""
     key = series_key(venue, title)
     s = db.get(key) if key else None
     if not s:
-        return None, None
-    return _dominant(s.get("prices", {})), _dominant(s.get("times", {}))
+        return None, None, None
+    return _dominant(s.get("prices", {})), _dominant(s.get("times", {})), _dominant(s.get("kinds", {}))
