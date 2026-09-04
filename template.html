@@ -37,7 +37,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 /* kop */
 .fbtn.brand{font-family:var(--display);font-weight:400;font-size:22px;line-height:1;letter-spacing:.01em;text-transform:uppercase;color:var(--ink);border-color:transparent;background:transparent;box-shadow:none;padding:4px 4px 4px 0;gap:0;white-space:nowrap}
-.fbtn.brand span{color:var(--accent)}
+.fbtn.brand span{color:var(--accent)} .fbtn.brand .bname{color:var(--ink)}
 .fbtn.brand svg{width:12px;height:12px;stroke:var(--ink-3);fill:none;stroke-width:1.6;margin:2px 0 0 5px}
 .fbtn.brand:hover,.fbtn.brand[aria-expanded="true"]{background:var(--paper-2);border-color:var(--line)}
 .chip:disabled{opacity:.6;cursor:default}
@@ -194,7 +194,7 @@ button:focus-visible{outline:none}
 <div class="wrap">
 <div class="bar" role="region" aria-label="Filters">
   <div class="pop">
-    <button class="fbtn brand" id="sectionBtn" aria-expanded="false" aria-controls="sectionPanel" title="Kies een agenda">Podium<span>agenda</span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
+    <button class="fbtn brand" id="sectionBtn" aria-expanded="false" aria-controls="sectionPanel" title="Kies een agenda"><span class="bname">Concert</span><span>agenda</span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="sectionPanel" hidden style="min-width:200px">
       <div class="row">Agenda's</div>
       <div class="chips" style="flex-direction:column;align-items:stretch">
