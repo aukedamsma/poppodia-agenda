@@ -47,14 +47,17 @@ h1 span{color:var(--accent)}
 .bar{position:sticky;top:0;z-index:20;background:var(--paper);border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow:visible}
 .bar > *{flex:0 0 auto}
 .tabs{display:flex;gap:2px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--paper-2)}
-.tabs button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500}
+.tabs button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500;position:relative}
+.tabs > button + button::before,.tabs > button + .plabel::before,.tabs > .daynav::before{content:'';position:absolute;left:-1px;top:7px;bottom:7px;border-left:1px solid var(--line)}
+.tabs button[aria-pressed="true"]::before,.tabs button[aria-pressed="true"] + button::before{display:none}
+.tabs button:hover{background:var(--card)}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .tabs button .n{font-size:11px;color:inherit;opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}
 .tabs button.ico{display:inline-flex;align-items:center;gap:2px;padding:6px 9px}.tabs button.ico svg{display:block}
 .fbtn:disabled{opacity:.35;cursor:default}
 .fbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink-2);background:var(--card);box-shadow:var(--shadow)}
 .fbtn[aria-expanded="true"],.fbtn.active{border-color:var(--ink);color:var(--ink)}
-.fbtn .cnt{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;padding:0 6px;line-height:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.fbtn .cnt{display:none!important}
 .fbtn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
 .filters{display:flex;gap:8px;margin-left:auto;align-items:center}
 .search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:0 1 260px !important;min-width:110px;box-shadow:var(--shadow)}
@@ -83,9 +86,9 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
 .pnav button:disabled{opacity:.35}
-.pnav .plabel{padding:6px 12px 6px 6px;font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pnav .plabel{position:relative;padding:6px 12px 6px 12px;font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pnav .plabel small{font-weight:400;color:var(--ink-3);margin-left:6px}
-.daynav{display:inline-flex;align-items:center}
+.daynav{display:inline-flex;align-items:center;position:relative;padding-left:6px}
 .daynav input{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:0;padding:6px 8px 6px 0;border-radius:6px}
 .save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
 .save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
