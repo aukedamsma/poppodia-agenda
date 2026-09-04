@@ -12,6 +12,21 @@ DOCS.mkdir(exist_ok=True)
 events = json.loads((ROOT / "data" / "events.json").read_text(encoding="utf-8"))
 report = json.loads((ROOT / "data" / "report.json").read_text(encoding="utf-8"))
 
+# Oudere data (van vóór de genre-taxonomie) ter plekke aanvullen, zodat een lokale build altijd
+# hoofdgenres, eventtype en artiesten toont. Nieuwe runs van fetch.py leveren dit al mee.
+if events and "genre_norm" not in events[0]:
+    from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, _taxonomy
+    for e in events:
+        e["artists"] = extract_artists(e["title"], e.get("subtitle"))
+        e["genre_norm"], _ = normalize_genres(e.get("genres") or [], e["title"], e.get("subtitle") or "")
+        e["kind"] = classify_kind(e["title"], e.get("subtitle"), e.get("genres") or [], e["genre_norm"])
+        e["price_num"] = price_number(e.get("price"))
+        e["free"] = e["price_num"] == 0.0
+        e.setdefault("section", "poppodium")
+    if "genre_groups" not in report:
+        groups, _ = _taxonomy()
+        report["genre_groups"] = {k: v.get("label", k) for k, v in groups.items()}
+
 # --- HTML ---------------------------------------------------------------------
 tpl = (ROOT / "template.html").read_text(encoding="utf-8")
 def safe_json(obj) -> str:
