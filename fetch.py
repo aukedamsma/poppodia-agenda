@@ -874,6 +874,12 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
     start = hm(r"(?:aanvang|start|begin|show|showtime|concert)\W{0,12}(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
+    # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang
+    if not start and dt is not None and m:
+        after = low[m.end(): m.end() + 14]
+        mt = re.match(r"\W{0,4}(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
+        if mt and int(mt.group(1)) < 24 and int(mt.group(2)) < 60:
+            start = (int(mt.group(1)), int(mt.group(2)))
     d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(\d{1,2})[:.u](\d{2})")
     d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
@@ -927,7 +933,13 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
         mm = re.search(r'"%s":\s*"([^"]*)"' % name, block)
         return clean(_unesc(mm.group(1))) if mm else None
 
-    start = parse_dt(start_main or m.group(1))  # startMain = aanvang hoofdact (alleen uit dit event zelf); anders startDateTime
+    # startDateTime draagt de juiste DATUM (UTC); startMain/doorsOpen hebben een bruikbare TIJD maar een onzinnige datum
+    # (Paradiso vult daar de dag van vandaag in). Dus: datum uit startDateTime, aanvangstijd uit startMain als die er is.
+    start = parse_dt(m.group(1))
+    if start and start_main:
+        sm = parse_dt(start_main)
+        if sm:
+            start = start.replace(hour=sm.hour, minute=sm.minute)
     if not start:
         return None
     title = fld("title") or "?"

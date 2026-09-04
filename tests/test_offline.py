@@ -247,6 +247,10 @@ def test_paradiso_flight_json_long_lineup():
     e = fetch.event_from_flight_json(html, "https://www.paradiso.nl/programma/the-patchwork-family-5-year-anniversary/2900191", {"name": "Paradiso", "city": "Amsterdam"})
     assert e and e.start == "2026-09-04T22:00" and e.price == "€ 5,00" and e.lineup[:2] == ["The Patchwork Family", "DJ Europarking"]
     assert fetch.clean_lineup(["Onder 30 jaar", "Koop met Korting", "Lime Garden", "STONE"], "Loose Ends") == ["Lime Garden", "STONE"]
+    # Paradiso zet in startMain/doorsOpen de datum van vandaag: datum uit startDateTime, tijd uit startMain
+    h2 = html.replace('"startDateTime":"2026-09-04T20:00:00+00:00"', '"startDateTime":"2026-09-18T21:59:00+00:00"').replace('"startMain":"2026-09-04T22:00:00+02:00"', '"startMain":"2026-09-04T23:59:00+02:00"')
+    e2 = fetch.event_from_flight_json(h2, "https://www.paradiso.nl/programma/x/2900191", {"name": "Paradiso", "city": "Amsterdam"})
+    assert e2.start == "2026-09-18T23:59"
 
 
 def test_classify_kind():
