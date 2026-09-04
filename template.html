@@ -44,7 +44,8 @@ h1 span{color:var(--accent)}
 .meta a{color:var(--ink-2)}
 
 /* filterbalk */
-.bar{position:sticky;top:0;z-index:20;background:var(--paper);border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bar{position:sticky;top:0;z-index:20;background:var(--paper);border-top:2px solid var(--ink);border-bottom:1px solid var(--line);padding:10px 0;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow:visible}
+.bar > *{flex:0 0 auto}
 .tabs{display:flex;gap:2px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--paper-2)}
 .tabs button{padding:6px 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
@@ -55,7 +56,7 @@ h1 span{color:var(--accent)}
 .fbtn[aria-expanded="true"],.fbtn.active{border-color:var(--ink);color:var(--ink)}
 .fbtn .cnt{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;padding:0 6px;line-height:16px;font-weight:600;font-variant-numeric:tabular-nums}
 .fbtn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
-.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:1 1 180px;min-width:150px;max-width:320px;box-shadow:var(--shadow)}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:0 1 260px !important;min-width:110px;margin-left:auto;box-shadow:var(--shadow)}
 .search input{border:0;background:none;color:var(--ink);font:inherit;width:100%;outline:none;font-size:13px}
 .search input::placeholder{color:var(--ink-3)}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -158,6 +159,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 @media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .wgrid{grid-template-columns:1fr} .wcol{min-height:0} .mgrid{grid-template-columns:repeat(7,minmax(0,1fr))} .mgrid .wk{display:none} .mcell{min-height:60px} .mi{display:none} .mi.plus{display:block} }
 @media (max-width:560px){
+  .bar{flex-wrap:wrap} .search{margin-left:0;flex:1 1 100% !important}
   .grid{grid-template-columns:1fr} h1{font-size:32px} .meta{margin-left:0}
   .venues{grid-template-columns:1fr} .panel{left:auto;right:0;max-width:calc(100vw - 40px)} .count{display:none}
 }
@@ -186,7 +188,6 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   </div>
   <div class="daynav" id="daynav" hidden>
     <input class="fbtn" type="date" id="dayPick" title="Spring naar dag">
-    <button class="fbtn" id="todayBtn">Vandaag</button>
   </div>
   <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
   <div class="pop">
@@ -488,14 +489,15 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   }
   // week/maand-navigatie
   function shiftPeriod(dir){
+    if (state.view==='all'){ const d=new Date((state.day||TODAY)+'T12:00:00'); d.setDate(d.getDate()+dir); if (isoOf(d)>=TODAY) goToDay(isoOf(d)); return; }
     if (state.view==='week'){ const d=new Date((state.wk||TODAY)+'T12:00:00'); d.setDate(d.getDate()+7*dir); state.wk=isoOf(d); }
     else if (state.view==='month'){ const d=new Date((state.mo||TODAY)+'T12:00:00'); d.setMonth(d.getMonth()+dir); state.mo=isoOf(new Date(d.getFullYear(),d.getMonth(),1)); }
     save(); render(false); window.scrollTo({top:0});
   }
   document.getElementById('prevP').addEventListener('click',()=>shiftPeriod(-1));
   document.getElementById('nextP').addEventListener('click',()=>shiftPeriod(1));
-  document.getElementById('todayP').addEventListener('click',()=>{ state.wk=null; state.mo=null; save(); render(false); });
-  document.addEventListener('keydown',ev=>{ if(['week','month'].includes(state.view) && !ev.target.matches('input,textarea')){ if(ev.key==='ArrowLeft') shiftPeriod(-1); if(ev.key==='ArrowRight') shiftPeriod(1); } });
+  document.getElementById('todayP').addEventListener('click',()=>{ if (state.view==='all') return goToDay(TODAY); state.wk=null; state.mo=null; save(); render(false); });
+  document.addEventListener('keydown',ev=>{ if(['all','week','month'].includes(state.view) && !ev.target.matches('input,textarea')){ if(ev.key==='ArrowLeft') shiftPeriod(-1); if(ev.key==='ArrowRight') shiftPeriod(1); } });
   function isoWeek(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-dn); const y=new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t-y)/864e5+1)/7); }
   function wireSaves(){
     document.querySelectorAll('.save').forEach(b => b.addEventListener('click', ev => {
@@ -506,8 +508,8 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     }));
     updateSavedCount();
     document.getElementById('daynav').hidden = state.view!=='all';
-    document.getElementById('periodnav').hidden = !['week','month'].includes(state.view);
-    if (['week','month'].includes(state.view)) document.getElementById('prevP').disabled = state.view==='week' ? (state.wk||TODAY) <= isoOf(new Date(new Date(today).setDate(today.getDate()-((today.getDay()+6)%7)))) : (state.mo||TODAY) <= isoOf(new Date(today.getFullYear(),today.getMonth(),1));
+    document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
+    if (['all','week','month'].includes(state.view)) document.getElementById('prevP').disabled = state.view==='all' ? (state.day||TODAY) <= TODAY : state.view==='week' ? (state.wk||TODAY) <= isoOf(new Date(new Date(today).setDate(today.getDate()-((today.getDay()+6)%7)))) : (state.mo||TODAY) <= isoOf(new Date(today.getFullYear(),today.getMonth(),1));
     document.getElementById('exportSaved').hidden = state.view!=='saved' || !saved.size;
   }
   function updateSavedCount(){ const n=[...saved].filter(k=>EVENTS.some(e=>keyOfEv(e)===k && e.start.slice(0,10)>=TODAY)).length; document.getElementById('savedCount').textContent = n||''; }
@@ -524,7 +526,6 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     if(sec){ const y=sec.getBoundingClientRect().top+window.scrollY-document.querySelector('.bar').offsetHeight-8; window.scrollTo({top:y}); }
   }
   dayPick.addEventListener('change', ()=> goToDay(dayPick.value||TODAY));
-  document.getElementById('todayBtn').addEventListener('click', ()=> goToDay(TODAY));
   document.getElementById('list').addEventListener('click', ev=>{ const j=ev.target.closest('[data-goto]'); if(j){ ev.preventDefault(); goToDay(j.dataset.goto); } });
   // lijstje exporteren als .ics
   document.getElementById('exportSaved').addEventListener('click', ()=>{

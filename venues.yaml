@@ -208,7 +208,18 @@
 - {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
 - {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda", capacity: 680}
 - {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl", capacity: 1100}
-- {name: Cinetol, city: Amsterdam, url: "https://www.cinetol.nl/programma", capacity: 210}
+- name: Cinetol
+  city: Amsterdam
+  capacity: 210
+  url: https://www.cinetol.nl/programma
+  type: html
+  item: .cms_list-item
+  title: h2[fs-list-field="name"]
+  subtitle: h3[fs-list-field="support"]
+  date: .card_location
+  link: a.link-block-3
+  genre: div[fs-list-field="genre"]
+  notes: "Webflow-collectie: 80 events op één pagina, datum als 'Fri 04 . 09'; tijd/prijs via eventpagina (enrich)"
 - {name: Slachthuis, city: Haarlem, url: "https://slachthuishaarlem.nl/programma/", capacity: 100, notes: "nog niet gecontroleerd"}
 - {name: Victorie, city: Alkmaar, url: "https://www.podiumvictorie.nl/programma/", capacity: 1140}
 - name: Nobel
