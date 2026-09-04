@@ -522,7 +522,10 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
     # ook window.__NUXT__ / __INITIAL_STATE__ als JSON-literal
     for m in re.finditer(r"window\.__(?:NUXT|INITIAL_STATE|APOLLO_STATE|PRELOADED_STATE)__\s*=\s*(\{.*?\})\s*;?\s*</script>", html, re.S):
         blobs.append(m.group(1))
+    # alle eventlijsten samenvoegen (Melkweg: per maand een lijst; alleen de grootste nemen gaf 235 van 283 events);
+    # dubbelen (zelfde url/id of titel+datum) vallen weg
     best: list[dict] = []
+    seen_keys: set = set()
     for raw in blobs:
         if not raw or len(raw) < 200:
             continue
@@ -530,9 +533,13 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
             j = json.loads(raw)
         except json.JSONDecodeError:
             continue
-        for lst in _walk_event_lists(j):
-            if len(lst) > len(best):
-                best = lst
+        for lst in sorted(_walk_event_lists(j), key=len, reverse=True):
+            for o in lst:
+                k = _find_url(o) or o.get("id") or (str(_find_title(o)), str(_find_date(o)))
+                if k in seen_keys:
+                    continue
+                seen_keys.add(k)
+                best.append(o)
     out = []
     for o in best:
         title, dt = _find_title(o), _find_date(o)
