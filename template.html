@@ -193,7 +193,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   <div class="pop">
     <button class="fbtn" id="venueBtn" aria-expanded="false" aria-controls="venuePanel">Podia <span class="cnt" id="venueCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="venuePanel" hidden>
-      <div class="row">Podia per stad <span><button id="allVenues">alles aan</button> · <button id="noVenues">alles uit</button></span></div>
+      <div class="row">Podia per stad <span style="display:flex;gap:10px;align-items:center"><label style="display:flex;gap:5px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink-2);font-size:12px;cursor:pointer"><input type="checkbox" id="vnpfOnly"> alleen VNPF-poppodia</label><span><button id="allVenues">alles aan</button> · <button id="noVenues">alles uit</button></span></span></div>
       <div class="venues" id="venueList"></div>
     </div>
   </div>
@@ -291,7 +291,8 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     cities[city].sort((a,b)=>a.name.localeCompare(b.name,'nl')).forEach(v => {
       const l=document.createElement('label'); l.className='venue'+(v.ok?'':' off');
       const c=document.createElement('input'); c.type='checkbox'; c.dataset.venue=v.name; c.checked=!state.venuesOff.includes(v.name);
-      if (v.section && v.section!=='poppodium') l.title='Geen VNPF-poppodium; zichtbaar onder "Alles"';
+      l.dataset.section=(v.section&&v.section!=='poppodium')?'overig':'poppodium';
+      if (l.dataset.section==='overig') l.title='Geen VNPF-poppodium';
       const n=document.createElement('span'); n.className='n'; n.textContent = v.ok ? (byVenue[v.name]||0) : (v.strategy==='disabled'?'binnenkort':'geen data');
       if (v.capacity) l.title=(l.title?l.title+' · ':'')+'capaciteit '+v.capacity;
       l.append(c, document.createTextNode(v.name), n); vs.append(l);
@@ -343,8 +344,14 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   // bereik: alleen poppodia of alles
   document.querySelectorAll('[data-scope]').forEach(b=>{ b.setAttribute('aria-pressed', b.dataset.scope===state.scope);
     b.addEventListener('click',()=>{ state.scope=b.dataset.scope; save(); document.querySelectorAll('[data-scope]').forEach(x=>x.setAttribute('aria-pressed', x===b)); render(); }); });
-  // Poppodia/Alles-schakelaar voorlopig verborgen: alles wordt getoond, podia kies je in het Podia-paneel
-  state.scope='all';
+  // 'alleen VNPF-poppodia' (standaard aan) verbergt de overige podia in paneel en agenda
+  if (typeof state.vnpf !== 'boolean') state.vnpf = true;
+  state.scope = state.vnpf ? 'poppodium' : 'all';
+  const vnpfBox=document.getElementById('vnpfOnly'); vnpfBox.checked=state.vnpf;
+  function applyVnpf(){ document.querySelectorAll('#venueList .venue[data-section="overig"]').forEach(l=>{ l.hidden=state.vnpf; });
+    document.querySelectorAll('#venueList .city').forEach(c=>{ const any=[...c.querySelectorAll('.venue')].some(l=>!l.hidden); c.querySelector('label').hidden=!any; c.querySelector('.vs').hidden=!any; }); }
+  vnpfBox.addEventListener('change',()=>{ state.vnpf=vnpfBox.checked; state.scope=state.vnpf?'poppodium':'all'; save(); applyVnpf(); render(); });
+  applyVnpf();
 
   // popovers openen/sluiten
   document.querySelectorAll('.fbtn[aria-controls]').forEach(btn => {
@@ -378,6 +385,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
       const d=e.start.slice(0,10);
       if (d < TODAY || d > limit) return false;
       if (state.view==='new' && !isNew(e)) return false;
+      if (state.view==='all' && d !== state.day) return false;
       if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
       if (state.venuesOff.includes(e.venue)) return false;
       if (state.scope!=='all' && (e.section||'poppodium')!=='poppodium') return false;
@@ -419,7 +427,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     document.getElementById('venueBtn').classList.toggle('active', !!state.venuesOff.length);
     document.getElementById('genreBtn').classList.toggle('active', !!(state.genres.length+state.subs.length));
     const list=document.getElementById('list');
-    if (!rows.length && !['week','month'].includes(state.view)){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
+    if (!rows.length && !['week','month'].includes(state.view)){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':state.view==='all'?'Geen concerten op deze dag met deze filters.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
     if (state.view==='week'){ renderWeeks(rows, list); wireSaves(); return; }
     if (state.view==='month'){ renderMonths(rows, list); wireSaves(); return; }
     // groeperen per dag (in tab Nieuw: per aankondigdag, nieuwste eerst)
@@ -517,13 +525,10 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   const dayPick=document.getElementById('dayPick'); dayPick.value=state.day; dayPick.min=TODAY;
   // springen naar een dag in de weergave Per dag (ook vanuit week/maand)
   function goToDay(d){
+    if (d < TODAY) d = TODAY;
     state.view='all'; state.day=d; dayPick.value=d; save();
     document.querySelectorAll('.tabs [data-view]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view==='all'));
-    shownDays = PAGE; render(false);
-    let sec=document.getElementById('d-'+d);
-    while(!sec && document.getElementById('more')){ shownDays+=PAGE; render(false); sec=document.getElementById('d-'+d); }
-    if(!sec){ const all=[...document.querySelectorAll('.day[id]')]; sec=all.find(x=>x.id.slice(2)>=d)||all[all.length-1]; }
-    if(sec){ const y=sec.getBoundingClientRect().top+window.scrollY-document.querySelector('.bar').offsetHeight-8; window.scrollTo({top:y}); }
+    render(false); window.scrollTo({top:0});
   }
   dayPick.addEventListener('change', ()=> goToDay(dayPick.value||TODAY));
   document.getElementById('list').addEventListener('click', ev=>{ const j=ev.target.closest('[data-goto]'); if(j){ ev.preventDefault(); goToDay(j.dataset.goto); } });
