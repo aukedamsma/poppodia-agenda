@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-04T17:32:44",
+ "generated": "2026-09-04T17:51:42",
  "venues": [
   {
    "name": "TivoliVredenburg",
@@ -18,8 +18,8 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.89,
-     "genre": 0.0
+     "price": 0.91,
+     "genre": 0.45
     }
    },
    "section": "poppodium",
@@ -93,7 +93,7 @@
    "city": "Amsterdam",
    "url": "https://www.melkweg.nl/nl/agenda",
    "strategy": "embedded",
-   "events": 236,
+   "events": 235,
    "note": "",
    "ok": true,
    "audit": {
@@ -129,14 +129,14 @@
    "city": "Amsterdam",
    "url": "https://www.paradiso.nl/",
    "strategy": "sitemap_detail",
-   "events": 126,
+   "events": 144,
    "note": "",
    "ok": true,
    "audit": {
     "coverage": {
      "time": 1.0,
-     "price": 0.44,
-     "genre": 0.34
+     "price": 0.43,
+     "genre": 0.33
     }
    },
    "section": "poppodium",
@@ -1380,7 +1380,7 @@
     "coverage": {
      "time": 0.98,
      "price": 0.85,
-     "genre": 0.5
+     "genre": 0.52
     }
    },
    "section": "poppodium",
@@ -2048,17 +2048,11 @@
    "name": "Loburg",
    "city": "Wageningen",
    "url": "https://www.loburg.com/",
-   "strategy": "wp_event",
-   "events": 18,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.loburg.com/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 18 events; jsonld_detail: 0 events",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 0.89,
-     "price": 0.44,
-     "genre": 0.28
-    }
-   },
+   "strategy": "error",
+   "events": 0,
+   "note": "ConnectionError: HTTPSConnectionPool(host='www.loburg.com', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.loburg.com', port=443): Failed to establish a new connec",
+   "ok": false,
+   "audit": {},
    "section": "overig",
    "capacity": 200
   },
@@ -2192,9 +2186,9 @@
    "capacity": null
   }
  ],
- "series": 4701,
+ "series": 4729,
  "estimated": {
-  "price": 10,
+  "price": 9,
   "time": 6,
   "kind": 0
  },
@@ -2326,10 +2320,9 @@
   "Schoolvoorstelling": 1,
   "Café": 1,
   "Neurodivergent": 1,
-  "Phoenix Academy": 1,
-  "Jasper Somsen Invites ...": 1
+  "Phoenix Academy": 1
  },
- "artists": 4327,
+ "artists": 4359,
  "genre_groups": {
   "pop": "Pop",
   "rock": "Rock",
@@ -2357,10 +2350,11 @@
   "overig": "Overig"
  },
  "kinds": {
-  "concert": 4571,
-  "club": 454,
-  "festival": 128,
-  "other": 229
+  "concert": 4569,
+  "club": 455,
+  "festival": 127,
+  "talk": 99,
+  "other": 232
  },
- "total_events": 5483
+ "total_events": 5482
 }

@@ -728,8 +728,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
                        price=tprice, source="detail_text")
     if ev is not None:
         if v.get("lineup") and not ev.lineup:
-            names = [clean(x.get_text()) for x in soup_of(html).select(v["lineup"])]
-            ev.lineup = [x for x in dict.fromkeys(names) if x and 1 < len(x) <= 60 and x.lower() != ev.title.lower()][:20]
+            ev.lineup = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])], ev.title)
         if not ev.genres:
             ev.genres = genre_hints(txt[:1500])
         # aanvang gaat vóór deuren-open: als de gevonden tijd gelijk is aan de deurtijd en er staat een aanvang, neem die
@@ -747,6 +746,21 @@ WEEKDAY_RE = r"(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|ma|di
 
 
 _JSON_PRICE = re.compile(r'"(?:price|prijs|ticketPrice|ticket_price|minPrice|lowestPrice|priceFrom|price_from)"\s*:\s*"?(€?\s?\d{1,3}(?:[.,]\d{1,2})?|gratis|free)"?', re.I)
+
+
+LINEUP_NOISE = re.compile(r"korting|\bjaar\b|ticket|info|praktisch|bereikbaar|parkeer|toegankelijk|faq|vragen|huisregels|garderobe|eten|drinken|route|membership|\blid\b|leden|cadeau|voucher|rolstoel|gehoor|zaal open|deuren|aanvang|meer weten|programma|nieuwsbrief", re.I)
+
+
+def clean_lineup(names: list[str], title: str = "") -> list[str]:
+    """Line-up-namen opschonen: geen ticket-/praktische-info-koppen (Tivoli-accordeon: 'Onder 30 jaar', 'Koop met Korting')."""
+    out = []
+    for x in names:
+        x = clean(x)
+        if not x or len(x) < 2 or len(x) > 60 or x.lower() == (title or "").lower() or LINEUP_NOISE.search(x):
+            continue
+        if x not in out:
+            out.append(x)
+    return out[:20]
 
 
 def _decoded(html: str) -> str:
@@ -859,19 +873,25 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     """Eventgegevens uit een React Server Components-payload (o.a. Paradiso: Craft CMS via Next.js)."""
     ev_id = url.rstrip("/").rsplit("/", 1)[-1]
     clean_html = html.replace('\\"', '"')
-    m = re.search(r'"__typename":\s*"event_\w+_Entry",\s*"id":\s*"%s".{0,4000}?"startDateTime":\s*"([^"]+)"' % re.escape(ev_id), clean_html, re.S)
+    # lange line-ups (Paradiso: "artists" per zaal) kunnen duizenden tekens tussen id en startDateTime zetten
+    m = re.search(r'"__typename":\s*"event_\w+_Entry",\s*"id":\s*"%s".{0,40000}?"startDateTime":\s*"([^"]+)"' % re.escape(ev_id), clean_html, re.S)
     if not m:
         return None
     block = clean_html[m.start(): m.end() + 2500]
+    head = clean_html[m.start(): m.end()]  # id t/m startDateTime: hier staan titel, ondertitel en line-up
 
     def fld(name):
         mm = re.search(r'"%s":\s*"([^"]*)"' % name, block)
         return clean(mm.group(1)) if mm else None
 
-    start = parse_dt(m.group(1))
+    start = parse_dt(fld("startMain") or m.group(1))  # startMain = aanvang hoofdact; startDateTime is vaak de deurtijd
     if not start:
         return None
     title = fld("title") or "?"
+    lineup = []
+    for seg in re.findall(r'"artists":\s*\[(.*?)\]\s*\}', head, re.S):
+        lineup += [clean(t) for t in re.findall(r'"title":\s*"([^"]+)"', seg)]
+    lineup = [x for x in dict.fromkeys(lineup) if x and not re.search(r"\btba\b|more tba|special guest", x, re.I)][:20]
     genres = []
     if '"subBrand"' in block:
         genres = [g for g in re.findall(r'"title":\s*"([^"]+)"', block.split('"subBrand"', 1)[1]) if g][:3]
@@ -884,9 +904,13 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     sub = fld("subtitle")
     if loc and loc.group(1).lower() not in (v["name"].lower(),):
         sub = (sub + " · " if sub else "") + loc.group(1)
-    price = fld("price") or fld("priceFrom")
+    price = fld("ticketPriceFormatted") or fld("price") or fld("priceFrom")
+    if price:
+        price = price.replace("€", "").strip()
+    if fld("soldOut") == "yes":
+        status = status or "uitverkocht"
     return Event(venue=v["name"], city=v["city"], title=title, start=start.isoformat(timespec="minutes"), url=url,
-                 subtitle=sub, genres=genres, price=(f"€ {price}" if price else None), status=status, source="flight_json")
+                 subtitle=sub, genres=genres, price=(f"€ {price}" if price else None), status=status, source="flight_json", lineup=lineup)
 
 
 def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
@@ -960,8 +984,7 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
         tstart, tdoors = times_from_embedded_json(html)
     extra.update({"start": tstart, "doors": tdoors, "price": tprice})
     if v.get("lineup") and not extra.get("lineup"):
-        names = [clean(x.get_text()) for x in soup_of(html).select(v["lineup"])]
-        extra["lineup"] = [x for x in dict.fromkeys(names) if x and 1 < len(x) <= 60][:20]
+        extra["lineup"] = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])])
     if not extra.get("ld_genres"):
         extra["hint_genres"] = genre_hints(txt[:1500])
     cache[key] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "extra": extra}

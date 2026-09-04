@@ -240,6 +240,15 @@ def test_text_and_json_extraction():
     assert fetch.price_from_embedded_json(enc) == "€ 34,75"
 
 
+def test_paradiso_flight_json_long_lineup():
+    html = open(str(Path(__file__).parent / "fixtures_paradiso_seg.txt"), encoding="utf-8").read() if (Path(__file__).parent / "fixtures_paradiso_seg.txt").exists() else ""
+    if not html:
+        return
+    e = fetch.event_from_flight_json(html, "https://www.paradiso.nl/programma/the-patchwork-family-5-year-anniversary/2900191", {"name": "Paradiso", "city": "Amsterdam"})
+    assert e and e.start == "2026-09-04T22:00" and e.price == "€ 5,00" and e.lineup[:2] == ["The Patchwork Family", "DJ Europarking"]
+    assert fetch.clean_lineup(["Onder 30 jaar", "Koop met Korting", "Lime Garden", "STONE"], "Loose Ends") == ["Lime Garden", "STONE"]
+
+
 def test_classify_kind():
     from taxonomy import classify_kind as ck
     assert ck("Two Door Cinema Club", None, [], [], "2026-10-01T20:00") == "concert"
