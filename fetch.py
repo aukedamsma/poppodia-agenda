@@ -699,14 +699,17 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
     return out
 
 
+FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
 CACHE_VERSION = 3  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
     """Leest een eventpagina; cache op URL zodat dit maar zelden opnieuw hoeft."""
     c = cache.get(url)
-    if c and c.get("fetched") and c.get("v", 1) < CACHE_VERSION and c.get("event") and c["event"].get("start", "9999") >= TODAY.isoformat():
-        c = None  # verouderd cache-item van een oudere parser (bv. zonder prijs/line-up): opnieuw ophalen
+    if c and c.get("fetched") and c.get("event") and c["event"].get("start", "9999") >= TODAY.isoformat():
+        stale = c.get("v", 1) < CACHE_VERSION or (c["event"].get("source") == "flight_json" and c.get("fv", 1) < FLIGHT_VERSION)
+        if stale:
+            c = None  # verouderd cache-item van een oudere parser (bv. zonder prijs/line-up, of met gelekte startMain): opnieuw ophalen
     if c and c.get("fetched"):
         # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
         ttl = int(v.get("detail_ttl_days", 10)) if c.get("event") else 1
@@ -763,7 +766,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
         if not ev.price and tprice:
             ev.price = tprice
-    cache[url] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "event": asdict(ev) if ev else None}
+    cache[url] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "fv": FLIGHT_VERSION, "event": asdict(ev) if ev else None}
     return ev
 
 
@@ -903,12 +906,18 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     m = re.search(r'"__typename":\s*"event_\w+_Entry",\s*"id":\s*"%s".{0,40000}?"startDateTime":\s*"([^"]+)"' % re.escape(ev_id), clean_html, re.S)
     if not m:
         return None
-    block = clean_html[m.start(): m.end() + 2500]
+    # blok = dit event t/m het volgende event-object; anders lekken velden (startMain, prijs) van "gerelateerde events"
+    tail = clean_html[m.end(): m.end() + 4000]
+    nxt = re.search(r'"__typename":\s*"event_\w+_Entry"', tail)
+    block = clean_html[m.start(): m.end() + (nxt.start() if nxt else 2500)]
     head = clean_html[m.start(): m.end()]  # id t/m startDateTime: hier staan titel, ondertitel en line-up
+
+    def _unesc(v: str) -> str:  # JSON-escapes in de RSC-payload: \u0026 -> &, \/ -> /
+        return re.sub(r"\\u([0-9a-fA-F]{4})", lambda mm: chr(int(mm.group(1), 16)), v).replace("\\/", "/")
 
     def fld(name):
         mm = re.search(r'"%s":\s*"([^"]*)"' % name, block)
-        return clean(mm.group(1)) if mm else None
+        return clean(_unesc(mm.group(1))) if mm else None
 
     start = parse_dt(fld("startMain") or m.group(1))  # startMain = aanvang hoofdact; startDateTime is vaak de deurtijd
     if not start:
@@ -916,7 +925,7 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     title = fld("title") or "?"
     lineup = []
     for seg in re.findall(r'"artists":\s*\[(.*?)\]\s*\}', head, re.S):
-        lineup += [clean(t) for t in re.findall(r'"title":\s*"([^"]+)"', seg)]
+        lineup += [clean(_unesc(t)) for t in re.findall(r'"title":\s*"([^"]+)"', seg)]
     lineup = [x for x in dict.fromkeys(lineup) if x and not re.search(r"\btba\b|more tba|special guest", x, re.I)][:20]
     genres = []
     if '"subBrand"' in block:
