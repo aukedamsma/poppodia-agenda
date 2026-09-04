@@ -56,7 +56,8 @@ h1 span{color:var(--accent)}
 .fbtn[aria-expanded="true"],.fbtn.active{border-color:var(--ink);color:var(--ink)}
 .fbtn .cnt{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;padding:0 6px;line-height:16px;font-weight:600;font-variant-numeric:tabular-nums}
 .fbtn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
-.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:0 1 260px !important;min-width:110px;margin-left:auto;box-shadow:var(--shadow)}
+.filters{display:flex;gap:8px;margin-left:auto;align-items:center}
+.search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:8px;flex:0 1 260px !important;min-width:110px;box-shadow:var(--shadow)}
 .search input{border:0;background:none;color:var(--ink);font:inherit;width:100%;outline:none;font-size:13px}
 .search input::placeholder{color:var(--ink-3)}
 .count{margin-left:auto;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -81,8 +82,11 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-.daynav{display:flex;gap:4px;align-items:center}
-.daynav input{font-size:13px;color:var(--ink)}
+.pnav button:disabled{opacity:.35}
+.pnav .plabel{padding:6px 12px 6px 6px;font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pnav .plabel small{font-weight:400;color:var(--ink-3);margin-left:6px}
+.daynav{display:inline-flex;align-items:center}
+.daynav input{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:0;padding:6px 8px 6px 0;border-radius:6px}
 .save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
 .save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
 .save:hover{color:var(--accent);background:var(--accent-soft)}
@@ -159,7 +163,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 @media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} .wgrid{grid-template-columns:1fr} .wcol{min-height:0} .mgrid{grid-template-columns:repeat(7,minmax(0,1fr))} .mgrid .wk{display:none} .mcell{min-height:60px} .mi{display:none} .mi.plus{display:block} }
 @media (max-width:560px){
-  .bar{flex-wrap:wrap} .search{margin-left:0;flex:1 1 100% !important}
+  .bar{flex-wrap:wrap} .filters{margin-left:0} .search{flex:1 1 100% !important}
   .grid{grid-template-columns:1fr} h1{font-size:32px} .meta{margin-left:0}
   .venues{grid-template-columns:1fr} .panel{left:auto;right:0;max-width:calc(100vw - 40px)} .count{display:none}
 }
@@ -181,15 +185,15 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     <button data-view="new" aria-pressed="false">Nieuw<span class="n" id="newCount"></span></button>
     <button data-view="saved" aria-pressed="false" class="ico" aria-label="Mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg><span class="n" id="savedCount"></span></button>
   </div>
-  <div class="daynav" id="periodnav" hidden>
-    <button class="fbtn" id="prevP" aria-label="Vorige">‹</button>
-    <button class="fbtn" id="nextP" aria-label="Volgende">›</button>
-    <button class="fbtn" id="todayP">Vandaag</button>
-  </div>
-  <div class="daynav" id="daynav" hidden>
-    <input class="fbtn" type="date" id="dayPick" title="Spring naar dag">
+  <div class="tabs pnav" id="periodnav" hidden>
+    <button id="prevP" aria-label="Vorige">‹</button>
+    <button id="nextP" aria-label="Volgende">›</button>
+    <button id="todayP">Vandaag</button>
+    <span class="plabel" id="plabel"></span>
+    <span class="daynav" id="daynav" hidden><input type="date" id="dayPick" title="Spring naar dag"></span>
   </div>
   <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
+  <div class="filters">
   <div class="pop">
     <button class="fbtn" id="venueBtn" aria-expanded="false" aria-controls="venuePanel">Podia <span class="cnt" id="venueCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="venuePanel" hidden>
@@ -226,6 +230,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
         <div class="chips" id="subChips"></div>
       </div>
     </div>
+  </div>
   </div>
   <label class="search"><svg viewBox="0 0 12 12" width="12" height="12" style="stroke:var(--ink-3);fill:none;stroke-width:1.6"><circle cx="5" cy="5" r="3.5"/><path d="M8 8l3 3"/></svg><input id="q" type="search" placeholder="Zoek artiest, podium…" autocomplete="off"></label>
   <span class="count" id="count" hidden></span>
@@ -517,6 +522,10 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     updateSavedCount();
     document.getElementById('daynav').hidden = state.view!=='all';
     document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
+    const pl=document.getElementById('plabel');
+    if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getDate()} ${MONS[d0.getMonth()]} – ${d6.getDate()} ${MONS[d6.getMonth()]}</small>`; pl.hidden=false; }
+    else if (state.view==='month'){ const m=new Date((state.mo||isoOf(new Date(today.getFullYear(),today.getMonth(),1)))+'T12:00:00'); pl.textContent=`${MON[m.getMonth()]} ${m.getFullYear()}`; pl.hidden=false; }
+    else pl.hidden=true;
     if (['all','week','month'].includes(state.view)) document.getElementById('prevP').disabled = state.view==='all' ? (state.day||TODAY) <= TODAY : state.view==='week' ? (state.wk||TODAY) <= isoOf(new Date(new Date(today).setDate(today.getDate()-((today.getDay()+6)%7)))) : (state.mo||TODAY) <= isoOf(new Date(today.getFullYear(),today.getMonth(),1));
     document.getElementById('exportSaved').hidden = state.view!=='saved' || !saved.size;
   }
