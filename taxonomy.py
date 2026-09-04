@@ -80,7 +80,7 @@ def normalize_genres(raw: list[str], title: str = "", subtitle: str = "") -> tup
         # laatste redmiddel: woorden in titel/ondertitel die duidelijk een genre of type aanduiden
         txt = _fold(f"{title} {subtitle}")
         for m, g in _taxonomy()[1]:
-            if g in ("kids", "talk", "party", "dance", "metal", "punk", "hiphop", "jazz", "klassiek") and len(m) >= 4 \
+            if g in ("kids", "comedy", "spokenword", "party", "electronic", "metal", "punk", "hiphop", "jazz", "classical") and len(m) >= 4 \
                     and re.search(rf"(?<![a-z0-9]){re.escape(m)}(?![a-z0-9])", txt):
                 out.append(g)
                 break
@@ -103,7 +103,7 @@ def genre_hints(text: str, limit: int = 3) -> list[str]:
         return []
     out: list[str] = []
     for m, g in _taxonomy()[1]:
-        if g in ("overig", "party", "talk", "kids") or len(m) < 4 or m in _HINT_SKIP:
+        if g in ("overig", "party", "comedy", "spokenword", "kids") or len(m) < 4 or m in _HINT_SKIP:
             continue
         if re.search(rf"(?<![a-z0-9]){re.escape(m)}(?![a-z0-9])", f) and m not in out:
             out.append(m)
@@ -163,7 +163,7 @@ def classify_kind_ex(title: str, subtitle: str | None, raw_tags: list[str], genr
             return kind, True
         if weak_rx and time and time >= weak_from and weak_rx.search(ft):
             return kind, True
-    if "talk" in genre_norm:
+    if "comedy" in genre_norm or "spokenword" in genre_norm:
         return "talk", True
     if "kids" in genre_norm:
         return "other", True
@@ -284,7 +284,7 @@ def _group_words() -> set[str]:
     for g in groups.values():
         for part in re.split(r"[/,]", g.get("label", "")):
             words.add(_fold(part))
-    words |= {"popmuziek", "rockmuziek", "hip hop", "hip-hop", "hiphop", "r&b", "electronic", "dance", "klassiek", "classical"}
+    words |= {"popmuziek", "rockmuziek", "hip hop", "hip-hop", "hiphop", "r&b", "electronic", "elektronisch", "dance", "klassiek", "classical", "indie", "alternative", "alternatief", "wereldmuziek", "world", "country", "blues", "folk", "soul", "funk", "jazz", "reggae", "latin", "ambient", "punk", "metal", "pop", "rock", "experimental", "experimenteel", "gospel", "comedy", "kids"}
     return words
 
 

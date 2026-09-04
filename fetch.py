@@ -34,7 +34,7 @@ from dateutil import parser as dtparser
 
 import artists as artistdb
 import series as seriesdb
-from taxonomy import (classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
+from taxonomy import (normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group)
 
 ROOT = Path(__file__).parent
@@ -933,7 +933,9 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     lineup = [x for x in dict.fromkeys(lineup) if x and not re.search(r"\btba\b|more tba|special guest", x, re.I)][:20]
     genres = []
     if '"subBrand"' in block:
-        genres = [g for g in re.findall(r'"title":\s*"([^"]+)"', block.split('"subBrand"', 1)[1]) if g][:3]
+        # subBrand = programmareeks (Club Paradiso, Indiestad, Tones, Sugar Mountain…): alleen houden als het een genre is
+        cands = [_unesc(g) for g in re.findall(r'"title":\s*"([^"]+)"', block.split('"subBrand"', 1)[1].split("]", 1)[0]) if g][:3]
+        genres = [g for g in cands if normalize_tag(g) not in (None, "overig")]
     loc = re.search(r'"location":\s*\{[^{}]*?"title":\s*"([^"]+)"', block)
     status = None
     if re.search(r'"(cancelled|isCancelled)":true', block) or "afgelast" in block.lower():
@@ -1393,6 +1395,10 @@ def main(only: list[str] | None = None) -> int:
     kind_learn_path, sub_learn_path = STATE / "kind_learn.json", STATE / "subgenre_learn.json"
     kind_learn = json.loads(kind_learn_path.read_text()) if kind_learn_path.exists() else {}
     sub_learn = json.loads(sub_learn_path.read_text()) if sub_learn_path.exists() else {}
+    for f, v in list(sub_learn.get("votes", {}).items()):      # hernoemde hoofdgenres in het leergeheugen omzetten
+        sub_learn["votes"][f] = artistdb.migrate_groups(v)
+    for f, v in sub_learn.get("accepted", {}).items():
+        v["group"] = artistdb.GROUP_RENAMES.get(v.get("group"), v.get("group"))
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.price = normalize_price(e.price)
@@ -1441,6 +1447,8 @@ def main(only: list[str] | None = None) -> int:
     report["learned"] = {"kind_tags": kind_learn.get("accepted", {}), "subgenres": sub_learn.get("accepted", {})}
     report["subgenre_labels"] = {k: subgenre_label(k) for e in all_events for k in e.subgenres}
     report["subgenre_labels"].update({k: v["label"] for k, v in sub_learn.get("accepted", {}).items()})
+    report["subgenre_groups"] = {k: subgenre_group(k) for e in all_events for k in e.subgenres}
+    report["subgenre_groups"].update({k: v["group"] for k, v in sub_learn.get("accepted", {}).items()})
     log(f"Artiestenbank: {len(adb)} artiesten; {filled} events kregen genre via de kennisbank")
 
     # --- reeksengeheugen: prijs/tijd van terugkerende events onthouden en aanvullen ---

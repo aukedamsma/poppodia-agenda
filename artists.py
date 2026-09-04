@@ -36,12 +36,29 @@ UA = "poppodia-agenda/1.0 (https://github.com/aukedamsma/poppodia-agenda)"
 TODAY = date.today().isoformat()
 
 
+# hoofdgenres die hernoemd zijn (sept. 2026: Bandcamp-indeling); oude stemmen in de kennisbank worden bij laden omgezet
+GROUP_RENAMES = {"indie": "alternative", "dance": "electronic", "bass": "electronic", "klassiek": "classical",
+                 "experimenteel": "experimental", "roots": "country", "talk": "spokenword"}
+
+
+def migrate_groups(counts: dict) -> dict:
+    out: dict = {}
+    for g, n in (counts or {}).items():
+        g2 = GROUP_RENAMES.get(g, g)
+        out[g2] = out.get(g2, 0) + n
+    return out
+
+
 def load() -> dict:
     if PATH.exists():
         try:
-            return json.loads(PATH.read_text(encoding="utf-8"))
+            db = json.loads(PATH.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
-            pass
+            return {}
+        for a in db.values():
+            if any(g in GROUP_RENAMES for g in a.get("votes", {})):
+                a["votes"] = migrate_groups(a["votes"])
+        return db
     return {}
 
 

@@ -1,68 +1,76 @@
 # Genre-taxonomie van de Podiumagenda.
 #
-# Uitgangspunt: de hoofdindelingen van RateYourMusic, Discogs en AllMusic, teruggebracht tot de
-# ~22 groepen die in de programmering van Nederlandse poppodia daadwerkelijk voorkomen.
-# Ruwe tags van podia blijven bewaard (event.genres); dit bestand bepaalt event.genre_norm.
+# Hoofdgenres: de genre-indeling van Bandcamp Discover (sept. 2026), zonder podcasts en audiobooks (geen live muziek),
+# aangevuld met drie categorieën die in Nederlandse programmering onmisbaar zijn: Nederlandstalig, Feest / tribute en
+# Overig. Eén bewuste afwijking: Bandcamps 'acoustic' valt hier onder Folk / singer-songwriter (in de praktijk dezelfde
+# programmering). Labels zijn Nederlands waar dat natuurlijk klinkt (Wereldmuziek, Klassiek, Filmmuziek), Engels waar
+# het vakjargon dat is (Indie, Hiphop, Ambient). Subgenres (verderop) volgen Bandcamp + RateYourMusic.
+# Ruwe tags van podia blijven bewaard (event.genres); dit bestand bepaalt event.genre_norm en event.subgenres.
 #
-# Regels worden van boven naar beneden getest; de EERSTE regel die past wint. Zet daarom specifieke
-# termen (pop-punk -> punk, indie-pop -> indie, hardcore-punk -> punk, hardstyle -> dance) vóór de
-# generieke (pop, punk, hardcore). `match` zijn losse woorden/fragmenten (kleine letters, koppeltekens
-# en spaties worden genegeerd bij het vergelijken). Onbekende tags komen in data/report.json onder
-# `unknown_genres`, zodat je ze hier kunt toevoegen.
+# Regels worden van boven naar beneden getest; de EERSTE regel die past wint. Zet daarom specifieke termen
+# (pop-punk -> punk, indie-pop -> alternative, hardstyle -> electronic) vóór de generieke (pop, punk, hardcore).
+# `match` zijn losse woorden/fragmenten (kleine letters, koppeltekens en spaties worden genegeerd bij het vergelijken).
+# Onbekende tags komen in data/report.json onder `unknown_genres`, zodat je ze hier kunt toevoegen.
 
 groups:
-  pop:            {label: Pop,                     desc: "pop, synthpop, dreampop, k-pop, hyperpop, popballads"}
-  rock:           {label: Rock,                    desc: "rock, hardrock, classic rock, psychedelica, prog, grunge, stoner, garage"}
-  indie:          {label: Indie / alternative,     desc: "indie, alternative, shoegaze, post-rock, britpop, emo"}
-  punk:           {label: Punk / hardcore,         desc: "punk, post-punk, hardcore-punk, ska-punk, emo-hardcore"}
-  metal:          {label: Metal,                   desc: "metal in alle varianten, metalcore, grindcore, doom, sludge"}
-  hiphop:         {label: Hiphop,                  desc: "hiphop, rap, trap, drill, grime, cloud rap, nederhop"}
-  soul:           {label: Soul / R&B,              desc: "soul, r&b, neo-soul, motown, gospel"}
-  funk:           {label: Funk / disco,            desc: "funk, disco, boogie, italo-disco, groove"}
-  jazz:           {label: Jazz,                    desc: "jazz, improvisatie, fusion, nu-jazz, bigband"}
-  roots:          {label: Blues / roots,           desc: "blues, rock-'n-roll, rockabilly, country, americana, bluegrass"}
-  folk:           {label: Folk / singer-songwriter, desc: "folk, singer-songwriter, akoestisch, kleinkunst-achtig"}
-  electronic:     {label: Electronic,              desc: "electronica, ambient, IDM, synthwave, electro, downtempo, modulair"}
-  dance:          {label: House / techno / dance,  desc: "house, techno, trance, hardstyle, rave, disco-house, clubmuziek"}
-  bass:           {label: Drum & bass / bass,      desc: "drum & bass, jungle, dubstep, uk garage, breakbeat"}
-  reggae:         {label: Reggae / ska,            desc: "reggae, dub, dancehall, ska, rocksteady"}
-  world:          {label: World / global,          desc: "afrobeat, amapiano, balkan, arabisch, aziatisch, flamenco, wereldmuziek"}
-  latin:          {label: Latin,                   desc: "salsa, bachata, cumbia, reggaeton, latin pop"}
-  nederlandstalig: {label: Nederlandstalig,        desc: "nederpop, levenslied, schlager, nederhop wordt hiphop"}
-  klassiek:       {label: Klassiek / neoklassiek,  desc: "klassiek, kamermuziek, neoklassiek, filmmuziek, oude muziek"}
-  experimenteel:  {label: Experimenteel,           desc: "avant-garde, noise, industrial, drone, sound art, krautrock"}
-  party:          {label: Feest / tribute,         desc: "tributebands, coverbands, decennia-feesten, bingo, quiz, karaoke, silent disco"}
-  talk:           {label: Comedy / talk,           desc: "cabaret, comedy, lezing, talkshow, podcast, spoken word, poëzie"}
-  kids:           {label: Kids / familie,          desc: "kindervoorstellingen, familieconcerten"}
-  overig:         {label: Overig,                  desc: "alles wat niet in te delen is"}
+  electronic:     {label: Elektronisch,             desc: "electronica, house, techno, drum & bass, dubstep, trance, hardstyle, electro, IDM, synthwave"}
+  rock:           {label: Rock,                     desc: "rock, hardrock, classic rock, psychedelica, prog, grunge, stoner, garage, rock-'n-roll"}
+  metal:          {label: Metal,                    desc: "metal in alle varianten, metalcore, hardcore, grindcore, doom, sludge"}
+  alternative:    {label: Alternative / indie,      desc: "indie, alternative, shoegaze, dream pop, post-rock, britpop, emo"}
+  hiphop:         {label: Hiphop / rap,             desc: "hiphop, rap, trap, drill, grime, cloud rap, nederhop"}
+  experimental:   {label: Experimenteel,            desc: "avant-garde, noise, industrial, sound art, krautrock, free improvisation"}
+  punk:           {label: Punk,                     desc: "punk, post-punk, hardcore-punk, ska-punk, pop-punk, post-hardcore"}
+  folk:           {label: Folk / singer-songwriter, desc: "folk, singer-songwriter, akoestisch, indie folk (Bandcamp: folk + acoustic)"}
+  pop:            {label: Pop,                      desc: "pop, synthpop, k-pop, hyperpop, power pop"}
+  ambient:        {label: Ambient,                  desc: "ambient, drone, soundscapes, dark ambient"}
+  soundtrack:     {label: Filmmuziek / soundtrack,  desc: "filmmuziek, soundtracks, gamemuziek, live-scores"}
+  world:          {label: Wereldmuziek,             desc: "afrobeats, amapiano, balkan, arabisch, aziatisch, flamenco, celtic"}
+  jazz:           {label: Jazz,                     desc: "jazz, improvisatie, fusion, nu-jazz, bigband"}
+  funk:           {label: Funk / disco,             desc: "funk, disco, boogie, italo-disco, groove"}
+  soul:           {label: R&B / soul,               desc: "soul, r&b, neo-soul, motown"}
+  devotional:     {label: Gospel / devotioneel,     desc: "gospel, worship, spirituele muziek"}
+  classical:      {label: Klassiek,                 desc: "klassiek, kamermuziek, neoklassiek, oude muziek, opera, koor"}
+  reggae:         {label: Reggae / ska,             desc: "reggae, dub, dancehall, ska, rocksteady"}
+  country:        {label: Country / americana,      desc: "country, americana, bluegrass, alt-country, rockabilly"}
+  spokenword:     {label: Spoken word / lezing,     desc: "spoken word, poëzie, lezing, talkshow, debat, podcast-opnames"}
+  comedy:         {label: Comedy / cabaret,         desc: "stand-up, comedy, cabaret"}
+  blues:          {label: Blues,                    desc: "blues, bluesrock, delta blues, boogie-woogie"}
+  kids:           {label: Kinderen / familie,       desc: "kindervoorstellingen, familieconcerten"}
+  latin:          {label: Latin,                    desc: "salsa, bachata, cumbia, reggaeton, braziliaans, flamenco"}
+  nederlandstalig: {label: Nederlandstalig,         desc: "nederpop, levenslied, schlager, kleinkunst (nederhop -> hiphop)"}
+  party:          {label: Feest / tribute,          desc: "tributebands, coverbands, decennia-feesten, bingo, quiz, karaoke, silent disco"}
+  overig:         {label: Overig,                   desc: "alles wat niet in te delen is"}
 
 # Volgorde is betekenisvol: eerste treffer wint.
 rules:
   # --- eventtypes die geen muziekgenre zijn ---
   - {group: kids,          match: [kids, kinder, familie, family, jeugd, peuter, kleuter]}
-  - {group: talk,          match: [comedy, cabaret, lezing, talk, talkshow, podcast, spoken word, poezie, poetry, literatuur, debat, college, filosof, boekpresentatie, stand-up, standup, quiz avond]}
+  - {group: comedy,        match: [comedy, cabaret, stand-up, standup, stand up, improv comedy]}
+  - {group: spokenword,    match: [lezing, talk, talkshow, podcast, spoken word, poezie, poetry, literatuur, debat, college, filosof, boekpresentatie, quiz avond, voordracht, storytelling]}
   - {group: party,         match: [tribute, tributes, classics, legends, hits, klassieker, greatest hits, eurovisie, eurovisiesongfestival, songfestival, decennia, 70s, 60s, 80's, 90's, zeroes, throwback, retro, coverband, cover band, covers, klassiekers, guilty pleasures, party hits, 80s, 90s, 00s, nineties, eighties, foute, bingo, pubquiz, karaoke, silent disco, feest, party, fout, sing along, singalong, meezing, apres ski, après ski, schlager party]}
   # --- specifieke termen vóór generieke ---
   - {group: punk,          match: [gypsypunk, gypsy punk, screamo, posthardcore, post-hardcore, post-punk, postpunk, pop-punk, poppunk, hardcore-punk, hardcore punk, ska-punk, skapunk, folk-punk, skate-punk, garage-punk, electro-punk, jangle-punk, queercore, riot grrrl, crust, d-beat, oi, anarcho, punkrock, punk]}
-  - {group: metal,         match: [metalcore, deathcore, grindcore, death metal, black metal, doom metal, doom, sludge, thrash, trash-metal, trash metal, power metal, powermetal, nu metal, nu-metal, folk metal, pagan, glam metal, glammetal, symphonic metal, progressive metal, prog metal, stoner metal, heavy, metal, hardcore, beatdown]}
-  - {group: indie,         match: [altpop, alt-pop, alt pop, alt rock, altrock, indiesoul, indie-pop, indiepop, indie-rock, indierock, indie, alternative, alternatief, shoegaze, dreampop, dream pop, post-rock, postrock, math rock, emo, britpop, brit-pop, slowcore, lo-fi, lofi, jangle, twee, art pop, art rock, noise pop, noise rock, noiserock]}
+  - {group: metal,         match: [metalcore, deathcore, grindcore, death metal, black metal, doom metal, doom, sludge, thrash, trash-metal, trash metal, power metal, powermetal, nu metal, nu-metal, folk metal, pagan, glam metal, glammetal, symphonic metal, progressive metal, prog metal, stoner metal, post-metal, heavy, metal, hardcore, beatdown]}
+  - {group: alternative,   match: [altpop, alt-pop, alt pop, alt rock, altrock, indiesoul, indie-pop, indiepop, indie-rock, indierock, indie, alternative, alternatief, shoegaze, dreampop, dream pop, post-rock, postrock, math rock, emo, britpop, brit-pop, slowcore, lo-fi, lofi, jangle, twee, art pop, art rock, noise pop, noise rock, noiserock]}
   - {group: nederlandstalig, match: [nederlands, nederpop, nederlandstalig, nederlandstalige, levenslied, hollandse, nederbeat, dutch pop, schlager, volksmuziek, smartlap, kleinkunst, chanson]}
-  - {group: hiphop,        match: [hip-hop, hiphop, hip hop, rap, trap, drill, grime, cloud rap, emo rap, nederhop, boom bap, urban, afrotrap, r&b hiphop]}
-  - {group: bass,          match: [drum & bass, drum and bass, drum&bass, dnb, d&b, jungle, dubstep, uk garage, uk-garage, ukg, breakbeat, breaks, bassline, footwork, juke, bass music, bass]}
-  - {group: dance,         match: [deephouse, house, techno, tekno, trance, psytrance, hardstyle, hardcore dance, gabber, rave, acid, electro house, tech house, deep house, progressive house, soulful house, minimal, club, clubnacht, dance, edm, eurodance, italo, italo-disco, disco house, nu-disco, uptempo, hard dance, donk, hardtechno, hard techno, schranz]}
-  - {group: electronic,    match: [electronisch, electronics, electronic, electronica, elektronisch, electro, ambient, idm, synthwave, synth, modulaire, modular, downtempo, trip hop, triphop, chiptune, glitch, leftfield, folktronica, hyperpop, digicore, depriwave, vaporwave, darkwave, ebm, coldwave, minimal wave, new wave, new-wave, wave]}
+  - {group: hiphop,        match: [hip-hop, hiphop, hip hop, rap, trap, drill, grime, cloud rap, emo rap, nederhop, boom bap, urban, afrotrap, r&b hiphop, phonk]}
+  - {group: soundtrack,    match: [filmmuziek, soundtrack, soundtracks, film music, ost, game music, gamemuziek, live score, live-score]}
+  - {group: devotional,    match: [gospel, worship, spiritual, devotional, christelijk, christian]}
+  - {group: ambient,       match: [ambient, dark ambient, drone, soundscapes, soundscape, new age]}
+  - {group: electronic,    match: [drum & bass, drum and bass, drum&bass, dnb, d&b, jungle, dubstep, uk garage, uk-garage, ukg, breakbeat, breaks, bassline, footwork, juke, bass music, bass, deephouse, house, techno, tekno, trance, psytrance, hardstyle, hardcore dance, gabber, rave, acid, electro house, tech house, deep house, progressive house, soulful house, minimal, club, clubnacht, dance, edm, eurodance, italo, italo-disco, disco house, nu-disco, uptempo, hard dance, donk, hardtechno, hard techno, schranz, electronisch, electronics, electronic, electronica, elektronisch, electro, idm, synthwave, synth, modulaire, modular, downtempo, trip hop, triphop, chiptune, glitch, leftfield, folktronica, hyperpop, digicore, depriwave, vaporwave, darkwave, ebm, coldwave, minimal wave, new wave, new-wave, wave, breakcore]}
   - {group: funk,          match: [funk, disco, boogie, groove, motown]}
-  - {group: soul,          match: [soul, r&b, rnb, r and b, neo-soul, neosoul, gospel, trap soul, quiet storm]}
+  - {group: soul,          match: [soul, r&b, rnb, r and b, neo-soul, neosoul, trap soul, quiet storm]}
   - {group: jazz,          match: [jazzy, jazz, improvisatie, improv, fusion, bigband, big band, bebop, swing]}
   - {group: reggae,        match: [reggae, dub, dancehall, ska, rocksteady, roots reggae, soundsystem, sound system]}
-  - {group: latin,         match: [latin, salsa, bachata, cumbia, reggaeton, merengue, bossa, brazil, braziliaans, tropical, latino, forro, forró, samba]}
-  - {group: world,         match: [afropop, mali, mpb, afrobeat, afrobeats, afro, amapiano, world, wereldmuziek, global, balkan, klezmer, arabic, arabisch, oriental, turks, turkish, kaseko, gnawa, highlife, soukous, kizomba, flamenco, fado, celtic, ierse, irish, tuareg, desert blues, cumbia digital, bollywood, k-pop, kpop, j-pop, jpop, h-pop]}
-  - {group: roots,         match: [countrypop, country pop, blues, rock & roll, "rock 'n' roll", rock n roll, rock-n-roll, rockabilly, rock and roll, country, americana, bluegrass, roots, western, honky tonk, gospel blues, boogie woogie, cajun, zydeco, surf]}
-  - {group: folk,          match: [singer-songwriter, singer, songwriter, indiefolk, indie folk, folkpop, singer songwriter, songwriter, folk, akoestisch, acoustic, unplugged, troubadour, liedjes, ballad]}
-  - {group: klassiek,      match: [klassiek, classical, neo-klassiek, neoklassiek, neo-classical, neoclassical, kamermuziek, orkest, orchestra, ensemble, oude muziek, early music, baroque, barok, opera, koor, choir, filmmuziek, soundtrack, minimal music, piano solo]}
-  - {group: experimenteel, match: [experimental, experimenteel, avant-garde, avantgarde, noise, industrial, drone, krautrock, kraut, sound art, free improvisation, free-jazz, free jazz, musique concrete, post-industrial, harsh, power electronics, cringecore, weird]}
-  - {group: rock,          match: [garagerock, garage rock, garage punk, psychedelisch, progrock, bluesrock, blues-rock, loud, hardrock, hard rock, classic rock, psychedelic, psych, prog, progressive rock, stoner, garage, grunge, glam, southern rock, blues rock, folkrock, folk rock, poprock, pop rock, pop-rock, arena rock, aor, rock]}
-  - {group: pop,           match: [dancepop, dance-pop, teenpop, teen pop, synthpop, synth-pop, electropop, electro-pop, dreampop, popmuziek, pop, indie pop, bedroom pop, chamber pop, power pop]}
+  - {group: latin,         match: [latin, salsa, bachata, cumbia, reggaeton, merengue, bossa, brazil, braziliaans, tropical, latino, forro, forró, samba, flamenco, fado, baile funk, dembow]}
+  - {group: world,         match: [afropop, mali, mpb, afrobeat, afrobeats, afro, amapiano, world, wereldmuziek, global, balkan, klezmer, arabic, arabisch, oriental, turks, turkish, kaseko, gnawa, highlife, soukous, kizomba, celtic, ierse, irish, tuareg, desert blues, cumbia digital, bollywood, k-pop, kpop, j-pop, jpop, h-pop, gqom, kwaito]}
+  - {group: blues,         match: [blues, bluesrock, blues-rock, blues rock, gospel blues, boogie woogie, delta blues]}
+  - {group: country,       match: [countrypop, country pop, country, americana, bluegrass, roots, western, honky tonk, cajun, zydeco, alt-country, rockabilly]}
+  - {group: folk,          match: [singer-songwriter, singer, songwriter, indiefolk, indie folk, folkpop, singer songwriter, folk, akoestisch, acoustic, unplugged, troubadour, liedjes, ballad]}
+  - {group: classical,     match: [klassiek, classical, neo-klassiek, neoklassiek, neo-classical, neoclassical, kamermuziek, orkest, orchestra, ensemble, oude muziek, early music, baroque, barok, opera, koor, choir, minimal music, piano solo]}
+  - {group: experimental,  match: [experimental, experimenteel, avant-garde, avantgarde, noise, industrial, krautrock, kraut, sound art, free improvisation, free-jazz, free jazz, musique concrete, post-industrial, harsh, power electronics, cringecore, weird]}
+  - {group: rock,          match: [garagerock, garage rock, garage punk, psychedelisch, progrock, loud, hardrock, hard rock, classic rock, psychedelic, psych, prog, progressive rock, stoner, garage, grunge, glam, southern rock, folkrock, folk rock, poprock, pop rock, pop-rock, arena rock, aor, rock & roll, "rock 'n' roll", rock n roll, rock-n-roll, rock and roll, surf, rock]}
+  - {group: pop,           match: [dancepop, dance-pop, teenpop, teen pop, synthpop, synth-pop, electropop, electro-pop, popmuziek, pop, indie pop, bedroom pop, chamber pop, power pop]}
   # --- eventtypes ---
   - {group: overig,        match: [muziekdocumentaire, documentaire, anime, sci-fi, theater, cinematisch, melodic, groovy, nights, upcoming, alles, queer, lgbtq, lgbtqia, 18+, nachtleven, concert, live, muziek, music, optreden, show, evenement, event, overig, diversen, divers, festival, releaseparty, release party, release show, presentatie, open mic, jam, jamsessie, sessie, workshop, film, expo, expositie, markt, dansen, dans]}
 
@@ -98,94 +106,102 @@ kind_time:
   weak_from: "21:30"
 
 # ---------------------------------------------------------------------------------------------
-# Subgenres (event.subgenres): vaste lijst, gebaseerd op de subgenre-indeling van Bandcamp Discover
-# (sept. 2026) plus wat in Nederlandse programmering voorkomt. Ruwe podiumtags worden hierop afgebeeld
+# Subgenres (event.subgenres): vaste lijst naar de subgenre-indeling van Bandcamp Discover (sept. 2026), aangevuld
+# met gangbare RateYourMusic-subgenres en wat in Nederlandse programmering voorkomt; labels waar mogelijk Nederlands. Ruwe podiumtags worden hierop afgebeeld
 # (spellingvarianten via `aliases`); tags die geen genre zijn (Concert, Muziek, Upcoming, "Bands - eigen
 # productie") vallen weg. Onbekende tags leert het systeem zelf: komt een tag ≥ 5 keer voor en in ≥ 80% van
 # de gevallen bij één hoofdgenre, dan wordt hij automatisch een subgenre van dat hoofdgenre
 # (state/subgenre_learn.json). Handmatig vastzetten kan hier.
 subgenres:
-  indie rock:   {label: Indie rock,          group: indie, aliases: [indierock, indie rock, indie-rock]}
-  indie pop:    {label: Indie pop,           group: indie, aliases: [indiepop, indie-pop, indie pop]}
-  alt rock:     {label: Alternative rock,    group: indie, aliases: [alternative rock, alt rock, altrock, alt-rock, alt-pop, altpop, alt pop]}
-  shoegaze:     {label: Shoegaze,            group: indie, aliases: [shoegaze, dreampop, dream pop, dream-pop]}
-  post-rock:    {label: Post-rock,           group: indie, aliases: [post-rock, postrock, post rock, math rock, mathrock]}
-  emo:          {label: Emo,                 group: indie, aliases: [emo, midwest emo, emo rock]}
-  britpop:      {label: Britpop,             group: indie, aliases: [britpop, brit-pop, brit pop, jangle pop, jangle]}
-  grunge:       {label: Grunge,              group: indie, aliases: [grunge, grunge rock]}
-  goth:         {label: Goth / darkwave,     group: indie, aliases: [goth, gothic, darkwave, dark wave, coldwave, cold wave, post-punk revival]}
-  lo-fi:        {label: Lo-fi,               group: indie, aliases: [lo-fi, lofi, slowcore, bedroom pop]}
-  psychedelic:  {label: Psychedelic,         group: rock,  aliases: [psychedelic, psychedelisch, psych, psych rock, psychedelic rock, psychrock, neo-psych]}
-  garage rock:  {label: Garage rock,         group: rock,  aliases: [garage rock, garagerock, garage, garagepunk, garage punk]}
-  hard rock:    {label: Hard rock,           group: rock,  aliases: [hard rock, hardrock, classic rock, classicrock, arena rock, aor]}
-  prog rock:    {label: Prog rock,           group: rock,  aliases: [prog rock, progrock, prog, progressive rock, progressive, symfo, symfonische rock]}
-  stoner:       {label: Stoner / doom rock,  group: rock,  aliases: [stoner, stonerrock, stoner rock, desert rock, fuzz]}
+  indie rock:   {label: Indierock,          group: alternative, aliases: [indierock, indie rock, indie-rock]}
+  indie pop:    {label: Indiepop,           group: alternative, aliases: [indiepop, indie-pop, indie pop]}
+  alt rock:     {label: Alternatieve rock,    group: alternative, aliases: [alternative rock, alt rock, altrock, alt-rock, alt-pop, altpop, alt pop]}
+  shoegaze:     {label: Shoegaze,            group: alternative, aliases: [shoegaze, nu-gaze, nugaze]}
+  dream pop:    {label: Dreampop,           group: alternative, aliases: [dreampop, dream pop, dream-pop, ethereal wave]}
+  art pop:      {label: Artpop / artrock,  group: alternative, aliases: [art pop, artpop, art rock, artrock, chamber pop, experimental pop]}
+  noise pop:    {label: Noisepop / noiserock, group: alternative, aliases: [noise pop, noisepop, noise rock, noiserock, slacker rock]}
+  post-rock:    {label: Post-rock,           group: alternative, aliases: [post-rock, postrock, post rock, math rock, mathrock]}
+  emo:          {label: Emo,                 group: alternative, aliases: [emo, midwest emo, emo rock]}
+  britpop:      {label: Britpop,             group: alternative, aliases: [britpop, brit-pop, brit pop, jangle pop, jangle]}
+  grunge:       {label: Grunge,              group: alternative, aliases: [grunge, grunge rock]}
+  goth:         {label: Goth / darkwave,     group: alternative, aliases: [goth, gothic, darkwave, dark wave, coldwave, cold wave, post-punk revival]}
+  lo-fi:        {label: Lo-fi,               group: alternative, aliases: [lo-fi, lofi, slowcore, bedroom pop]}
+  psychedelic:  {label: Psychedelisch,         group: rock,  aliases: [psychedelic, psychedelisch, psych, psych rock, psychedelic rock, psychrock, neo-psych]}
+  garage rock:  {label: Garagerock,         group: rock,  aliases: [garage rock, garagerock, garage, garagepunk, garage punk]}
+  hard rock:    {label: Hardrock,           group: rock,  aliases: [hard rock, hardrock, classic rock, classicrock, arena rock, aor]}
+  prog rock:    {label: Progrock,           group: rock,  aliases: [prog rock, progrock, prog, progressive rock, progressive, symfo, symfonische rock]}
+  stoner:       {label: Stoner,  group: rock,  aliases: [stoner, stonerrock, stoner rock, desert rock, fuzz]}
   surf:         {label: Surf / rockabilly,   group: rock,  aliases: [surf, surf rock, rockabilly, psychobilly]}
   rock & roll:  {label: "Rock 'n' roll",     group: rock,  aliases: ["rock 'n' roll", rock n roll, rock & roll, rock-n-roll, rock and roll, rocknroll]}
   synthpop:     {label: Synthpop,            group: pop,   aliases: [synthpop, synth-pop, synth pop, electropop, electro-pop, electro pop, new wave, newwave]}
-  power pop:    {label: Power pop,           group: pop,   aliases: [power pop, powerpop]}
+  power pop:    {label: Powerpop,           group: pop,   aliases: [power pop, powerpop]}
   hyperpop:     {label: Hyperpop,            group: pop,   aliases: [hyperpop, hyper pop, digicore]}
   k-pop:        {label: K-pop / J-pop,       group: pop,   aliases: [k-pop, kpop, j-pop, jpop]}
   post-punk:    {label: Post-punk,           group: punk,  aliases: [post-punk, postpunk, post punk]}
-  hardcore punk: {label: Hardcore punk,      group: punk,  aliases: [hardcore punk, hardcore-punk, hardcorepunk, hc punk]}
+  hardcore punk: {label: Hardcore-punk,      group: punk,  aliases: [hardcore punk, hardcore-punk, hardcorepunk, hc punk]}
   pop punk:     {label: Pop-punk,            group: punk,  aliases: [pop punk, pop-punk, poppunk, skate punk, skatepunk]}
   ska punk:     {label: Ska-punk,            group: punk,  aliases: [ska punk, ska-punk, skapunk, skacore]}
   folk punk:    {label: Folk-punk,           group: punk,  aliases: [folk punk, folk-punk, folkpunk, gypsy punk, gypsypunk]}
   post-hardcore: {label: Post-hardcore,      group: punk,  aliases: [post-hardcore, posthardcore, post hardcore, screamo]}
   hardcore:     {label: Hardcore,            group: metal, aliases: [hardcore, beatdown, metallic hardcore]}
   metalcore:    {label: Metalcore,           group: metal, aliases: [metalcore, deathcore, mathcore]}
-  death metal:  {label: Death metal,         group: metal, aliases: [death metal, deathmetal, death, brutal death metal, tech death]}
-  black metal:  {label: Black metal,         group: metal, aliases: [black metal, blackmetal, atmospheric black metal]}
-  thrash:       {label: Thrash metal,        group: metal, aliases: [thrash, thrash metal, thrashmetal, trash metal, trash-metal, speed metal]}
+  death metal:  {label: Deathmetal,         group: metal, aliases: [death metal, deathmetal, death, brutal death metal, tech death]}
+  black metal:  {label: Blackmetal,         group: metal, aliases: [black metal, blackmetal, atmospheric black metal, blackgaze, post-black metal]}
+  post-metal:   {label: Post-metal,          group: metal, aliases: [post-metal, postmetal, post metal, atmospheric sludge]}
+  thrash:       {label: Thrashmetal,        group: metal, aliases: [thrash, thrash metal, thrashmetal, trash metal, trash-metal, speed metal]}
   doom:         {label: Doom / sludge,       group: metal, aliases: [doom, doom metal, sludge, sludge metal, drone metal]}
   heavy metal:  {label: Heavy metal,         group: metal, aliases: [heavy metal, heavymetal, heavy, power metal, powermetal, nwobhm, glam metal]}
-  prog metal:   {label: Prog metal,          group: metal, aliases: [prog metal, progressive metal, djent]}
-  folk metal:   {label: Folk / symphonic metal, group: metal, aliases: [folk metal, pagan metal, viking metal, symphonic metal, gothic metal]}
+  prog metal:   {label: Progmetal,          group: metal, aliases: [prog metal, progressive metal, djent]}
+  folk metal:   {label: Folk- / symfonische metal, group: metal, aliases: [folk metal, pagan metal, viking metal, symphonic metal, gothic metal]}
   grindcore:    {label: Grindcore,           group: metal, aliases: [grindcore, grind, powerviolence, crust]}
-  nu metal:     {label: Nu metal,            group: metal, aliases: [nu metal, nu-metal, numetal]}
+  nu metal:     {label: Nu-metal,            group: metal, aliases: [nu metal, nu-metal, numetal]}
   rap:          {label: Rap,                 group: hiphop, aliases: [rap, rapper, hip-hop, hiphop, hip hop]}
-  trap:         {label: Trap / drill,        group: hiphop, aliases: [trap, drill, uk drill, afrotrap]}
+  trap:         {label: Trap / drill,        group: hiphop, aliases: [trap, drill, uk drill, afrotrap, phonk]}
+  cloud rap:    {label: Cloud rap / alternatieve hiphop, group: hiphop, aliases: [cloud rap, cloudrap, alternative hip-hop, alt hip hop, abstract hip-hop, experimental hip hop, jazz rap]}
   nederhop:     {label: Nederhop,            group: hiphop, aliases: [nederhop, nederlandse hiphop, nl hiphop]}
   grime:        {label: Grime,               group: hiphop, aliases: [grime, uk rap]}
   boom bap:     {label: Boom bap,            group: hiphop, aliases: [boom bap, boom-bap, boombap, underground hip-hop, conscious hip-hop]}
   neo-soul:     {label: Neo-soul,            group: soul,  aliases: [neo-soul, neosoul, neo soul, indiesoul]}
   r&b:          {label: R&B,                 group: soul,  aliases: [r&b, rnb, r and b, rhythm & blues, contemporary r&b]}
-  gospel:       {label: Gospel,              group: soul,  aliases: [gospel, spiritual, worship]}
-  motown:       {label: Motown / classic soul, group: soul, aliases: [motown, classic soul, northern soul, soul]}
+  gospel:       {label: Gospel,              group: devotional,  aliases: [gospel, spiritual, worship]}
+  motown:       {label: Motown / klassieke soul, group: soul, aliases: [motown, classic soul, northern soul, soul]}
   disco:        {label: Disco,               group: funk,  aliases: [disco, nu-disco, nu disco, italo, italo-disco, italo disco, boogie]}
   funk:         {label: Funk,                group: funk,  aliases: [funk, funky, deep funk, funk rock, jazz funk, groove, rare groove]}
-  fusion:       {label: Fusion / nu jazz,    group: jazz,  aliases: [fusion, jazz fusion, fusion jazz, nu jazz, nu-jazz, jazztronica]}
-  free jazz:    {label: Free jazz / improv,  group: jazz,  aliases: [free jazz, free-jazz, improvisatie, improv, improvisation, free improvisation]}
-  big band:     {label: Big band / swing,    group: jazz,  aliases: [big band, bigband, swing, bebop]}
-  modern jazz:  {label: Modern jazz,         group: jazz,  aliases: [modern jazz, spiritual jazz, vocal jazz, soul jazz, latin jazz, jazzy]}
-  blues:        {label: Blues,               group: roots, aliases: [blues, bluesrock, blues rock, blues-rock, electric blues, delta blues]}
-  country:      {label: Country,             group: roots, aliases: [country, alt-country, alt country, country rock, outlaw, honky tonk, honky-tonk, countrypop, country pop]}
-  americana:    {label: Americana,           group: roots, aliases: [americana, roots, roots rock, southern rock]}
-  bluegrass:    {label: Bluegrass,           group: roots, aliases: [bluegrass, hillbilly, western]}
+  fusion:       {label: Fusion / nu-jazz,    group: jazz,  aliases: [fusion, jazz fusion, fusion jazz, nu jazz, nu-jazz, jazztronica]}
+  free jazz:    {label: Free jazz / improvisatie,  group: jazz,  aliases: [free jazz, free-jazz, improvisatie, improv, improvisation, free improvisation]}
+  big band:     {label: Bigband / swing,    group: jazz,  aliases: [big band, bigband, swing, bebop]}
+  modern jazz:  {label: Moderne jazz,         group: jazz,  aliases: [modern jazz, spiritual jazz, vocal jazz, soul jazz, latin jazz, jazzy]}
+  blues:        {label: Blues,               group: blues, aliases: [blues, bluesrock, blues rock, blues-rock, electric blues, delta blues]}
+  country:      {label: Country,             group: country, aliases: [country, alt-country, alt country, country rock, outlaw, honky tonk, honky-tonk, countrypop, country pop]}
+  americana:    {label: Americana,           group: country, aliases: [americana, roots, roots rock, southern rock]}
+  bluegrass:    {label: Bluegrass,           group: country, aliases: [bluegrass, hillbilly, western]}
   singer-songwriter: {label: Singer-songwriter, group: folk, aliases: [singer-songwriter, singer songwriter, singer/songwriter, songwriter, singer, troubadour]}
-  indie folk:   {label: Indie folk,          group: folk,  aliases: [indie folk, indiefolk, folk pop, folkpop, pop folk, folk rock, folkrock]}
+  indie folk:   {label: Indiefolk,          group: folk,  aliases: [indie folk, indiefolk, folk pop, folkpop, pop folk, folk rock, folkrock]}
   folk:         {label: Folk,                group: folk,  aliases: [folk, traditional, traditioneel, akoestisch, acoustic, unplugged]}
-  house:        {label: House,               group: dance, aliases: [house, deep house, deephouse, tech house, techhouse, disco house, soulful house, progressive house, afro house, acid house, garage house]}
-  techno:       {label: Techno,              group: dance, aliases: [techno, hard techno, hardtechno, minimal, minimal techno, acid, industrial techno, schranz]}
-  trance:       {label: Trance,              group: dance, aliases: [trance, psytrance, progressive trance, uplifting]}
-  hardstyle:    {label: Hardstyle / hardcore, group: dance, aliases: [hardstyle, hardcore dance, gabber, uptempo, hard dance, rawstyle, frenchcore, early hardcore]}
-  edm:          {label: EDM,                 group: dance, aliases: [edm, eurodance, dance, electro house, big room, festival house, mainstream dance]}
-  drum & bass:  {label: Drum & bass,         group: bass,  aliases: [drum & bass, drum and bass, drum&bass, dnb, d&b, jungle, liquid, neurofunk]}
-  dubstep:      {label: Dubstep / bass,      group: bass,  aliases: [dubstep, bass music, bass, riddim, wave]}
-  uk garage:    {label: UK garage / breaks,  group: bass,  aliases: [uk garage, uk-garage, ukg, 2-step, breaks, breakbeat, bassline, footwork, juke]}
-  ambient:      {label: Ambient / drone,     group: electronic, aliases: [ambient, drone, dark ambient, soundscapes, chill-out, chillout, downtempo, trip hop, triphop, chillwave]}
+  house:        {label: House,               group: electronic, aliases: [house, deep house, deephouse, tech house, techhouse, disco house, soulful house, progressive house, afro house, acid house, garage house]}
+  techno:       {label: Techno,              group: electronic, aliases: [techno, hard techno, hardtechno, minimal, minimal techno, acid, industrial techno, schranz]}
+  trance:       {label: Trance,              group: electronic, aliases: [trance, psytrance, progressive trance, uplifting]}
+  hardstyle:    {label: Hardstyle / hardcore, group: electronic, aliases: [hardstyle, hardcore dance, gabber, uptempo, hard dance, rawstyle, frenchcore, early hardcore]}
+  edm:          {label: EDM,                 group: electronic, aliases: [edm, eurodance, dance, electro house, big room, festival house, mainstream dance]}
+  drum & bass:  {label: Drum & bass,         group: electronic,  aliases: [drum & bass, drum and bass, drum&bass, dnb, d&b, jungle, liquid, neurofunk]}
+  dubstep:      {label: Dubstep / bass,      group: electronic,  aliases: [dubstep, bass music, bass, riddim, wave]}
+  uk garage:    {label: UK garage / breaks,  group: electronic,  aliases: [uk garage, uk-garage, ukg, 2-step, breaks, breakbeat, bassline, footwork, juke]}
+  ambient:      {label: Ambient / drone,     group: ambient, aliases: [ambient, drone, dark ambient, soundscapes, chill-out, chillout, chillwave]}
+  downtempo:    {label: Downtempo / triphop, group: electronic, aliases: [downtempo, trip hop, triphop, trip-hop, nu jazz beats, lo-fi beats, beats]}
+  breakcore:    {label: Breakcore, group: electronic, aliases: [breakcore, digital hardcore, speedcore]}
   electro:      {label: Electro / synthwave, group: electronic, aliases: [electro, synthwave, synth, synthesizer, retrowave, vaporwave, chiptune, ebm]}
   idm:          {label: IDM / electronica,   group: electronic, aliases: [idm, electronica, electronics, electronisch, elektronisch, electronic, glitch, leftfield, braindance, modular, modulair, folktronica]}
   dancehall:    {label: Dancehall,           group: reggae, aliases: [dancehall, ragga, bashment]}
   dub:          {label: Dub,                 group: reggae, aliases: [dub, roots reggae, soundsystem, sound system, steppers]}
   ska:          {label: Ska / rocksteady,    group: reggae, aliases: [ska, rocksteady, 2 tone, two tone]}
   reggae:       {label: Reggae,              group: reggae, aliases: [reggae, lovers rock]}
-  afrobeats:    {label: Afrobeats / amapiano, group: world, aliases: [afrobeats, afrobeat, afropop, afro, amapiano, afro house, highlife, alté]}
+  afrobeats:    {label: Afrobeats / amapiano, group: world, aliases: [afrobeats, afrobeat, afropop, afro, amapiano, afro house, highlife, alté, gqom, kwaito, afroswing]}
+  baile funk:   {label: Baile funk / global club, group: world, aliases: [baile funk, funk carioca, global club, global bass, kuduro, dembow]}
   balkan:       {label: Balkan / gypsy,      group: world, aliases: [balkan, gypsy, klezmer, balkan beats]}
-  celtic:       {label: Celtic / Irish,      group: world, aliases: [celtic, irish, ierse, iers, keltisch, folk irish]}
+  celtic:       {label: Keltisch / Iers,      group: world, aliases: [celtic, irish, ierse, iers, keltisch, folk irish]}
   arabic:       {label: Arabisch / Turks,    group: world, aliases: [arabic, arabisch, oriental, oriëntaals, turks, turkish, anatolian, anatolisch]}
   african:      {label: Afrikaans,           group: world, aliases: [african, afrikaans, mali, tuareg, desert blues, soukous, gnawa, kaseko, kizomba]}
-  tropical:     {label: Tropical / global,   group: world, aliases: [tropical, global, global sounds, world, wereldmuziek, world fusion, tribal, new age]}
+  tropical:     {label: Tropisch / global,   group: world, aliases: [tropical, global, global sounds, world, wereldmuziek, world fusion, tribal, new age]}
   salsa:        {label: Salsa / bachata,     group: latin, aliases: [salsa, bachata, merengue, bolero, tango, latino]}
   cumbia:       {label: Cumbia,              group: latin, aliases: [cumbia, cumbia digital, tropical bass]}
   reggaeton:    {label: Reggaeton,           group: latin, aliases: [reggaeton, latin pop, latin trap, urbano]}
@@ -194,22 +210,22 @@ subgenres:
   nederpop:     {label: Nederpop,            group: nederlandstalig, aliases: [nederpop, nederlandstalig, nederlandstalige, nederlands, nederlandse, dutch pop, nederbeat, hollandse]}
   levenslied:   {label: Levenslied / schlager, group: nederlandstalig, aliases: [levenslied, schlager, smartlap, volksmuziek, hollandse hits, feestmuziek]}
   kleinkunst:   {label: Kleinkunst / chanson, group: nederlandstalig, aliases: [kleinkunst, chanson, liedjes, luisterlied, cabaretesk]}
-  orchestral:   {label: Orkest / kamermuziek, group: klassiek, aliases: [orchestral, orkest, orchestra, kamermuziek, chamber music, ensemble, symfonisch]}
-  neo-classical: {label: Neoklassiek,        group: klassiek, aliases: [neo-classical, neoclassical, neoklassiek, neo-klassiek, modern classical, contemporary classical, minimal music, piano, classical piano, piano solo]}
-  early music:  {label: Oude muziek / barok, group: klassiek, aliases: [early music, oude muziek, baroque, barok, renaissance]}
-  opera:        {label: Opera / koor,        group: klassiek, aliases: [opera, choral, koor, choir, vocaal]}
-  soundtrack:   {label: Filmmuziek,          group: klassiek, aliases: [soundtrack, filmmuziek, film music, ost, video game music, game music]}
-  noise:        {label: Noise / industrial,  group: experimenteel, aliases: [noise, industrial, post-industrial, harsh noise, power electronics, noise rock, noiserock]}
-  avant-garde:  {label: Avant-garde,         group: experimenteel, aliases: [avant-garde, avantgarde, avant garde, experimental, experimenteel, musique concrete, sound art, weird]}
-  krautrock:    {label: Krautrock / kosmische, group: experimenteel, aliases: [krautrock, kraut, kosmische, motorik]}
+  orchestral:   {label: Orkest / kamermuziek, group: classical, aliases: [orchestral, orkest, orchestra, kamermuziek, chamber music, ensemble, symfonisch]}
+  neo-classical: {label: Neoklassiek,        group: classical, aliases: [neo-classical, neoclassical, neoklassiek, neo-klassiek, modern classical, contemporary classical, minimal music, piano, classical piano, piano solo]}
+  early music:  {label: Oude muziek / barok, group: classical, aliases: [early music, oude muziek, baroque, barok, renaissance]}
+  opera:        {label: Opera / koor,        group: classical, aliases: [opera, choral, koor, choir, vocaal]}
+  soundtrack:   {label: Filmmuziek,          group: soundtrack, aliases: [soundtrack, filmmuziek, film music, ost, video game music, game music]}
+  noise:        {label: Noise / industrial,  group: experimental, aliases: [noise, industrial, post-industrial, harsh noise, power electronics, noise rock, noiserock]}
+  avant-garde:  {label: Avant-garde,         group: experimental, aliases: [avant-garde, avantgarde, avant garde, experimental, experimenteel, musique concrete, sound art, weird]}
+  krautrock:    {label: Krautrock / kosmische, group: experimental, aliases: [krautrock, kraut, kosmische, motorik]}
   tribute:      {label: Tribute / covers,    group: party, aliases: [tribute, tributes, tributeband, coverband, cover band, covers, undercover]}
   decennia:     {label: 80s / 90s / 00s,     group: party, aliases: [80s, 80's, eighties, 90s, 90's, nineties, 00s, zeroes, 70s, 70's, seventies, 60s, decennia, throwback, retro, classics, hits, klassiekers, foute, guilty pleasures]}
   singalong:    {label: Meezing,             group: party, aliases: [meezing, meezingen, sing along, singalong, songfestival, eurovisie, apres ski, après ski]}
-  comedy:       {label: Comedy / stand-up,   group: talk, aliases: [comedy, stand-up, standup, stand up, cabaret, improv]}
-  talk:         {label: Talk / lezing,       group: talk, aliases: [talk, talkshow, lezing, lecture, debat, gesprek, college, interview]}
-  podcast:      {label: Podcast,             group: talk, aliases: [podcast, live podcast]}
-  spoken word:  {label: Spoken word / poëzie, group: talk, aliases: [spoken word, poetry, poëzie, poezie, storytelling, literatuur, voordracht]}
-  kids:         {label: Kids / familie,      group: kids, aliases: [kids, kinder, kinderen, familie, family, jeugd, peuter, kleuter, kinderdisco, family music]}
+  comedy:       {label: Comedy / stand-up,   group: comedy, aliases: [comedy, stand-up, standup, stand up, cabaret, improv]}
+  talk:         {label: Lezing / talkshow,       group: spokenword, aliases: [talk, talkshow, lezing, lecture, debat, gesprek, college, interview]}
+  podcast:      {label: Podcast,             group: spokenword, aliases: [podcast, live podcast]}
+  spoken word:  {label: Spoken word / poëzie, group: spokenword, aliases: [spoken word, poetry, poëzie, poezie, storytelling, literatuur, voordracht]}
+  kids:         {label: Kinderen / familie,      group: kids, aliases: [kids, kinder, kinderen, familie, family, jeugd, peuter, kleuter, kinderdisco, family music]}
 
 # Tags die nooit een subgenre zijn (eventtype, marketing, interne labels van podia)
 subgenre_noise: [concert, concerten, muziek, music, live, show, event, evenement, optreden, upcoming, tip, nieuw, net bevestigd, uitverkocht,

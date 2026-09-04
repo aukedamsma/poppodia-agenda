@@ -387,12 +387,12 @@ button:focus-visible{outline:none}
   topG.forEach(g=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=GROUPS[g]||g; b.setAttribute('aria-pressed', state.genres.includes(g));
     b.addEventListener('click',()=>{ state.genres=state.genres.includes(g)?state.genres.filter(x=>x!==g):[...state.genres,g]; b.setAttribute('aria-pressed', state.genres.includes(g)); save(); buildSubs(); render(); }); chips.append(b); });
   const subChips=document.getElementById('subChips');
-  const SUBL = REPORT.subgenre_labels || {};
+  const SUBL = REPORT.subgenre_labels || {}, SUBG = REPORT.subgenre_groups || {};
   const subsOf = e => (e.subgenres && e.subgenres.length) ? e.subgenres : [];
   function buildSubs(){
     document.getElementById('subBlock').hidden = !state.genres.length;
     if (!state.genres.length) { state.subs=[]; subChips.innerHTML=''; return; }
-    const cnt={}; EVENTS.filter(e=>(e.genre_norm||[]).some(g=>state.genres.includes(g))).forEach(e=>subsOf(e).forEach(k=>{ cnt[k]=(cnt[k]||0)+1; }));
+    const cnt={}; EVENTS.filter(e=>(e.genre_norm||[]).some(g=>state.genres.includes(g))).forEach(e=>subsOf(e).forEach(k=>{ if (state.genres.includes(SUBG[k])) cnt[k]=(cnt[k]||0)+1; }));
     const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,24).map(x=>x[0]);
     state.subs = state.subs.filter(t=>cnt[t]);
     subChips.innerHTML='';
@@ -488,7 +488,7 @@ button:focus-visible{outline:none}
   function card(e, compact=false){
     const time = e.start.length>10 && e.start.slice(11,16)!=='00:00' ? e.start.slice(11,16) : '';
     const badges = isNew(e)?'<span class="dot" title="nieuw aangekondigd"></span>':'';   // klein rood stipje i.p.v. NIEUW-label
-    const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(subsOf(e).length?subsOf(e).map(k=>SUBL[k]||k):(e.genres||[])).filter(t=>!main.some(m=>m.toLowerCase()===t.toLowerCase())).slice(0,3);
+    const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=subsOf(e).map(k=>SUBL[k]||k).slice(0,3);   // alleen canonieke subgenres, nooit ruwe tags
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const tm = time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:'';
     const pr = e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:'';
