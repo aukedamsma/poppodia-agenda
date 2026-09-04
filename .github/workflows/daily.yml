@@ -26,6 +26,9 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Agenda's ophalen
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
         run: python fetch.py
       - name: Pagina bouwen
         run: python build.py
