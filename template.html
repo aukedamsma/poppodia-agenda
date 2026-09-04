@@ -56,7 +56,7 @@ footer details[open] summary::before{content:'▾'}
 .tabs{display:flex;gap:2px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--paper-2)}
 .tabs button{padding:0 12px;border-radius:6px;font-size:13px;color:var(--ink-2);font-weight:500;position:relative}
 .tabs > *{height:31px;box-sizing:border-box;display:inline-flex;align-items:center}
-.tabs > button + button::before,.tabs > button + .plabel::before,.tabs > .daynav::before{content:'';position:absolute;left:-1px;top:7px;bottom:7px;border-left:1px solid var(--line)}
+.tabs > button + button::before{content:'';position:absolute;left:-1px;top:7px;bottom:7px;border-left:1px solid var(--line)}
 .tabs button[aria-pressed="true"]::before,.tabs button[aria-pressed="true"] + button::before{display:none}
 .tabs button:hover{background:var(--card)}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
@@ -96,8 +96,9 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-.pnav{width:330px;flex:0 0 330px}
-.pnav .plabel{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.pnav{width:312px;flex:0 0 312px}
+.pnav .plabel{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;background:linear-gradient(var(--line),var(--line)) 0 center/1px 17px no-repeat;padding-left:13px}
+.pnav .daynav{background:linear-gradient(var(--line),var(--line)) 0 center/1px 17px no-repeat;padding-left:13px}
 .pnav .plabel:hover,.daynav .dow:hover{color:var(--accent)}
 .daynav .dow{cursor:pointer}
 input.ghost{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
@@ -632,7 +633,7 @@ button:focus-visible{outline:none}
     const an=document.getElementById('artistnav'); const wasHidden=an.hidden; an.hidden = state.view!=='search'; if (!an.hidden && wasHidden) setTimeout(()=>document.getElementById('aq').focus(),0);
     const pl=document.getElementById('plabel');
     if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = `${DOWS[dd.getDay()]} ${String(dd.getDate()).padStart(2,'0')}-${String(dd.getMonth()+1).padStart(2,'0')}-${dd.getFullYear()}`; }
-    if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getDate()} ${MONS[d0.getMonth()]} – ${d6.getDate()} ${MONS[d6.getMonth()]}</small>`; pl.hidden=false; }
+    if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getMonth()===d6.getMonth()?`${d0.getDate()}–${d6.getDate()} ${MONS[d6.getMonth()]}`:`${d0.getDate()} ${MONS[d0.getMonth()]}–${d6.getDate()} ${MONS[d6.getMonth()]}`}</small>`; pl.hidden=false; }
     else if (state.view==='month'){ const m=new Date((state.mo||isoOf(new Date(today.getFullYear(),today.getMonth(),1)))+'T12:00:00'); pl.textContent=`${MON[m.getMonth()]} ${m.getFullYear()}`; pl.hidden=false; }
     else pl.hidden=true;
     if (['all','week','month'].includes(state.view)) document.getElementById('prevP').disabled = state.view==='all' ? (state.day||TODAY) <= TODAY : state.view==='week' ? (state.wk||TODAY) <= isoOf(new Date(new Date(today).setDate(today.getDate()-((today.getDay()+6)%7)))) : (state.mo||TODAY) <= isoOf(new Date(today.getFullYear(),today.getMonth(),1));

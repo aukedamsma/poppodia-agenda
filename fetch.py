@@ -700,7 +700,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
-CACHE_VERSION = 3  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 4  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
@@ -886,6 +886,10 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
             later = [(int(h), int(m)) for h, m in re.findall(r"(\d{1,2})[:.](\d{2})", after) if (int(h), int(m)) > doors and int(h) < 24 and int(m) < 60]
             if later:
                 start = min(later)
+    # servicekosten zijn geen ticketprijs: "Gratis · incl. € 1,75 servicekosten" (FLUOR) moet gratis blijven
+    plow = re.sub(r"(?:incl\.?|inclusief|excl\.?|exclusief|\+)?\s*€?\s?\d{1,3}(?:[.,]\d{2})?\s*(?:aan\s+)?(?:servicekosten|service ?fee|service ?kosten|administratiekosten|transactiekosten|fee)\b", " ", low)
+    plow = re.sub(r"(?:servicekosten|service ?fee|service ?kosten|administratiekosten)\W{0,12}€?\s?\d{1,3}(?:[.,]\d{2})?", " ", plow)
+    low = plow
     pm = (re.search(r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
           or re.search(r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)", low)
           or re.search(r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
