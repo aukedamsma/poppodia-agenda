@@ -215,6 +215,18 @@ def test_parse_ymd():
     assert fetch.parse_dt("2026/09/04 20:30:00").hour == 20 and fetch.parse_dt("2026/09/04 20:30:00").day == 4
 
 
+def test_series_memory():
+    import series as s
+    db, seen = {}, set()
+    for i, (p, t) in enumerate([("€ 7,50", "2026-09-05T20:00"), ("€ 7,50", "2026-09-12T20:00"), ("€ 8", "2026-09-19T20:30")]):
+        s.record(db, seen, "Vera", f"Jazz Jam #{i}", f"k{i}", p, t)
+    s.record(db, seen, "Vera", "Jazz Jam #0", "k0", "€ 99", "2026-09-05T20:00")  # dubbel event telt niet
+    assert s.guess(db, "Vera", "Jazz Jam #9") == ("€ 7,50", "20:00")
+    assert s.guess(db, "Vera", "Onbekend") == (None, None)
+    assert s.series_key("Melkweg", "Cheeky Monday: MURDOCK!") == "melkweg|cheeky monday"
+
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
@@ -225,3 +237,4 @@ if __name__ == "__main__":
             except Exception as ex:  # noqa: BLE001
                 fails += 1; print("FAIL", name, "->", type(ex).__name__, ex)
     sys.exit(1 if fails else 0)
+

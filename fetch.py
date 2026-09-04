@@ -32,6 +32,7 @@ from bs4 import BeautifulSoup
 from dateutil import parser as dtparser
 
 import artists as artistdb
+import series as seriesdb
 from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, group_label, _taxonomy
 
 ROOT = Path(__file__).parent
@@ -79,6 +80,8 @@ class Event:
     kind: str = "concert"          # concert | club | festival | other
     price_num: float | None = None
     free: bool = False
+    price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
+    time_est: bool = False         # aanvangstijd idem
     section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
 
 
@@ -1155,6 +1158,28 @@ def main(only: list[str] | None = None) -> int:
     artistdb.save(adb)
     seen_ev_path.write_text(json.dumps(sorted(seen_ev)[-30000:]))
     log(f"Artiestenbank: {len(adb)} artiesten; {filled} events kregen genre via de kennisbank")
+
+    # --- reeksengeheugen: prijs/tijd van terugkerende events onthouden en aanvullen ---
+    sdb, sseen = seriesdb.load()
+    for e in all_events:
+        seriesdb.record(sdb, sseen, e.venue, e.title, f"{e.venue}|{e.url}", e.price, e.start)
+    est_p = est_t = 0
+    for e in all_events:
+        if e.price and (len(e.start) > 10 and e.start[11:16] != "00:00"):
+            continue
+        gp, gt = seriesdb.guess(sdb, e.venue, e.title)
+        if not e.price and gp:
+            e.price, e.price_est = gp, True
+            e.price_num = price_number(gp)
+            e.free = e.price_num == 0.0
+            est_p += 1
+        if gt and not (len(e.start) > 10 and e.start[11:16] != "00:00"):
+            e.start, e.time_est = f"{e.start[:10]}T{gt}", True
+            est_t += 1
+    seriesdb.save(sdb, sseen)
+    log(f"Reeksengeheugen: {len(sdb)} reeksen; {est_p} prijzen en {est_t} tijden geschat uit eerdere edities")
+    report["series"] = len(sdb)
+    report["estimated"] = {"price": est_p, "time": est_t}
     report["unknown_genres"] = dict(sorted(unknown_genres.items(), key=lambda x: -x[1])[:150])
     report["artists"] = len(adb)
     report["genre_groups"] = {k: v["label"] for k, v in _taxonomy()[0].items()}

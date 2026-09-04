@@ -138,6 +138,7 @@ main{padding:6px 0 60px}
 .card .date{color:var(--ink-2);font-weight:500}
 .card .time{color:var(--ink-3)}
 .card .pr{color:var(--ink-2)}
+.card .est{color:var(--ink-3);font-style:italic}
 .badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 5px;line-height:14px;vertical-align:2px;margin-right:5px}
 .badge.new{background:var(--accent);color:var(--accent-ink)}
 .badge.status{background:var(--warn-soft);color:var(--warn)}
@@ -366,7 +367,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const price = e.price ? `<span class="price">${esc(e.price)}</span>` : '';
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-      <span class="side"><span class="date">${fmtCard(e.start)}</span>${time?`<span class="time">${time}</span>`:''}${e.price?`<span class="pr">${esc(e.price)}</span>`:''}</span>
+      <span class="side"><span class="date">${fmtCard(e.start)}</span>${time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:''}${e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:''}</span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${e.subtitle?esc(e.subtitle):''}</div>
       <div class="w"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
