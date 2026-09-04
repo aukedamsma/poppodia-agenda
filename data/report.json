@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-04T11:33:26",
+ "generated": "2026-09-04T12:39:25",
  "venues": [
   {
    "name": "TivoliVredenburg",
@@ -33,7 +33,7 @@
    "city": "Utrecht",
    "url": "https://www.dehelling.nl/agenda/",
    "strategy": "jsonld",
-   "events": 71,
+   "events": 72,
    "note": "",
    "ok": true
   },
@@ -50,28 +50,28 @@
    "name": "Bitterzoet",
    "city": "Amsterdam",
    "url": "https://www.bitterzoet.com/agenda/",
-   "strategy": "none",
-   "events": 0,
-   "note": "wp_event: 0 events",
-   "ok": false
+   "strategy": "wp_event",
+   "events": 63,
+   "note": "",
+   "ok": true
   },
   {
    "name": "Paradiso",
    "city": "Amsterdam",
    "url": "https://www.paradiso.nl/",
-   "strategy": "disabled",
-   "events": 0,
-   "note": "uitgeschakeld in venues.yaml",
-   "ok": false
+   "strategy": "sitemap_detail",
+   "events": 83,
+   "note": "",
+   "ok": true
   },
   {
    "name": "Tolhuistuin",
    "city": "Amsterdam",
    "url": "https://tolhuistuin.nl/agenda",
-   "strategy": "disabled",
-   "events": 0,
-   "note": "uitgeschakeld in venues.yaml",
-   "ok": false
+   "strategy": "embedded",
+   "events": 106,
+   "note": "",
+   "ok": true
   },
   {
    "name": "013",
@@ -96,7 +96,7 @@
    "city": "Haarlem",
    "url": "https://www.patronaat.nl/programma/",
    "strategy": "html",
-   "events": 168,
+   "events": 169,
    "note": "",
    "ok": true
   },
@@ -126,7 +126,295 @@
    "events": 133,
    "note": "",
    "ok": true
+  },
+  {
+   "name": "Vera",
+   "city": "Groningen",
+   "url": "https://www.vera-groningen.nl/programma/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.vera-groningen.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "Simplon",
+   "city": "Groningen",
+   "url": "https://simplon.nl/programma/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://simplon.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "SPOT",
+   "city": "Groningen",
+   "url": "https://www.spotgroningen.nl/programma/",
+   "strategy": "jsonld_detail",
+   "events": 80,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.spotgroningen.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: 0 events",
+   "ok": true
+  },
+  {
+   "name": "Neushoorn",
+   "city": "Leeuwarden",
+   "url": "https://www.neushoorn.nl/programma",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.neushoorn.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: HTTPError 404 Client Error: Not Found for url: https://www.neushoorn.nl/wp-json/wp/v2/types; jsonld_detail: 2 events",
+   "ok": false
+  },
+  {
+   "name": "Iduna",
+   "city": "Drachten",
+   "url": "https://iduna.nl/evenementen/",
+   "strategy": "wp_event",
+   "events": 51,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://iduna.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026-",
+   "ok": true
+  },
+  {
+   "name": "Luxor Live",
+   "city": "Arnhem",
+   "url": "https://www.luxorlive.nl/agenda/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.luxorlive.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: HTTPError 401 Client Error: Unauthorized for url: https://www.luxorlive.nl/wp-json/wp/v2/types; jsonld_detail: 1 events",
+   "ok": false
+  },
+  {
+   "name": "Willemeen",
+   "city": "Arnhem",
+   "url": "https://www.willemeen.nl/programma/",
+   "strategy": "jsonld_detail",
+   "events": 4,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.willemeen.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: 0 events",
+   "ok": true
+  },
+  {
+   "name": "GIGANT",
+   "city": "Apeldoorn",
+   "url": "https://www.gigant.nl/concerten/",
+   "strategy": "error",
+   "events": 0,
+   "note": "HTTPError: 403 Client Error: Forbidden for url: https://www.gigant.nl/concerten/",
+   "ok": false
+  },
+  {
+   "name": "Burgerweeshuis",
+   "city": "Deventer",
+   "url": "https://www.burgerweeshuis.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 46,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/wp/v2/types",
+   "ok": true
+  },
+  {
+   "name": "Metropool",
+   "city": "Hengelo",
+   "url": "https://metropool.nl/agenda",
+   "strategy": "jsonld_detail",
+   "events": 10,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://metropool.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2; wp_event: HTTPError 404 Client Error: Not Found for url: https://metropool.nl/wp-json/wp/v2/types",
+   "ok": true
+  },
+  {
+   "name": "FLUOR",
+   "city": "Amersfoort",
+   "url": "https://fluor033.nl/programma/",
+   "strategy": "tribe",
+   "events": 66,
+   "note": "jsonld: 0 events; embedded: 0 events",
+   "ok": true
+  },
+  {
+   "name": "De Vorstin",
+   "city": "Hilversum",
+   "url": "https://vorstin.nl/agenda/",
+   "strategy": "jsonld_detail",
+   "events": 47,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://vorstin.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: HTTPError 401 Client Error: Unauthorized for url: https://vorstin.nl/wp-json/wp/v2/types",
+   "ok": true
+  },
+  {
+   "name": "P60",
+   "city": "Amstelveen",
+   "url": "https://www.p60.nl/agenda",
+   "strategy": "wp_event",
+   "events": 3,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.p60.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202",
+   "ok": true
+  },
+  {
+   "name": "Q-factory",
+   "city": "Amsterdam",
+   "url": "https://q-factory.com/nl",
+   "strategy": "jsonld_detail",
+   "events": 3,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://q-factory.com/nl/wp-json/tribe/events/v1/events; wp_event: HTTPError 404 Client Error: Not Found for url: https://q-factory.com/nl/wp-json/wp/v2/types",
+   "ok": true
+  },
+  {
+   "name": "Cinetol",
+   "city": "Amsterdam",
+   "url": "https://www.cinetol.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 3,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.cinetol.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: HTTPError 404 Client Error: Not Found for url: https://www.cinetol.nl/wp-json/wp/v2/types",
+   "ok": true
+  },
+  {
+   "name": "Slachthuis",
+   "city": "Haarlem",
+   "url": "https://slachthuishaarlem.nl/programma/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://slachthuishaarlem.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: HTTPError 404 Client Error: Not Found for url: https://slachthuishaarlem.nl/wp-json/wp/v2/types; jsonld_detail: 2 events",
+   "ok": false
+  },
+  {
+   "name": "Victorie",
+   "city": "Alkmaar",
+   "url": "https://www.podiumvictorie.nl/programma/",
+   "strategy": "wp_event",
+   "events": 111,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumvictorie.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta",
+   "ok": true
+  },
+  {
+   "name": "Nobel",
+   "city": "Leiden",
+   "url": "https://nobel.nl/agenda",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://nobel.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026-; wp_event: HTTPError 404 Client Error: Not Found for url: https://nobel.nl/wp-json/wp/v2/types; jsonld_detail: 1 events",
+   "ok": false
+  },
+  {
+   "name": "Boerderij",
+   "city": "Zoetermeer",
+   "url": "https://poppodiumboerderij.nl/programma/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://poppodiumboerderij.nl/404/; wp_event: TooManyRedirects Exceeded 30 redirects.; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "Musicon",
+   "city": "Den Haag",
+   "url": "https://musicon.nl/programma/",
+   "strategy": "jsonld",
+   "events": 76,
+   "note": "",
+   "ok": true
+  },
+  {
+   "name": "Rotown",
+   "city": "Rotterdam",
+   "url": "https://www.rotown.nl/agenda/",
+   "strategy": "error",
+   "events": 0,
+   "note": "HTTPError: 404 Client Error: Not Found for url: https://www.rotown.nl/agenda/",
+   "ok": false
+  },
+  {
+   "name": "WORM",
+   "city": "Rotterdam",
+   "url": "https://worm.org/agenda/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://worm.org/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026-; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "BIRD",
+   "city": "Rotterdam",
+   "url": "https://bird-rotterdam.nl/agenda",
+   "strategy": "jsonld_detail",
+   "events": 5,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://bird-rotterdam.nl/wp-json/tribe/events/v1/events/?per_page=50&page=1&start_; wp_event: HTTPError 404 Client Error: Not Found for url: https://bird-rotterdam.nl/wp-json/wp/v2/types/",
+   "ok": true
+  },
+  {
+   "name": "Baroeg",
+   "city": "Rotterdam",
+   "url": "https://www.baroeg.nl/agenda",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://baroeg.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026; wp_event: HTTPError 401 Client Error: Unauthorized for url: https://baroeg.nl/wp-json/wp/v2/activity-log-events?per_page=100&_embed=1&page=1; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "LantarenVenster",
+   "city": "Rotterdam",
+   "url": "https://www.lantarenvenster.nl/muziek/",
+   "strategy": "jsonld_detail",
+   "events": 71,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.lantarenvenster.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events",
+   "ok": true
+  },
+  {
+   "name": "Bibelot",
+   "city": "Dordrecht",
+   "url": "https://bibelot.net/programma/",
+   "strategy": "wp_event",
+   "events": 3,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://bibelot.net/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20",
+   "ok": true
+  },
+  {
+   "name": "Mezz",
+   "city": "Breda",
+   "url": "https://www.mezz.nl/programma/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.mezz.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "Willem Twee",
+   "city": "Den Bosch",
+   "url": "https://www.willem-twee.nl/agenda",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.willem-twee.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: HTTPError 404 Client Error: Not Found for url: https://www.willem-twee.nl/wp-json/wp/v2/types; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "Hall of Fame",
+   "city": "Tilburg",
+   "url": "https://hall-fame.nl/programma",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Server Error for url: https://hall-fame.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: HTTPError 404 Client Error: Server Error for url: https://hall-fame.nl/wp-json/wp/v2/types; jsonld_detail: 0 events",
+   "ok": false
+  },
+  {
+   "name": "Muziekgieterij",
+   "city": "Maastricht",
+   "url": "https://muziekgieterij.nl/",
+   "strategy": "jsonld",
+   "events": 1,
+   "note": "",
+   "ok": true
+  },
+  {
+   "name": "Nieuwe Nor",
+   "city": "Heerlen",
+   "url": "https://www.nieuwenor.nl/agenda",
+   "strategy": "jsonld_detail",
+   "events": 80,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: JSONDecodeError Expecting value: line 1 column 1 (char 0)",
+   "ok": true
+  },
+  {
+   "name": "Grenswerk",
+   "city": "Venlo",
+   "url": "https://www.grenswerk.nl/agenda/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; embedded: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.grenswerk.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: HTTPError 401 Client Error: Unauthorized for url: https://www.grenswerk.nl/wp-json/wp/v2/types; jsonld_detail: 0 events",
+   "ok": false
   }
  ],
- "total_events": 1570
+ "total_events": 2484
 }
