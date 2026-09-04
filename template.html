@@ -173,8 +173,10 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     <div class="panel" id="genrePanel" hidden>
       <div class="row">Hoofdgenre <button id="clearGenres">wissen</button></div>
       <div class="chips" id="genreChips"></div>
-      <div class="row" style="margin-top:12px">Subgenre / tag <span id="subHint" style="font-weight:400;letter-spacing:0;text-transform:none">meest voorkomend</span></div>
-      <div class="chips" id="subChips"></div>
+      <div id="subBlock" hidden>
+        <div class="row" style="margin-top:12px">Subgenre / tag <span id="subHint" style="font-weight:400;letter-spacing:0;text-transform:none">binnen gekozen hoofdgenre</span></div>
+        <div class="chips" id="subChips"></div>
+      </div>
     </div>
   </div>
   <label class="search"><svg viewBox="0 0 12 12" width="12" height="12" style="stroke:var(--ink-3);fill:none;stroke-width:1.6"><circle cx="5" cy="5" r="3.5"/><path d="M8 8l3 3"/></svg><input id="q" type="search" placeholder="Zoek artiest, podium…" autocomplete="off"></label>
@@ -262,6 +264,8 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
     b.addEventListener('click',()=>{ state.genres=state.genres.includes(g)?state.genres.filter(x=>x!==g):[...state.genres,g]; b.setAttribute('aria-pressed', state.genres.includes(g)); save(); buildSubs(); render(); }); chips.append(b); });
   const subChips=document.getElementById('subChips');
   function buildSubs(){
+    document.getElementById('subBlock').hidden = !state.genres.length;
+    if (!state.genres.length) { state.subs=[]; subChips.innerHTML=''; return; }
     const cnt={}; EVENTS.filter(e=>!state.genres.length || (e.genre_norm||[]).some(g=>state.genres.includes(g))).forEach(e=>(e.genres||[]).forEach(t=>{const k=t.trim(); if(k && !Object.values(GROUPS).some(l=>l.toLowerCase()===k.toLowerCase())) cnt[k]=(cnt[k]||0)+1;}));
     const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,30).map(x=>x[0]);
     state.subs = state.subs.filter(t=>top.includes(t)||cnt[t]);
