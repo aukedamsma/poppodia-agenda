@@ -490,7 +490,7 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
             return []
         api = urljoin(base, f"/wp-json/wp/v2/{cands[0]['rest_base']}?per_page=100&_embed=1")
     out, page = [], 1
-    while page <= 10:
+    while page <= int(v.get("max_pages", 3)):
         sep = "&" if "?" in api else "?"
         r = get(f"{api}{sep}page={page}", delay=0.5)
         items = r.json()
