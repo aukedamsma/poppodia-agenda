@@ -528,8 +528,11 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
     """Leest een eventpagina; cache op URL zodat dit maar zelden opnieuw hoeft."""
     c = cache.get(url)
-    if c and c.get("fetched") and date.fromisoformat(c["fetched"]) > TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
-        return Event(**c["event"]) if c.get("event") else None
+    if c and c.get("fetched"):
+        # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
+        ttl = int(v.get("detail_ttl_days", 10)) if c.get("event") else 1
+        if date.fromisoformat(c["fetched"]) > TODAY - timedelta(days=ttl):
+            return Event(**c["event"]) if c.get("event") else None
     try:
         html = get(url, delay=float(v.get("crawl_delay", 1.0))).text
     except requests.RequestException as ex:
@@ -716,11 +719,13 @@ def main(only: list[str] | None = None) -> int:
                                  "events": len(evs), "note": note, "ok": len(evs) > 0})
         all_events.extend(evs)
 
-    # 'nieuw' bepalen
+    # 'nieuw' bepalen; een podium dat voor het eerst meedoet levert geen 'nieuwe' events op
+    known_venues = {k.split("|", 1)[0] for k in seen}
+    backdate = (TODAY - timedelta(days=30)).isoformat()
     for e in all_events:
         key = f"{e.venue}|{e.url}"
         if key not in seen:
-            seen[key] = TODAY.isoformat()
+            seen[key] = TODAY.isoformat() if (e.venue in known_venues or not seen) else backdate
         e.first_seen = seen[key]
     # opschonen: sleutels van events die > 60 dagen weg zijn
     live = {f"{e.venue}|{e.url}" for e in all_events}
