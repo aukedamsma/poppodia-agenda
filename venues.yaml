@@ -150,14 +150,39 @@
 # ---------------- Batch 2: automatisch detecteren ----------------
 # Deze podia hebben alleen naam + URL; de fetcher zoekt zelf de beste bron.
 # Podia die in data/report.json op ✕ blijven staan krijgen daarna een handmatige configuratie.
-- {name: Vera, city: Groningen, url: "https://www.vera-groningen.nl/programma/"}
-- {name: Simplon, city: Groningen, url: "https://simplon.nl/programma/"}
+- name: Vera
+  city: Groningen
+  url: https://www.vera-groningen.nl/programma/
+  type: html
+  item: "a.event-link"
+  title: ".artist"
+  date: ".date"
+  notes: WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; datum Engels zonder jaar
+- name: Simplon
+  city: Groningen
+  url: https://simplon.nl/programma/
+  type: html
+  item: "a.block__content"
+  title: ".block__title"
+  date: ".block__date"
+  subtitle: ".block__subtitle"
+  notes: datum als "vr 4.9"; tijd en prijs via eventpagina (enrich)
 - {name: SPOT, city: Groningen, url: "https://www.spotgroningen.nl/programma/"}
-- {name: Neushoorn, city: Leeuwarden, url: "https://www.neushoorn.nl/programma"}
+- name: Neushoorn
+  city: Leeuwarden
+  url: https://www.neushoorn.nl/programma
+  type: jsonld_detail
+  link_pattern: "neushoorn\\.nl/events/[^/]+/?$"
+  max_detail: 150
+  notes: "Webflow; geen structured data, datum/tijd/prijs uit tekst van de eventpagina ('Datum Fri 4 Sep … Aanvang: 23:00 … € 25,-')"
 - {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/"}
-- {name: Luxor Live, city: Arnhem, url: "https://www.luxorlive.nl/agenda/"}
+- name: Luxor Live
+  city: Arnhem
+  url: https://www.luxorlive.nl/agenda/
+  type: microdata
+  notes: schema.org-microdata (itemscope Event) per item, incl. startDate
 - {name: Willemeen, city: Arnhem, url: "https://www.willemeen.nl/programma/"}
-- {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/"}
+- {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
 - {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma"}
 - {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda"}
 - {name: FLUOR, city: Amersfoort, url: "https://fluor033.nl/programma/"}
@@ -165,20 +190,84 @@
 - {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda"}
 - {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl"}
 - {name: Cinetol, city: Amsterdam, url: "https://www.cinetol.nl/programma"}
-- {name: Slachthuis, city: Haarlem, url: "https://slachthuishaarlem.nl/programma/"}
+- {name: Slachthuis, city: Haarlem, url: "https://slachthuishaarlem.nl/programma/", notes: "nog niet gecontroleerd"}
 - {name: Victorie, city: Alkmaar, url: "https://www.podiumvictorie.nl/programma/"}
-- {name: Nobel, city: Leiden, url: "https://nobel.nl/agenda"}
-- {name: Boerderij, city: Zoetermeer, url: "https://poppodiumboerderij.nl/programma/"}
+- name: Nobel
+  city: Leiden
+  url: https://nobel.nl/agenda
+  type: html
+  item: "a.event"
+  title: "h3"
+  date: ".time"
+  date_text_only: true
+  subtitle: "p"
+  genre: ".genre"
+  notes: Drupal; <time datetime> is de publicatiedatum, dus datumtekst "vr. 04 sept." gebruiken; tijd via enrich
+- name: Boerderij
+  city: Zoetermeer
+  url: https://poppodiumboerderij.nl/programma/
+  type: html
+  item: "li.programm-card"
+  title: ".programm-card__title"
+  date: ".programm-card__date"
+  subtitle: ".programm-card__description"
+  notes: <time datetime="undefined">, datumtekst "ZA 5 SEP '26"; wp-json geeft redirect-loop
 - {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/"}
-- {name: Rotown, city: Rotterdam, url: "https://www.rotown.nl/agenda/"}
-- {name: WORM, city: Rotterdam, url: "https://worm.org/agenda/"}
+- name: Rotown
+  city: Rotterdam
+  url: https://www.rotown.nl/
+  type: jsonld
+  notes: /agenda/ geeft 404; homepage bevat ~150 JSON-LD Events (Theater for WordPress)
+- name: WORM
+  city: Rotterdam
+  url: https://worm.org/agenda/
+  type: html
+  item: ".agenda-item__title"
+  title: ".agenda-item__title__title"
+  date: ".agenda-item__title__date"
+  genre: ".agenda-item__title__cat"
+  link: "a.agenda-item__link"
+  notes: eventpagina's onder /production/; starttijd via enrich ("Start → 20:30")
 - {name: BIRD, city: Rotterdam, url: "https://bird-rotterdam.nl/agenda"}
-- {name: Baroeg, city: Rotterdam, url: "https://www.baroeg.nl/agenda"}
+- name: Baroeg
+  city: Rotterdam
+  url: https://www.baroeg.nl/agenda
+  type: auto
+  notes: Theater for WordPress (.wp_theatre_event) -> html-preset; datum "di 8/09/26"
 - {name: LantarenVenster, city: Rotterdam, url: "https://www.lantarenvenster.nl/muziek/"}
 - {name: Bibelot, city: Dordrecht, url: "https://bibelot.net/programma/"}
-- {name: Mezz, city: Breda, url: "https://www.mezz.nl/programma/"}
-- {name: Willem Twee, city: Den Bosch, url: "https://www.willem-twee.nl/agenda"}
-- {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma"}
+- name: Mezz
+  city: Breda
+  url: https://www.mezz.nl/programma/
+  type: html
+  item: "li.program-item"
+  title: ".program-item__title"
+  date: ".program-item__date"
+  subtitle: ".program-item__subtitle"
+  notes: "tijd/prijs via enrich ('15:00 (Doors: 15:00)')"
+- name: Willem Twee
+  city: Den Bosch
+  url: https://www.willem-twee.nl/agenda
+  type: html
+  item: ".article-wrapper"
+  title: ".article-title"
+  date: ".article-date"
+  subtitle: ".article-subtitle"
+  genre: ".tags .tag, .article-genre"
+  only_genres: [Poppodium]
+  notes: gemengd programma (kunstruimte, toonzaal); alleen tag Poppodium; datum "vr 14 aug. t/m zo 20 sep."
+- {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma", type: disabled, notes: "Nuxt-app, data in devalue-formaat; nog uitzoeken"}
 - {name: Muziekgieterij, city: Maastricht, url: "https://muziekgieterij.nl/"}
 - {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda"}
-- {name: Grenswerk, city: Venlo, url: "https://www.grenswerk.nl/agenda/"}
+- name: Grenswerk
+  city: Venlo
+  url: https://www.grenswerk.nl/agenda/
+  type: html
+  item: "li.item"
+  title: "h3"
+  date: ".date"
+  subtitle: "h4"
+  link_attr: data-target
+  genre_attr: data-filter
+  enrich: false
+  notes: alles op de lijstpagina ("Open 17:30 / Aanvang 18:00 / € 8,50"); ticketlinks naar Stager
