@@ -387,6 +387,38 @@ def test_extra_sources_stager_itemlist():
     assert club.start == FUT + "T23:00", club.start  # rijkste versie (met tijd) blijft
 
 
+def test_stager_acf_fields():
+    """Muziekgieterij (Stager-WordPress): programma-start, deurtijd, reguliere ticketprijs, gratis, uitverkocht uit acf.stager_*."""
+    acf = {"stager_program_start": FUT + "T23:00:00+02:00", "stager_doors_open": FUT + "T22:30:00+02:00", "stager_production_start": FUT + "T20:00:00+02:00",
+           "stager_production_free": False, "production_tickets_soldout": True, "stager_production_subtitle": "W/ Lovefoundation",
+           "stager_tickets": [{"stager_ticket_valid": True, "stager_ticket_type": "MEMBERSHIP", "stager_ticket_price": 0},
+                              {"stager_ticket_valid": True, "stager_ticket_type": "REGULAR", "stager_ticket_name": "Voorverkoop", "stager_ticket_price": 37.5},
+                              {"stager_ticket_valid": True, "stager_ticket_type": "EARLYBIRD", "stager_ticket_price": 30}]}
+    st = fetch._stager_acf(acf)
+    assert st["start"].isoformat(timespec="minutes") == FUT + "T23:00" and st["doors"].hour == 22
+    assert st["price"] == "€ 37,5" and st["status"] == "uitverkocht" and st["subtitle"] == "W/ Lovefoundation"
+    assert fetch._stager_acf({"stager_production_free": True})["price"] == "gratis"
+    assert fetch._acf_date(acf).hour == 23
+
+
+def test_facetwp_bibelot():
+    """Bibelot: FacetWP 'laad meer' -> JSON-POST met paged, antwoord {"template": html, "settings": {"pager": {...}}}."""
+    card = lambda slug, tt, d: f'<a class="card card-programma" href="https://bibelot.net/programma/{slug}/"><p class="h6">{d}</p><div class="categories"><div class="tag">concert </div></div><h3>{tt}</h3><p class="subtitle">sub</p></a>'
+    d1 = date.fromisoformat(FUT); d2 = date.fromisoformat(FUT2)
+    mon = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    pages = {1: card("a", "Band A", f"vr {d1.day} {mon[d1.month-1]}") + card("b", "Band B", f"za {d1.day} {mon[d1.month-1]}"), 2: card("c", "Band C", f"zo {d2.day} {mon[d2.month-1]}")}
+    class S:
+        headers = {}
+        def get(self, url, **kw): return FakeResp(text='<div class="facetwp-template">' + pages[1] + "</div>")
+        def post(self, url, json=None, **kw): return FakeResp(text="", json_={"template": pages.get(json["data"]["paged"], ""), "settings": {"pager": {"total_pages": 2}}})
+    fetch.SESSION = S()
+    v = {"name": "Bibelot", "city": "Dordrecht", "url": "https://bibelot.net/programma/", "type": "html", "facetwp": True, "enrich": False,
+         "item": "a.card-programma", "title": "h3", "date": "p.h6", "subtitle": "p.subtitle", "genre": ".categories .tag"}
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert [e.title for e in evs] == ["Band A", "Band B", "Band C"], (strat, note)
+    assert evs[2].start.startswith(FUT2) and evs[0].genres == ["concert"]
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

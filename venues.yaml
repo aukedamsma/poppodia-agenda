@@ -29,6 +29,8 @@
 #   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
 #   min_events    minimum aantal events voordat een strategie als geslaagd geldt (standaard 3)
 #   item/title/date/link/genre/subtitle  CSS-selectors voor type: html
+#   group / group_date   type: html: datum staat als kop boven een groep kaarten (selector van de groep en van de datumkop)
+#   facetwp: true        type: html met FacetWP 'laad meer' (JSON-POST met paged); wordt ook automatisch herkend
 #   date_from_url true -> haal DD-MM-YYYY (of DD-MM-YY) uit de event-URL als datum ontbreekt
 #   section       poppodium (standaard) | overig  -> 'overig' is alleen zichtbaar onder de knop 'Alles'
 #   capacity      zaalcapaciteit (informatief, uit VNPF-overzicht)
@@ -265,7 +267,19 @@
   url: https://www.luxorlive.nl/agenda/
   type: microdata
   notes: schema.org-microdata (itemscope Event) per item, incl. startDate
-- {name: Willemeen, city: Arnhem, url: "https://www.willemeen.nl/programma/", capacity: 375}
+- name: Willemeen
+  city: Arnhem
+  url: https://www.willemeen.nl/programma/
+  capacity: 375
+  type: html
+  item: ".we__agenda-item"
+  title: ".we__agenda-item-name > div[data-text]"
+  title_attr: data-text
+  link: "a.-link-to-program"
+  group: ".we__agenda-row"
+  group_date: ".we__agenda-item-date"
+  genre: ".we__agenda-item-genre"
+  notes: "alle events (75) in de HTML, datum als kop per dag ('vr 04 sep'), tijd in de kaart ('12:00'), 'Gratis' als ticketknop; eventpagina: 'Zaal open: 19:30 Start: 20:00 … Door: €16,00 Early: €12,00 Regular: €14,50' (regular wint); Stager-shop willemeen.stager.co. Ook welzijn/nacht-activiteiten (type via titel)"
 - {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", capacity: 500, type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
 - {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma", capacity: 450}
 - {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda", capacity: 1000}
@@ -278,7 +292,15 @@
     tags: {concerten: Concert, dance: Clubnacht, en-de-rest: Overig}
 - {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
 - {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda", capacity: 680}
-- {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl", capacity: 1100}
+- name: Q-factory
+  city: Amsterdam
+  url: https://q-factory.com/nl
+  capacity: 1100
+  type: sitemap_detail
+  sitemap: https://q-factory.com/sitemap.xml
+  link_pattern: "q-factory\\.com/nl/events/"
+  max_detail: 300
+  notes: "Next.js; homepage toont 12 events + 'meer laden' (JS), geen agenda-URL; sitemap.xml (gewone urlset) heeft alle 71 events (nl + en). Eventpagina: 'Datum Do.10.Sep Aanvang 20:30 Deuren 19:30 … Tickets € 23,00'"
 - name: Cinetol
   city: Amsterdam
   capacity: 210
@@ -331,7 +353,16 @@
   genre: ".agenda-item__title__cat"
   link: "a.agenda-item__link"
   notes: eventpagina's onder /production/; starttijd via enrich ("Start → 20:30")
-- {name: BIRD, city: Rotterdam, url: "https://bird-rotterdam.nl/agenda", capacity: 300}
+- name: BIRD
+  city: Rotterdam
+  url: https://bird-rotterdam.nl/agenda
+  capacity: 300
+  type: sitemap_detail
+  sitemap: https://bird-rotterdam.nl/sitemap.xml
+  sitemap_recent_days: 150
+  link_pattern: "bird-rotterdam\\.nl/event/[^/]+/?$"
+  max_detail: 400
+  notes: "Next.js + Prismic; de agenda laadt via RSC (5 events in de HTML, 81 live). Sitemap (urlset, 3131 events incl. verleden) met lastmod: alleen recent gewijzigde URL's; eventpagina heeft JSON-LD Event (startDate in UTC) en prijs in de tekst ('Tickets €25,50')"
 - name: Baroeg
   city: Rotterdam
   capacity: 350
@@ -339,7 +370,18 @@
   type: auto
   notes: Theater for WordPress (.wp_theatre_event) -> html-preset; datum "di 8/09/26"
 - {name: LantarenVenster, city: Rotterdam, url: "https://www.lantarenvenster.nl/muziek/", capacity: 525}
-- {name: Bibelot, city: Dordrecht, url: "https://bibelot.net/programma/", capacity: 1100}
+- name: Bibelot
+  city: Dordrecht
+  url: https://bibelot.net/programma/
+  capacity: 1100
+  type: html
+  facetwp: true
+  item: "a.card-programma"
+  title: "h3"
+  date: "p.h6"
+  subtitle: "p.subtitle"
+  genre: ".categories .tag"
+  notes: "FacetWP 'laad meer': 30 events in de HTML, 106 via JSON-POST (paged 1..4). WP REST 'programma' (576 posts) heeft geen datum; WP-type 'eventtype' (zakelijk) werd eerder per ongeluk gekozen. Tijd/prijs op de eventpagina ('Deuren open 20:00 Aanvang 20:00'); Stager-shop bibelot.stager.co"
 - name: Mezz
   city: Breda
   capacity: 750
@@ -368,8 +410,10 @@
   capacity: 1520
   url: https://muziekgieterij.nl/
   type: wp_event
-  api: https://muziekgieterij.nl/wp-json/wp/v2/event?per_page=100&_embed=1
+  api: https://muziekgieterij.nl/wp-json/wp/v2/event?per_page=20&_embed=1
+  max_pages: 8
   genre_taxonomies: [production_genre, production_type]
+  notes: "Stager-WordPress-koppeling: zeer zware ACF-payload (per_page=100 loopt in de timeout), dus 20 per pagina; acf.stager_program_start/doors_open/tickets/production_free/production_subtitle worden generiek gelezen (_stager_acf)"
   notes: "WP REST 'event' (Stager-koppeling, 121 producties); datum staat in de slug (…-2026-09-18), tijd/prijs via eventpagina (enrich). Homepage-JSON-LD gaf maar 1 event."
 - {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda", capacity: 1100}
 - name: Grenswerk
@@ -495,7 +539,16 @@
 - {name: De Peppel, city: Zeist, url: "https://peppel-zeist.nl/", capacity: 350}
 - {name: Capsloc, city: Capelle aan den IJssel, url: "https://www.capsloc.nl/programma/", capacity: 280}
 - {name: Gebouw-T, city: Bergen op Zoom, url: "https://www.gebouw-t.nl/agenda", capacity: 700}
-- {name: So What!, city: Gouda, url: "https://www.so-what.nl/agenda/", capacity: 420}
+- name: So What!
+  city: Gouda
+  url: https://www.so-what.nl/agenda/
+  capacity: 420
+  type: wp_event
+  api: "https://www.so-what.nl/wp-json/wp/v2/event?per_page=100&_embed=1"
+  genre_taxonomies: [customer_interest, event_type]
+  extra_sources:
+    - {url: "https://so-what.stager.co/shop/default/events", type: jsonld, enrich: false}
+  notes: "Cloudflare weigert onze user-agent (403) -> browser-fallback; WP REST 'event' zonder datum, datum/tijd/prijs op de eventpagina ('Datum Sat 5 Sep 2026 Deuren open 22:30 Start 22:30 … Leden: € 5,00 Regulier: € 10,00 Voorverkoop Regulier: € 8,00'); Stager-shop als extra bron"
 - {name: Kroepoekfabriek, city: Vlaardingen, url: "https://kroepoekfabriek.nl/agenda/", capacity: 300}
 - {name: Manifesto, city: Hoorn, url: "https://manifesto-hoorn.nl/", capacity: 300}
 - {name: De Flux, city: Zaandam, url: "https://www.podiumdeflux.nl/agenda/", capacity: 350}
@@ -519,7 +572,19 @@
              classicretro: Classics, soulfunkjazz: [Soul, Funk, Jazz], skareggae: [Ska, Reggae], indiealternative: [Indie, Alternative]}
 - {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/", capacity: 400}
 - {name: Groene Engel, city: Oss, url: "https://www.groene-engel.nl/programma/", capacity: 650}
-- {name: De Cacaofabriek, city: Helmond, url: "https://www.cacaofabriek.nl/agenda", capacity: 550, notes: "gemengd programma (film/concert/expo)"}
+- name: De Cacaofabriek
+  city: Helmond
+  url: https://www.cacaofabriek.nl/agenda?type=concert
+  capacity: 550
+  type: html
+  item: "li.event"
+  title: "h3.title"
+  date: "p.date"
+  link: "h3.title a"
+  subtitle: "p.subtitle"
+  genre: ".category-tag"
+  enrich: false
+  notes: "gemengd programma (film/concert/expo); ?type=concert geeft alle concerten in één HTML (client-side paging). Datum 'donderdag 10 sep.' + tijd '19:00' in de kaart. Prijs staat alleen in de Ticketlab-shop (tickets.cacaofabriek.nl, JS/cookiemuur) -> geen prijs"
 - {name: Astrant, city: Ede, url: "https://astrant-ede.nl/programma-evenementen-en-activiteiten-ede/", capacity: 150}
 - {name: De Meester, city: Almere, url: "https://poppodiumdemeester.nl/", capacity: 300}
 

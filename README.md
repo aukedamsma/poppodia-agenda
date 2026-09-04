@@ -52,6 +52,7 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Terugkerende events zonder tijd | Reeksengeheugen vult de tijd aan uit eerdere edities, gemarkeerd als schatting (~). Prijzen worden nooit geschat: alleen een geparsete prijs (of 'uitverkocht') komt op de kaart. |
 | Prijs/tijd alleen in ingebedde JSON (Melkweg `"price":"€ 24,05"`, Vorstin URL-gecodeerde `program_start`/`door_open`) | `price_from_embedded_json` en `times_from_embedded_json` lezen JSON-blobs in de HTML (ook URL-gecodeerd) als de zichtbare tekst niets oplevert; het 'primary' ticket wint. |
 | Tijd vóór het label ("19:30 Zaal Open", 013) en tijdschema's zonder 'aanvang' (Nobel "19:00 - Deuren open 19:30 - Band") | Beide woordvolgordes worden herkend; de vroegste tijd is de deurtijd, de eerste tijd erna de start. |
+| Meerdere bedragen op een pagina (Willemeen "Door €16 / Early €12 / Regular €14,50", So What! "Leden €5 / Regulier €10 / Voorverkoop €8") | De prijs is die van nú online een gewoon ticket bestellen: het label direct vóór elk bedrag bepaalt de context; leden/CJP/jeugd/early bird/deur/dagkassa vallen af, voorverkoop/online wint van 'regulier', dat van de rest (`_pick_price`). |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
 Twee zelflerende lagen (bewijs verzamelen → bij voldoende consistentie promoveren tot regel; handmatig vast te zetten in `genres.yaml`):

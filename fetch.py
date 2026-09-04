@@ -593,9 +593,46 @@ def strat_tribe(v: dict, base: str) -> list[Event]:
 
 # --- WordPress: eigen event-posttype -----------------------------------------
 
+def _stager_acf(acf: dict) -> dict:
+    """Stager-WordPress-koppeling (Muziekgieterij e.a.): ACF-velden stager_* met programma-start, deuren, tickets, status.
+    Geeft {start, doors, price, subtitle, status} voor zover aanwezig."""
+    out: dict = {}
+    if not isinstance(acf, dict) or not any(k.startswith("stager_") for k in acf):
+        return out
+    for k in ("stager_program_start", "stager_doors_open", "stager_production_start"):
+        dt = parse_dt(acf.get(k)) if acf.get(k) else None
+        if dt:
+            out.setdefault("start", dt)
+            if k == "stager_doors_open":
+                out["doors"] = dt
+    if acf.get("stager_production_free") is True:
+        out["price"] = "gratis"
+    else:
+        prices = []
+        for t in as_list(acf.get("stager_tickets") or []):
+            if not isinstance(t, dict) or t.get("stager_ticket_valid") is False:
+                continue
+            p = t.get("stager_ticket_price")
+            if isinstance(p, (int, float)) and p > 0 and str(t.get("stager_ticket_type", "REGULAR")).upper() in ("REGULAR", "EARLYBIRD", "EARLY_BIRD", "PRESALE", "DOOR"):
+                prices.append((0 if str(t.get("stager_ticket_type")).upper() == "REGULAR" else 1, float(p)))
+        if prices:
+            out["price"] = fmt_price(min(prices)[1])
+    sub = acf.get("stager_production_subtitle")
+    if isinstance(sub, str) and sub.strip():
+        out["subtitle"] = sub
+    if acf.get("production_tickets_soldout") is True:
+        out["status"] = "uitverkocht"
+    elif acf.get("stager_production_postponed") is True or acf.get("stager_production_moved") is True:
+        out["status"] = "verplaatst"
+    return out
+
+
 def _acf_date(acf: dict) -> datetime | None:
     if not isinstance(acf, dict):
         return None
+    st = _stager_acf(acf)
+    if st.get("start"):
+        return st["start"]
     for k in ("date_time", "start_date", "startdate", "date", "datum", "event_date", "start", "begin"):
         if acf.get(k):
             dt = parse_dt(acf[k])
@@ -615,7 +652,10 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
         try:
             types = get(urljoin(base, "/wp-json/wp/v2/types"), delay=0.5).json()
             cands = [t for t in types.values() if re.search(r"event|evenement|agenda|programma|voorstelling|concert|show", t.get("rest_base", "") + t.get("slug", ""), re.I)
-                     and not re.search(r"log|activity|ticket|serie|categor", t.get("rest_base", ""), re.I)]
+                     and not re.search(r"log|activity|ticket|serie|categor|type$|types$|keynius|label|genre|locat", t.get("rest_base", ""), re.I)]
+            # Bibelot: 'eventtype' (zakelijke eventsoorten) en 'keynius-event' (lockers) zijn geen agenda; 'programma' wel
+            pref = ["events", "event", "evenementen", "evenement", "programma", "agenda", "voorstellingen", "voorstelling", "concerten", "concert", "shows", "show"]
+            cands.sort(key=lambda t: pref.index(t["rest_base"]) if t.get("rest_base") in pref else 99)
             if cands:
                 rest_base = cands[0]["rest_base"]
         except (requests.RequestException, ValueError):
@@ -655,8 +695,9 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
                     ok = (tax in want_tax) if want_tax else (tax not in ("category", "post_tag", "language"))
                     if ok and term.get("name"):
                         genres.append(clean(term["name"]))
-            price = acf.get("price") if isinstance(acf, dict) else None
-            sub = acf.get("one_liner") or acf.get("subtitle") or acf.get("support_act") if isinstance(acf, dict) else None
+            stg = _stager_acf(acf)
+            price = stg.get("price") or (acf.get("price") if isinstance(acf, dict) else None)
+            sub = stg.get("subtitle") or (acf.get("one_liner") or acf.get("subtitle") or acf.get("support_act") if isinstance(acf, dict) else None)
             if not dt and v.get("detail_jsonld", True):
                 # datum staat alleen op de eventpagina -> JSON-LD of HTML daar lezen
                 ev = fetch_detail(v, link, detail_cache, title=title)
@@ -667,9 +708,13 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
                 continue
             if not dt:
                 continue
+            if isinstance(price, str) and (price.startswith("€") or price == "gratis"):
+                price_s = price
+            else:
+                price_s = (f"€ {price}" if price not in (None, "", 0) else None) if isinstance(price, (str, int, float)) else None
             out.append(Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=link,
                              subtitle=clean(sub) if isinstance(sub, str) else None, genres=genres,
-                             price=(f"€ {price}" if price not in (None, "", 0) else None) if isinstance(price, (str, int, float)) else None, source="wp_event"))
+                             price=normalize_price(price_s) if price_s else None, status=stg.get("status"), source="wp_event"))
         if len(items) < 100 and "per_page=100" in api:
             break
         if int(r.headers.get("X-WP-TotalPages", 1)) <= page:
@@ -1022,6 +1067,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     low = txt.lower()
     dt = None
     for pat in (rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
+                rf"\b{WEEKDAY_RE}\.\s?(\d{{1,2}})\.\s?{MONTH_RE}\b\.?(?:\s?(\d{{4}}))?",   # "Do.10.Sep" (Q-factory)
                 rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}}[./]\d{{1,2}}(?:[./]\d{{2,4}})?)\b",
                 rf"\bdatum\W{{0,6}}(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
                 rf"\b(\d{{1,2}})\s+{MONTH_RE}\.?\s+(\d{{4}})\b",
@@ -1062,16 +1108,48 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     plow = re.sub(r"(?:incl\.?|inclusief|excl\.?|exclusief|\+)?\s*€?\s?\d{1,3}(?:[.,]\d{2})?\s*(?:aan\s+)?(?:servicekosten|service ?fee|service ?kosten|administratiekosten|transactiekosten|fee)\b", " ", low)
     plow = re.sub(r"(?:servicekosten|service ?fee|service ?kosten|administratiekosten)\W{0,12}€?\s?\d{1,3}(?:[.,]\d{2})?", " ", plow)
     low = plow
-    pm = (re.search(r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
-          or re.search(r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)", low)
-          or re.search(r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
-          or re.search(r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b", low))
+    pm = _pick_price(low)
     price = None
     if re.search(r"\bgratis\b|\bfree\b(?! ?(wifi|parking))", low) and not pm:
         price = "gratis"
     elif pm:
-        price = fmt_price(pm.group(1))
+        price = fmt_price(pm)
     return dt, start, doors, price
+
+
+_DISCOUNT_CTX = re.compile(r"leden|members?|lid\b|cjp|student|scholier|jeugd|jongeren|kinderen|kids|t/m \d+ jaar|tot en met \d+|65\+|vrienden|donateur|korting|reduced|early\b|deurprijs|dagkassa|aan de deur|at the door|door ?sale|\bdoor\s*:|deur\s*:|late\b", re.I)
+_PREFERRED_CTX = re.compile(r"regulier|regular|normaal|standaard|voorverkoop|vvk|presale|pre-?sale|tickets?|entree|kaarten", re.I)
+
+
+def _pick_price(low: str) -> str | None:
+    """De reguliere voorverkoopprijs uit tekst met meerdere bedragen. So What!: "Leden: € 5,00 Regulier: € 10,00
+    Voorverkoop Regulier: € 8,00" -> € 8,00 (niet de ledenprijs); De Piek: "Presale € 23,00 | Tickets € 25,00" -> € 23,00.
+    Bedragen met een kortings- of deurprijscontext (leden, CJP, jeugd, dagkassa) vallen af zolang er andere zijn;
+    daarna wint het eerste bedrag met een 'gewone' context, anders het eerste bedrag."""
+    raw = []
+    for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)",
+                r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b"):
+        for m in re.finditer(pat, low):
+            raw.append((m.start(), m.end(), m.group(1)))
+    if not raw:
+        return None
+    raw.sort()
+    cands = []
+    prev_end = None
+    for start, end, val in raw:
+        if cands and start < cands[-1][3]:
+            continue  # zelfde bedrag, door twee patronen gevonden
+        # context = het label direct vóór dit bedrag (tot het vorige bedrag): "Door: €16,00 Early: €12,00 Regular: €14,50"
+        lo = max(0, start - 28, prev_end if prev_end is not None else 0)
+        cands.append((start, val, low[lo:start], end))
+        prev_end = end
+    cands = [(a, b, c) for a, b, c, _ in cands]
+    regular = [c for c in cands if not _DISCOUNT_CTX.search(c[2])]
+    pool = regular or cands
+    # de prijs van nú online een gewoon ticket bestellen: voorverkoop/online gaat vóór 'regulier' (kan dagkassa zijn), dat vóór de rest
+    online = [c for c in pool if re.search(r"voorverkoop|vvk|presale|pre-?sale|online", c[2], re.I)]
+    preferred = online or [c for c in pool if _PREFERRED_CTX.search(c[2])]
+    return (preferred or pool)[0][1]
 
 
 def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
@@ -1141,9 +1219,12 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
     """Eventlinks uit de sitemap (laatste N bestanden = nieuwste events), daarna per eventpagina lezen (gecached)."""
     sitemap = v.get("sitemap") or urljoin(base, "/sitemap.xml")
     idx = get(sitemap, delay=0.5).text
-    files = [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", idx)]
-    pat = re.compile(v.get("sitemap_pattern", r"event"))
-    files = [f for f in files if pat.search(f)]
+    if "<sitemapindex" in idx or ("<sitemap>" in idx and "<url>" not in idx):
+        files = [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", idx)]
+        pat = re.compile(v.get("sitemap_pattern", r"event"))
+        files = [f for f in files if pat.search(f)]
+    else:
+        files = [sitemap]   # gewone urlset (Q-factory): de sitemap zelf bevat de eventlinks
 
     def num(f):
         mm = re.search(r"(\d+)\.xml$", f)
@@ -1353,7 +1434,7 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
             sel = v.get(key)
             return item.select_one(sel) if sel else None
         t = pick("title")
-        title = clean(t.get_text()) if t else None
+        title = clean(t.get(v["title_attr"]) if t is not None and v.get("title_attr") and t.has_attr(v["title_attr"]) else t.get_text()) if t else None
         # link: uit attribuut (bijv. data-target), uit selector, of de eerste <a>
         url = None
         if v.get("link_attr"):
@@ -1372,12 +1453,24 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
                 dt = extract_from_text(d.get_text(" "))[0]
         if not dt and v.get("date_from_url"):
             dt = date_from_url(url)
+        if not dt and v.get("group") and v.get("group_date"):
+            # datum staat als kop boven een groep kaarten (Willemeen: .we__agenda-row > .we__agenda-item-date "vr 04 sep")
+            grp = item.find_parent(class_=v["group"].lstrip(".")) if v["group"].startswith(".") else item.find_parent(v["group"])
+            gd = grp.select_one(v["group_date"]) if grp else None
+            if gd is not None:
+                dt = parse_dt(clean(gd.get_text())) or extract_from_text(gd.get_text(" "))[0]
         if not dt:
             dt = extract_from_text(item.get_text(" "))[0]
         if not (title and dt):
             continue
         # tijd en prijs uit de tekst van het item (bijv. "Open 17:30 / Aanvang 18:00 / € 8,50")
         _, tstart, tdoors, tprice = extract_from_text(item.get_text(" "))
+        if not tstart and not tdoors:
+            # één losse tijd in de kaart zonder label (Willemeen "12:00"): dat is de aanvang
+            times = re.findall(r"(?<!\d)(\d{1,2})[:.](\d{2})(?!\d)", item.get_text(" "))
+            times = [(int(h), int(m)) for h, m in times if int(h) < 24 and int(m) < 60]
+            if len(times) == 1:
+                tstart = times[0]
         if (dt.hour, dt.minute) == (0, 0) and (tstart or tdoors):
             hh, mm = tstart or tdoors
             dt = dt.replace(hour=hh, minute=mm)
@@ -1430,6 +1523,41 @@ def strat_html_api(v: dict, base: str) -> list[Event]:
         page += 1
         if "{offset}" not in v["api"] and "{page}" not in v["api"]:
             break
+    return out
+
+
+def strat_facetwp(v: dict, base: str) -> list[Event]:
+    """FacetWP (WordPress-plugin voor filters + 'laad meer'; Bibelot): de pagina toont 30 events, de rest komt via een
+    JSON-POST naar dezelfde URL met {"action":"facetwp_refresh","data":{"paged":n,…}}; het antwoord bevat "template"
+    (HTML-fragment) en settings.pager.total_pages. Zelfde CSS-selectors als type: html.
+      type: html
+      facetwp: true          # of automatisch: de pagina bevat 'facetwp' (class facetwp-template / facetwp-load-more)
+    """
+    path = urlparse(base).path.strip("/")
+    out: list[Event] = []
+    seen: set[str] = set()
+    total_pages = int(v.get("max_pages", 20))
+    page = 1
+    while page <= total_pages:
+        body = {"action": "facetwp_refresh", "data": {"facets": {}, "frozen_facets": {}, "http_params": {"get": [], "uri": path, "url_vars": []},
+                                                      "template": "wp", "extras": {}, "soft_refresh": 1, "first_load": 0, "paged": page}}
+        r = SESSION.post(base, json=body, timeout=TIMEOUT, headers={**(BROWSER_HEADERS if urlparse(base).netloc in _BROWSER_UA_HOSTS else {}), "Accept": "application/json"})
+        time.sleep(float(v.get("crawl_delay", 0.6)))
+        r.raise_for_status()
+        try:
+            j = r.json()
+        except ValueError:
+            break
+        html = j.get("template") or ""
+        pager = (j.get("settings") or {}).get("pager") or {}
+        if pager.get("total_pages"):
+            total_pages = min(total_pages, int(pager["total_pages"]))
+        evs = [e for e in strat_html(v, html, base) if e.url not in seen]
+        if not evs:
+            break
+        seen.update(e.url for e in evs)
+        out += evs
+        page += 1
     return out
 
 
@@ -1492,7 +1620,14 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             elif strat == "jsonld_detail":
                 evs = strat_jsonld_detail(v, html, base, cache)
             elif strat == "html":
-                evs = strat_html_api(v, base) if v.get("api") else strat_html(v, html, base)
+                if v.get("api"):
+                    evs = strat_html_api(v, base)
+                elif v.get("facetwp") or (v.get("facetwp") is None and "facetwp-template" in html):
+                    evs = strat_facetwp(v, base)
+                    if len(evs) < 3:
+                        evs = strat_html(v, html, base)
+                else:
+                    evs = strat_html(v, html, base)
             elif strat == "html_preset":
                 evs, preset_name = strat_html_preset(v, html, base)
                 if preset_name:
@@ -1518,10 +1653,21 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             break
         notes.append(f"{strat}: {len(evs)} events")
     evs, strat = best
+    # ticketshops met server-side data als automatische extra bron: Stager (<slug>.stager.co/shop/default/events, JSON-LD
+    # ItemList met 50 komende events incl. tijd) wordt herkend aan ticketlinks op de agenda- of eventpagina's
+    if v.get("ticketshops", True) and not v.get("_is_extra"):
+        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", html or ""))
+        for e in evs[:60]:
+            shops.update(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (e.url or "") + " " + str(cache.get(e.url, {}).get("event") or "")))
+        for slug in sorted(shops)[:2]:
+            src = {"url": f"https://{slug}.stager.co/shop/default/events", "type": "jsonld", "enrich": False}
+            if src["url"] not in [x.get("url") for x in as_list(v.get("extra_sources") or [])]:
+                v = {**v, "extra_sources": as_list(v.get("extra_sources") or []) + [src]}
+                notes.append(f"ticketshop herkend: {slug}.stager.co")
     # extra bronnen voor hetzelfde podium (eigen site toont maar 3 weken, de Stager-ticketshop 50 events; of een tweede
     # agendapagina): elk met eigen type/instellingen; dubbele events (zelfde dag + titel) worden later samengevoegd
     for src in as_list(v.get("extra_sources") or []):
-        sub = {**v, **src, "extra_sources": None, "category_pages": None, "name": v["name"], "city": v["city"]}
+        sub = {**v, **src, "extra_sources": None, "category_pages": None, "name": v["name"], "city": v["city"], "_is_extra": True}
         try:
             more, sstrat, snote, _ = fetch_venue(sub, cache)
             known = {e.url.rstrip("/") for e in evs}
@@ -1694,7 +1840,19 @@ def dedupe(events: list[Event]) -> list[Event]:
         k2 = (e.venue, e.start[:10], _fold(NOISE_PAREN.sub("", e.title))[:40])
         if k2 in by_day:
             old = by_day[k2]
-            if _richness(e) > _richness(old):
+            rich, poor = (e, old) if _richness(e) > _richness(old) else (old, e)
+            # velden aanvullen uit de armere versie; de URL van de eigen site gaat vóór die van een ticketshop
+            if not rich.price and poor.price:
+                rich.price = poor.price
+            if rich.start[11:16] in ("", "00:00") and poor.start[11:16] not in ("", "00:00"):
+                rich.start = poor.start
+            if not rich.genres and poor.genres:
+                rich.genres = poor.genres
+            if not rich.subtitle and poor.subtitle:
+                rich.subtitle = poor.subtitle
+            if re.search(r"stager\.co|tickets?\.|shop\.|eventix|paylogic|ticketmaster|weeztix|tixly", rich.url or "") and poor.url and not re.search(r"stager\.co|tickets?\.|shop\.|eventix|paylogic|ticketmaster|weeztix|tixly", poor.url):
+                rich.url = poor.url
+            if rich is e:
                 final[final.index(old)] = e
                 by_day[k2] = e
             continue
