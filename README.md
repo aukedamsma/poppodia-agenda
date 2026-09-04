@@ -20,6 +20,16 @@ zodat ik niet elke site apart hoef af te zoeken. Draait gratis op GitHub Actions
 Een falend podium blokkeert nooit de rest: het staat dan met een ✕ in de status-voettekst van de pagina,
 met de reden in `data/report.json`.
 
+## Genres en artiesten
+
+- `genres.yaml` bevat de taxonomie: ~23 hoofdgenres (naar RateYourMusic/Discogs/Bandcamp, toegesneden op de Nederlandse
+  poppodia) plus regels die ruwe podiumtags op een hoofdgenre afbeelden. Ruwe tags blijven bewaard als subgenre.
+  Onbekende tags staan na elke run in `data/report.json` onder `unknown_genres`; voeg ze toe aan de regels.
+- `taxonomy.py` herkent artiesten in titels/ondertitels, bepaalt het eventtype (concert/club/festival/other) en de prijs als getal.
+- `artists.py` beheert `state/artists.json`: een kennisbank die elke run groeit (genre-stemmen van podia, medespelers,
+  podia, MusicBrainz-tags en — met `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` als GitHub-secrets — Spotify-genres en
+  populariteit). Events zonder genre krijgen er een via de kennisbank. Basis voor de smaakscore.
+
 ## Een podium toevoegen
 
 Voeg een blok toe aan `venues.yaml`. Meestal is dit genoeg:

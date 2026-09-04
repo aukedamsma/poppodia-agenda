@@ -1,0 +1,67 @@
+# Genre-taxonomie van de Podiumagenda.
+#
+# Uitgangspunt: de hoofdindelingen van RateYourMusic, Discogs en AllMusic, teruggebracht tot de
+# ~22 groepen die in de programmering van Nederlandse poppodia daadwerkelijk voorkomen.
+# Ruwe tags van podia blijven bewaard (event.genres); dit bestand bepaalt event.genre_norm.
+#
+# Regels worden van boven naar beneden getest; de EERSTE regel die past wint. Zet daarom specifieke
+# termen (pop-punk -> punk, indie-pop -> indie, hardcore-punk -> punk, hardstyle -> dance) vóór de
+# generieke (pop, punk, hardcore). `match` zijn losse woorden/fragmenten (kleine letters, koppeltekens
+# en spaties worden genegeerd bij het vergelijken). Onbekende tags komen in data/report.json onder
+# `unknown_genres`, zodat je ze hier kunt toevoegen.
+
+groups:
+  pop:            {label: Pop,                     desc: "pop, synthpop, dreampop, k-pop, hyperpop, popballads"}
+  rock:           {label: Rock,                    desc: "rock, hardrock, classic rock, psychedelica, prog, grunge, stoner, garage"}
+  indie:          {label: Indie / alternative,     desc: "indie, alternative, shoegaze, post-rock, britpop, emo"}
+  punk:           {label: Punk / hardcore,         desc: "punk, post-punk, hardcore-punk, ska-punk, emo-hardcore"}
+  metal:          {label: Metal,                   desc: "metal in alle varianten, metalcore, grindcore, doom, sludge"}
+  hiphop:         {label: Hiphop,                  desc: "hiphop, rap, trap, drill, grime, cloud rap, nederhop"}
+  soul:           {label: Soul / R&B,              desc: "soul, r&b, neo-soul, motown, gospel"}
+  funk:           {label: Funk / disco,            desc: "funk, disco, boogie, italo-disco, groove"}
+  jazz:           {label: Jazz,                    desc: "jazz, improvisatie, fusion, nu-jazz, bigband"}
+  roots:          {label: Blues / roots,           desc: "blues, rock-'n-roll, rockabilly, country, americana, bluegrass"}
+  folk:           {label: Folk / singer-songwriter, desc: "folk, singer-songwriter, akoestisch, kleinkunst-achtig"}
+  electronic:     {label: Electronic,              desc: "electronica, ambient, IDM, synthwave, electro, downtempo, modulair"}
+  dance:          {label: House / techno / dance,  desc: "house, techno, trance, hardstyle, rave, disco-house, clubmuziek"}
+  bass:           {label: Drum & bass / bass,      desc: "drum & bass, jungle, dubstep, uk garage, breakbeat"}
+  reggae:         {label: Reggae / ska,            desc: "reggae, dub, dancehall, ska, rocksteady"}
+  world:          {label: World / global,          desc: "afrobeat, amapiano, balkan, arabisch, aziatisch, flamenco, wereldmuziek"}
+  latin:          {label: Latin,                   desc: "salsa, bachata, cumbia, reggaeton, latin pop"}
+  nederlandstalig: {label: Nederlandstalig,        desc: "nederpop, levenslied, schlager, nederhop wordt hiphop"}
+  klassiek:       {label: Klassiek / neoklassiek,  desc: "klassiek, kamermuziek, neoklassiek, filmmuziek, oude muziek"}
+  experimenteel:  {label: Experimenteel,           desc: "avant-garde, noise, industrial, drone, sound art, krautrock"}
+  party:          {label: Feest / tribute,         desc: "tributebands, coverbands, decennia-feesten, bingo, quiz, karaoke, silent disco"}
+  talk:           {label: Comedy / talk,           desc: "cabaret, comedy, lezing, talkshow, podcast, spoken word, poëzie"}
+  kids:           {label: Kids / familie,          desc: "kindervoorstellingen, familieconcerten"}
+  overig:         {label: Overig,                  desc: "alles wat niet in te delen is"}
+
+# Volgorde is betekenisvol: eerste treffer wint.
+rules:
+  # --- eventtypes die geen muziekgenre zijn ---
+  - {group: kids,          match: [kids, kinder, familie, family, jeugd, peuter, kleuter]}
+  - {group: talk,          match: [comedy, cabaret, lezing, talk, talkshow, podcast, spoken word, poezie, poetry, literatuur, debat, college, filosof, boekpresentatie, stand-up, standup, quiz avond]}
+  - {group: party,         match: [tribute, tributes, classics, legends, hits, klassieker, greatest hits, eurovisie, eurovisiesongfestival, songfestival, decennia, 70s, 60s, 80's, 90's, zeroes, throwback, retro, coverband, cover band, covers, klassiekers, guilty pleasures, party hits, 80s, 90s, 00s, nineties, eighties, foute, bingo, pubquiz, karaoke, silent disco, feest, party, fout, sing along, singalong, meezing, apres ski, après ski, schlager party]}
+  # --- specifieke termen vóór generieke ---
+  - {group: punk,          match: [gypsypunk, gypsy punk, screamo, posthardcore, post-hardcore, post-punk, postpunk, pop-punk, poppunk, hardcore-punk, hardcore punk, ska-punk, skapunk, folk-punk, skate-punk, garage-punk, electro-punk, jangle-punk, queercore, riot grrrl, crust, d-beat, oi, anarcho, punkrock, punk]}
+  - {group: metal,         match: [metalcore, deathcore, grindcore, death metal, black metal, doom metal, doom, sludge, thrash, trash-metal, trash metal, power metal, powermetal, nu metal, nu-metal, folk metal, pagan, glam metal, glammetal, symphonic metal, progressive metal, prog metal, stoner metal, heavy, metal, hardcore, beatdown]}
+  - {group: indie,         match: [altpop, alt-pop, alt pop, alt rock, altrock, indiesoul, indie-pop, indiepop, indie-rock, indierock, indie, alternative, alternatief, shoegaze, dreampop, dream pop, post-rock, postrock, math rock, emo, britpop, brit-pop, slowcore, lo-fi, lofi, jangle, twee, art pop, art rock, noise pop, noise rock, noiserock]}
+  - {group: nederlandstalig, match: [nederlands, nederpop, nederlandstalig, nederlandstalige, levenslied, hollandse, nederbeat, dutch pop, schlager, volksmuziek, smartlap, kleinkunst, chanson]}
+  - {group: hiphop,        match: [hip-hop, hiphop, hip hop, rap, trap, drill, grime, cloud rap, emo rap, nederhop, boom bap, urban, afrotrap, r&b hiphop]}
+  - {group: bass,          match: [drum & bass, drum and bass, drum&bass, dnb, d&b, jungle, dubstep, uk garage, uk-garage, ukg, breakbeat, breaks, bassline, footwork, juke, bass music, bass]}
+  - {group: dance,         match: [deephouse, house, techno, tekno, trance, psytrance, hardstyle, hardcore dance, gabber, rave, acid, electro house, tech house, deep house, progressive house, soulful house, minimal, club, clubnacht, dance, edm, eurodance, italo, italo-disco, disco house, nu-disco, uptempo, hard dance, donk, hardtechno, hard techno, schranz]}
+  - {group: electronic,    match: [electronisch, electronics, electronic, electronica, elektronisch, electro, ambient, idm, synthwave, synth, modulaire, modular, downtempo, trip hop, triphop, chiptune, glitch, leftfield, folktronica, hyperpop, digicore, depriwave, vaporwave, darkwave, ebm, coldwave, minimal wave, new wave, new-wave, wave]}
+  - {group: funk,          match: [funk, disco, boogie, groove, motown]}
+  - {group: soul,          match: [soul, r&b, rnb, r and b, neo-soul, neosoul, gospel, trap soul, quiet storm]}
+  - {group: jazz,          match: [jazzy, jazz, improvisatie, improv, fusion, bigband, big band, bebop, swing]}
+  - {group: reggae,        match: [reggae, dub, dancehall, ska, rocksteady, roots reggae, soundsystem, sound system]}
+  - {group: latin,         match: [latin, salsa, bachata, cumbia, reggaeton, merengue, bossa, brazil, braziliaans, tropical, latino, forro, forró, samba]}
+  - {group: world,         match: [afropop, mali, mpb, afrobeat, afrobeats, afro, amapiano, world, wereldmuziek, global, balkan, klezmer, arabic, arabisch, oriental, turks, turkish, kaseko, gnawa, highlife, soukous, kizomba, flamenco, fado, celtic, ierse, irish, tuareg, desert blues, cumbia digital, bollywood, k-pop, kpop, j-pop, jpop, h-pop]}
+  - {group: roots,         match: [countrypop, country pop, blues, rock & roll, "rock 'n' roll", rock n roll, rock-n-roll, rockabilly, rock and roll, country, americana, bluegrass, roots, western, honky tonk, gospel blues, boogie woogie, cajun, zydeco, surf]}
+  - {group: folk,          match: [singer-songwriter, singer, songwriter, indiefolk, indie folk, folkpop, singer songwriter, songwriter, folk, akoestisch, acoustic, unplugged, troubadour, liedjes, ballad]}
+  - {group: klassiek,      match: [klassiek, classical, neo-klassiek, neoklassiek, neo-classical, neoclassical, kamermuziek, orkest, orchestra, ensemble, oude muziek, early music, baroque, barok, opera, koor, choir, filmmuziek, soundtrack, minimal music, piano solo]}
+  - {group: experimenteel, match: [experimental, experimenteel, avant-garde, avantgarde, noise, industrial, drone, krautrock, kraut, sound art, free improvisation, free-jazz, free jazz, musique concrete, post-industrial, harsh, power electronics, cringecore, weird]}
+  - {group: rock,          match: [psychedelisch, progrock, bluesrock, blues-rock, loud, hardrock, hard rock, classic rock, psychedelic, psych, prog, progressive rock, stoner, garage, grunge, glam, southern rock, blues rock, folkrock, folk rock, poprock, pop rock, pop-rock, arena rock, aor, rock]}
+  - {group: pop,           match: [dancepop, dance-pop, teenpop, teen pop, synthpop, synth-pop, electropop, electro-pop, dreampop, popmuziek, pop, indie pop, bedroom pop, chamber pop, power pop]}
+  # --- eventtypes ---
+  - {group: overig,        match: [muziekdocumentaire, documentaire, anime, sci-fi, theater, cinematisch, melodic, groovy, nights, upcoming, alles, queer, lgbtq, lgbtqia, 18+, nachtleven, concert, live, muziek, music, optreden, show, evenement, event, overig, diversen, divers, festival, releaseparty, release party, release show, presentatie, open mic, jam, jamsessie, sessie, workshop, film, expo, expositie, markt, dansen, dans]}

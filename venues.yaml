@@ -22,6 +22,8 @@
 #   min_events    minimum aantal events voordat een strategie als geslaagd geldt (standaard 3)
 #   item/title/date/link/genre/subtitle  CSS-selectors voor type: html
 #   date_from_url true -> haal DD-MM-YYYY (of DD-MM-YY) uit de event-URL als datum ontbreekt
+#   section       poppodium (standaard) | overig  -> 'overig' is alleen zichtbaar onder de knop 'Alles'
+#   capacity      zaalcapaciteit (informatief, uit VNPF-overzicht)
 #   notes         vrije opmerking, wordt niet gebruikt
 
 # ---------------- Utrecht ----------------
@@ -29,21 +31,17 @@
   city: Utrecht
   url: https://www.tivolivredenburg.nl/agenda/
   type: jsonld_detail
-  list_pages:
-    - https://www.tivolivredenburg.nl/agenda/
-    - https://www.tivolivredenburg.nl/agenda/page/2/
-    - https://www.tivolivredenburg.nl/agenda/page/3/
-    - https://www.tivolivredenburg.nl/agenda/page/4/
-    - https://www.tivolivredenburg.nl/agenda/page/5/
-    - https://www.tivolivredenburg.nl/agenda/page/6/
-    - https://www.tivolivredenburg.nl/agenda/page/7/
-    - https://www.tivolivredenburg.nl/agenda/page/8/
+  list_pages_template: "https://www.tivolivredenburg.nl/agenda/page/{n}/"
+  list_pages_max: 80
   link_pattern: "tivolivredenburg\\.nl/agenda/\\d+/"
-  max_detail: 400
-  notes: JSON-LD MusicEvent per eventpagina; WP REST is afgeschermd (401)
+  max_detail: 1500
+  detail_ttl_days: 14
+  capacity: 2650
+  notes: "JSON-LD MusicEvent per eventpagina; agenda is gepagineerd (~50 pagina's x 20), event-sitemap is leeg; WP REST afgeschermd"
 
 - name: EKKO
   city: Utrecht
+  capacity: 275
   url: https://www.ekko.nl/agenda/
   type: wp_event
   api: https://www.ekko.nl/wp-json/wp/v2/event?per_page=100&lang=nl&_embed=1
@@ -58,6 +56,7 @@
 
 - name: De Helling
   city: Utrecht
+  capacity: 500
   url: https://www.dehelling.nl/agenda/
   type: jsonld
   notes: ~70 Event-objecten als JSON-LD op de agendapagina
@@ -65,12 +64,14 @@
 # ---------------- Amsterdam ----------------
 - name: Melkweg
   city: Amsterdam
+  capacity: 2150
   url: https://www.melkweg.nl/nl/agenda
   type: embedded
   notes: __NEXT_DATA__ met alle events (incl. tags, status, announcedAt)
 
 - name: Bitterzoet
   city: Amsterdam
+  capacity: 350
   url: https://www.bitterzoet.com/agenda/
   type: wp_event
   api: https://www.bitterzoet.com/wp-json/wp/v2/event?per_page=100
@@ -79,6 +80,7 @@
 
 - name: Paradiso
   city: Amsterdam
+  capacity: 1710
   url: https://www.paradiso.nl/
   type: sitemap_detail
   sitemap: https://www.paradiso.nl/sitemap.xml
@@ -92,6 +94,7 @@
 
 - name: Tolhuistuin
   city: Amsterdam
+  capacity: 550
   url: https://tolhuistuin.nl/agenda
   type: embedded
   only_genres: [Muziek, Clubnacht, Festival]
@@ -100,6 +103,7 @@
 # ---------------- Landelijk ----------------
 - name: "013"
   city: Tilburg
+  capacity: 3700
   url: https://www.013.nl/programma
   type: jsonld_detail
   link_pattern: "013\\.nl/programma/\\d+/"
@@ -108,6 +112,7 @@
 
 - name: Doornroosje
   city: Nijmegen
+  capacity: 1700
   url: https://www.doornroosje.nl/programma/
   type: jsonld_detail
   link_pattern: "doornroosje\\.nl/event/[^/]+/?$"
@@ -116,6 +121,7 @@
 
 - name: Patronaat
   city: Haarlem
+  capacity: 1450
   url: https://www.patronaat.nl/programma/
   type: html
   item: ".event-program"
@@ -130,12 +136,14 @@
 
 - name: PAARD
   city: Den Haag
+  capacity: 1550
   url: https://www.paard.nl/event/
   type: jsonld
   notes: /agenda is leeg zonder JS, maar /event/ bevat alle ~170 events als JSON-LD
 
 - name: Hedon
   city: Zwolle
+  capacity: 1050
   url: https://www.hedon-zwolle.nl/
   type: embedded
   url_template: "https://www.hedon-zwolle.nl/voorstelling/{id}"
@@ -143,6 +151,7 @@
 
 - name: Effenaar
   city: Eindhoven
+  capacity: 1970
   url: https://www.effenaar.nl/agenda
   type: embedded
   notes: __NEXT_DATA__ (react-query) met alle events; date.machine + times.starts_at
@@ -152,6 +161,7 @@
 # Podia die in data/report.json op ✕ blijven staan krijgen daarna een handmatige configuratie.
 - name: Vera
   city: Groningen
+  capacity: 530
   url: https://www.vera-groningen.nl/programma/
   type: html
   item: "a.event-link"
@@ -160,6 +170,7 @@
   notes: WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; datum Engels zonder jaar
 - name: Simplon
   city: Groningen
+  capacity: 600
   url: https://simplon.nl/programma/
   type: html
   item: "a.block__content"
@@ -167,33 +178,36 @@
   date: ".block__date"
   subtitle: ".block__subtitle"
   notes: datum als "vr 4.9"; tijd en prijs via eventpagina (enrich)
-- {name: SPOT, city: Groningen, url: "https://www.spotgroningen.nl/programma/"}
+- {name: SPOT, city: Groningen, url: "https://www.spotgroningen.nl/programma/", capacity: 1600}
 - name: Neushoorn
   city: Leeuwarden
+  capacity: 1000
   url: https://www.neushoorn.nl/programma
   type: jsonld_detail
   link_pattern: "neushoorn\\.nl/events/[^/]+/?$"
   max_detail: 150
   notes: "Webflow; geen structured data, datum/tijd/prijs uit tekst van de eventpagina ('Datum Fri 4 Sep … Aanvang: 23:00 … € 25,-')"
-- {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/"}
+- {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/", capacity: 725}
 - name: Luxor Live
   city: Arnhem
+  capacity: 900
   url: https://www.luxorlive.nl/agenda/
   type: microdata
   notes: schema.org-microdata (itemscope Event) per item, incl. startDate
-- {name: Willemeen, city: Arnhem, url: "https://www.willemeen.nl/programma/"}
-- {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
-- {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma"}
-- {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda"}
-- {name: FLUOR, city: Amersfoort, url: "https://fluor033.nl/programma/"}
-- {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/"}
-- {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda"}
-- {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl"}
-- {name: Cinetol, city: Amsterdam, url: "https://www.cinetol.nl/programma"}
-- {name: Slachthuis, city: Haarlem, url: "https://slachthuishaarlem.nl/programma/", notes: "nog niet gecontroleerd"}
-- {name: Victorie, city: Alkmaar, url: "https://www.podiumvictorie.nl/programma/"}
+- {name: Willemeen, city: Arnhem, url: "https://www.willemeen.nl/programma/", capacity: 375}
+- {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", capacity: 500, type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
+- {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma", capacity: 450}
+- {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda", capacity: 1000}
+- {name: FLUOR, city: Amersfoort, url: "https://fluor033.nl/programma/", capacity: 800}
+- {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
+- {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda", capacity: 680}
+- {name: Q-factory, city: Amsterdam, url: "https://q-factory.com/nl", capacity: 1100}
+- {name: Cinetol, city: Amsterdam, url: "https://www.cinetol.nl/programma", capacity: 210}
+- {name: Slachthuis, city: Haarlem, url: "https://slachthuishaarlem.nl/programma/", capacity: 100, notes: "nog niet gecontroleerd"}
+- {name: Victorie, city: Alkmaar, url: "https://www.podiumvictorie.nl/programma/", capacity: 1140}
 - name: Nobel
   city: Leiden
+  capacity: 1000
   url: https://nobel.nl/agenda
   type: html
   item: "a.event"
@@ -205,6 +219,7 @@
   notes: Drupal; <time datetime> is de publicatiedatum, dus datumtekst "vr. 04 sept." gebruiken; tijd via enrich
 - name: Boerderij
   city: Zoetermeer
+  capacity: 850
   url: https://poppodiumboerderij.nl/programma/
   type: html
   item: "li.programm-card"
@@ -212,14 +227,16 @@
   date: ".programm-card__date"
   subtitle: ".programm-card__description"
   notes: <time datetime="undefined">, datumtekst "ZA 5 SEP '26"; wp-json geeft redirect-loop
-- {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/"}
+- {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/", capacity: 220}
 - name: Rotown
   city: Rotterdam
+  capacity: 250
   url: https://www.rotown.nl/
   type: jsonld
   notes: /agenda/ geeft 404; homepage bevat ~150 JSON-LD Events (Theater for WordPress)
 - name: WORM
   city: Rotterdam
+  capacity: 350
   url: https://worm.org/agenda/
   type: html
   item: ".agenda-item__title"
@@ -228,16 +245,18 @@
   genre: ".agenda-item__title__cat"
   link: "a.agenda-item__link"
   notes: eventpagina's onder /production/; starttijd via enrich ("Start → 20:30")
-- {name: BIRD, city: Rotterdam, url: "https://bird-rotterdam.nl/agenda"}
+- {name: BIRD, city: Rotterdam, url: "https://bird-rotterdam.nl/agenda", capacity: 300}
 - name: Baroeg
   city: Rotterdam
+  capacity: 350
   url: https://www.baroeg.nl/agenda
   type: auto
   notes: Theater for WordPress (.wp_theatre_event) -> html-preset; datum "di 8/09/26"
-- {name: LantarenVenster, city: Rotterdam, url: "https://www.lantarenvenster.nl/muziek/"}
-- {name: Bibelot, city: Dordrecht, url: "https://bibelot.net/programma/"}
+- {name: LantarenVenster, city: Rotterdam, url: "https://www.lantarenvenster.nl/muziek/", capacity: 525}
+- {name: Bibelot, city: Dordrecht, url: "https://bibelot.net/programma/", capacity: 1100}
 - name: Mezz
   city: Breda
+  capacity: 750
   url: https://www.mezz.nl/programma/
   type: html
   item: "li.program-item"
@@ -247,6 +266,7 @@
   notes: "tijd/prijs via enrich ('15:00 (Doors: 15:00)')"
 - name: Willem Twee
   city: Den Bosch
+  capacity: 1630
   url: https://www.willem-twee.nl/agenda
   type: html
   item: ".article-wrapper"
@@ -256,11 +276,12 @@
   genre: ".tags .tag, .article-genre"
   only_genres: [Poppodium]
   notes: gemengd programma (kunstruimte, toonzaal); alleen tag Poppodium; datum "vr 14 aug. t/m zo 20 sep."
-- {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma", type: disabled, notes: "Nuxt-app, data in devalue-formaat; nog uitzoeken"}
-- {name: Muziekgieterij, city: Maastricht, url: "https://muziekgieterij.nl/"}
-- {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda"}
+- {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma", capacity: 400, type: disabled, notes: "Nuxt-app, data in devalue-formaat; nog uitzoeken"}
+- {name: Muziekgieterij, city: Maastricht, url: "https://muziekgieterij.nl/", capacity: 1520}
+- {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda", capacity: 1100}
 - name: Grenswerk
   city: Venlo
+  capacity: 600
   url: https://www.grenswerk.nl/agenda/
   type: html
   item: "li.item"
@@ -274,29 +295,62 @@
 
 # ---------------- Batch 3: de overige VNPF-podia (automatische detectie) ----------------
 - {name: PX, city: Volendam, url: "https://pxvolendam.nl/evenementen/"}
-- {name: De Gelderlandfabriek, city: Culemborg, url: "https://degelderlandfabriek.nl/agenda/"}
-- {name: Bolwerk (Poort), city: Sneek, url: "https://ontdekpoort.nl/programma/", notes: "Bolwerk is opgegaan in Poort; programma gecombineerd met theater"}
-- {name: "'t Beest", city: Goes, url: "https://tbeest.nl/evenementen/"}
-- {name: De Pul, city: Uden, url: "https://www.livepul.com/agenda"}
-- {name: De Piek, city: Vlissingen, url: "https://depiek.nl/"}
-- {name: Estrado, city: Harderwijk, url: "https://www.estrado.nl/agenda"}
-- {name: Volt, city: Sittard, url: "https://www.poppodium-volt.nl/programma"}
-- {name: De Spot, city: Middelburg, url: "https://www.despotmiddelburg.nl/agenda"}
-- {name: De Bosuil, city: Weert, url: "https://www.debosuil.nl/programma/"}
-- {name: Het Podium, city: Hoogeveen, url: "https://www.hetpodium.nl/agenda"}
-- {name: De Pit, city: Terneuzen, url: "https://www.poppodiumdepit.nl/programma/"}
-- {name: Porgy en Bess, city: Terneuzen, url: "https://www.porgyenbess.nl/programma/"}
-- {name: ECI Cultuurfabriek, city: Roermond, url: "https://www.ecicultuurfabriek.nl/agenda", notes: "gemengd programma (film/theater/muziek)"}
-- {name: De Peppel, city: Zeist, url: "https://peppel-zeist.nl/"}
-- {name: Capsloc, city: Capelle aan den IJssel, url: "https://www.capsloc.nl/programma/"}
-- {name: Gebouw-T, city: Bergen op Zoom, url: "https://www.gebouw-t.nl/agenda"}
-- {name: So What!, city: Gouda, url: "https://www.so-what.nl/agenda/"}
-- {name: Kroepoekfabriek, city: Vlaardingen, url: "https://kroepoekfabriek.nl/agenda/"}
-- {name: Manifesto, city: Hoorn, url: "https://manifesto-hoorn.nl/"}
-- {name: De Flux, city: Zaandam, url: "https://www.podiumdeflux.nl/agenda/"}
-- {name: Cpunt, city: Hoofddorp, url: "https://www.cpunt.nl/agenda/concerten"}
-- {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/"}
-- {name: Groene Engel, city: Oss, url: "https://www.groene-engel.nl/programma/"}
-- {name: De Cacaofabriek, city: Helmond, url: "https://www.cacaofabriek.nl/agenda", notes: "gemengd programma (film/concert/expo)"}
-- {name: Astrant, city: Ede, url: "https://astrant-ede.nl/programma-evenementen-en-activiteiten-ede/"}
-- {name: De Meester, city: Almere, url: "https://poppodiumdemeester.nl/"}
+- {name: De Gelderlandfabriek, city: Culemborg, url: "https://degelderlandfabriek.nl/agenda/", capacity: 410}
+- {name: Bolwerk (Poort), city: Sneek, url: "https://ontdekpoort.nl/programma/", capacity: 650, notes: "Bolwerk is opgegaan in Poort; programma gecombineerd met theater"}
+- {name: "'t Beest", city: Goes, url: "https://tbeest.nl/evenementen/", capacity: 450}
+- {name: De Pul, city: Uden, url: "https://www.livepul.com/agenda", capacity: 750}
+- {name: De Piek, city: Vlissingen, url: "https://depiek.nl/", capacity: 200}
+- {name: Estrado, city: Harderwijk, url: "https://www.estrado.nl/agenda", capacity: 420}
+- {name: Volt, city: Sittard, url: "https://www.poppodium-volt.nl/programma", capacity: 600}
+- {name: De Spot, city: Middelburg, url: "https://www.despotmiddelburg.nl/agenda", capacity: 400}
+- {name: De Bosuil, city: Weert, url: "https://www.debosuil.nl/programma/", capacity: 800}
+- {name: Het Podium, city: Hoogeveen, url: "https://www.hetpodium.nl/agenda", capacity: 375}
+- {name: De Pit, city: Terneuzen, url: "https://www.poppodiumdepit.nl/programma/", capacity: 350}
+- {name: Porgy en Bess, city: Terneuzen, url: "https://www.porgyenbess.nl/programma/", capacity: 250}
+- {name: ECI Cultuurfabriek, city: Roermond, url: "https://www.ecicultuurfabriek.nl/agenda", capacity: 600, notes: "gemengd programma (film/theater/muziek)"}
+- {name: De Peppel, city: Zeist, url: "https://peppel-zeist.nl/", capacity: 350}
+- {name: Capsloc, city: Capelle aan den IJssel, url: "https://www.capsloc.nl/programma/", capacity: 280}
+- {name: Gebouw-T, city: Bergen op Zoom, url: "https://www.gebouw-t.nl/agenda", capacity: 700}
+- {name: So What!, city: Gouda, url: "https://www.so-what.nl/agenda/", capacity: 420}
+- {name: Kroepoekfabriek, city: Vlaardingen, url: "https://kroepoekfabriek.nl/agenda/", capacity: 300}
+- {name: Manifesto, city: Hoorn, url: "https://manifesto-hoorn.nl/", capacity: 300}
+- {name: De Flux, city: Zaandam, url: "https://www.podiumdeflux.nl/agenda/", capacity: 350}
+- {name: Cpunt, city: Hoofddorp, url: "https://www.cpunt.nl/agenda/concerten", capacity: 900}
+- {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/", capacity: 400}
+- {name: Groene Engel, city: Oss, url: "https://www.groene-engel.nl/programma/", capacity: 650}
+- {name: De Cacaofabriek, city: Helmond, url: "https://www.cacaofabriek.nl/agenda", capacity: 550, notes: "gemengd programma (film/concert/expo)"}
+- {name: Astrant, city: Ede, url: "https://astrant-ede.nl/programma-evenementen-en-activiteiten-ede/", capacity: 150}
+- {name: De Meester, city: Almere, url: "https://poppodiumdemeester.nl/", capacity: 300}
+
+# ---------------- Batch 4: geen VNPF-poppodia, wel live muziek (section: overig) ----------------
+# Bron: locatielijst van pop-agenda.nl (podia met recente events). Zichtbaar onder 'Alles'.
+- {name: Altstadt, city: Eindhoven, url: "https://www.altstadt.nl/", section: overig, capacity: 250}
+- {name: Popcentrale, city: Dordrecht, url: "https://www.popcentrale.nl/", section: overig, capacity: 150}
+- {name: Poppodium Phoenix, city: Breda, url: "https://www.poppodiumphoenix.nl/", section: overig, capacity: 150}
+- {name: De Nieuwe Anita, city: Amsterdam, url: "https://www.denieuweanita.nl/", section: overig, capacity: 250}
+- {name: Skatecafe, city: Amsterdam, url: "https://www.skatecafe.nl/", section: overig, capacity: 300}
+- {name: OCCII, city: Amsterdam, url: "https://occii.org/", section: overig, capacity: 200}
+- {name: The Cave, city: Amsterdam, url: "https://www.thecaveamsterdam.nl/", section: overig, capacity: 135}
+- {name: Maloe Melo, city: Amsterdam, url: "https://www.maloemelo.com/", section: overig, capacity: 150}
+- {name: Parallel, city: Amsterdam, url: "https://parallel.am/", section: overig, capacity: 750}
+- {name: Ziggo Dome, city: Amsterdam, url: "https://www.ziggodome.nl/", section: overig, capacity: 17000}
+- {name: AFAS Live, city: Amsterdam, url: "https://www.afaslive.nl/", section: overig, capacity: 6000}
+- {name: Amsterdamse Bostheater, city: Amsterdam, url: "https://bostheater.nl/", section: overig, capacity: 1400}
+- {name: Grounds, city: Rotterdam, url: "https://www.grounds.nu/", section: overig, capacity: 200}
+- {name: V11, city: Rotterdam, url: "https://www.vessel11.nl/", section: overig, capacity: 180}
+- {name: Ahoy, city: Rotterdam, url: "https://www.ahoy.nl/", section: overig, capacity: 16500}
+- {name: De Amer, city: Amen, url: "https://www.cafedeamer.nl/", section: overig, capacity: 100}
+- {name: DJS, city: Dordrecht, url: "https://muziekpodiumdjs.nl/", section: overig, capacity: 100}
+- {name: WPC Nederland 3, city: Wateringen, url: "https://www.nederlanddrie.nl/", section: overig, capacity: 250}
+- {name: Resistor, city: Leiden, url: "https://www.resistor.nl/", section: overig}
+- {name: De Beuk, city: Barendrecht, url: "https://www.beukonline.nl/", section: overig, capacity: 150}
+- {name: Openluchttheater De Goffert, city: Nijmegen, url: "https://www.oltgoffert.nl/", section: overig, capacity: 1500}
+- {name: De Grote Weiver, city: Wormerveer, url: "https://degrooteweiver.nl/", section: overig, capacity: 200}
+- {name: Loburg, city: Wageningen, url: "https://www.loburg.com/", section: overig, capacity: 200}
+- {name: Beauforthuis, city: Austerlitz, url: "https://www.beauforthuis.nl/", section: overig, capacity: 160}
+- {name: Caprera, city: Bloemendaal, url: "https://caprera.nu/", section: overig, capacity: 1100}
+- {name: PHIL, city: Haarlem, url: "https://www.philhaarlem.nl/", section: overig, capacity: 660}
+- {name: Little Devil, city: Tilburg, url: "https://www.littledevil.nl/", section: overig, capacity: 175}
+- {name: Aa-Theater, city: Groningen, url: "https://www.deraatheater.nl/", section: overig, capacity: 200}
+- {name: De Vereeniging, city: Nijmegen, url: "https://www.stadsschouwburgendevereeniging.nl/", section: overig}
+- {name: Toekomstmuziek, city: Amsterdam, url: "https://www.toekomstmuziek.com/", section: overig}

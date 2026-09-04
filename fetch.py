@@ -31,6 +31,9 @@ import yaml
 from bs4 import BeautifulSoup
 from dateutil import parser as dtparser
 
+import artists as artistdb
+from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, group_label, _taxonomy
+
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
 STATE = ROOT / "state"
@@ -71,6 +74,12 @@ class Event:
     status: str | None = None      # afgelast / uitverkocht / verplaatst
     source: str = ""               # strategie waarmee gevonden
     first_seen: str | None = None  # wordt gezet uit state/seen.json
+    artists: list[str] = field(default_factory=list)      # herkende artiesten, eerste = headliner
+    genre_norm: list[str] = field(default_factory=list)   # hoofdgenres (genres.yaml)
+    kind: str = "concert"          # concert | club | festival | other
+    price_num: float | None = None
+    free: bool = False
+    section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
 
 
 # ----------------------------------------------------------------------------
@@ -865,6 +874,22 @@ def strat_jsonld_detail(v: dict, html: str, base: str, cache: dict) -> list[Even
             pages.append(get(extra, delay=1.0).text)
         except requests.RequestException as ex:
             log(f"    extra pagina mislukt {extra}: {ex}")
+    if v.get("list_pages_template"):
+        # paginering: doorgaan tot een pagina 404 geeft of geen nieuwe eventlinks meer bevat
+        seen_links = set(event_links(v, html, base))
+        for n in range(2, int(v.get("list_pages_max", 60)) + 1):
+            try:
+                r = SESSION.get(v["list_pages_template"].format(n=n), timeout=TIMEOUT)
+            except requests.RequestException:
+                break
+            time.sleep(float(v.get("crawl_delay", 0.6)))
+            if r.status_code != 200:
+                break
+            new_links = [l for l in event_links(v, r.text, base) if l not in seen_links]
+            if not new_links:
+                break
+            seen_links.update(new_links)
+            pages.append(r.text)
     links: list[str] = []
     for p in pages:
         for l in event_links(v, p, base):
@@ -1094,6 +1119,50 @@ def main(only: list[str] | None = None) -> int:
         for e in all_events:
             e.first_seen = (TODAY - timedelta(days=30)).isoformat()
             seen[f"{e.venue}|{e.url}"] = e.first_seen
+
+    # --- verrijking: artiesten, genres, type, prijs ---
+    vmeta = {v["name"]: v for v in venues}
+    unknown_genres: dict[str, int] = {}
+    adb = artistdb.load()
+    seen_ev_path = STATE / "artists_seen.json"
+    seen_ev = set(json.loads(seen_ev_path.read_text())) if seen_ev_path.exists() else set()
+    for e in all_events:
+        e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
+        e.artists = extract_artists(e.title, e.subtitle)
+        e.genre_norm, unk = normalize_genres(e.genres, e.title, e.subtitle or "")
+        for u in unk:
+            unknown_genres[u] = unknown_genres.get(u, 0) + 1
+        e.kind = classify_kind(e.title, e.subtitle, e.genres, e.genre_norm)
+        e.price_num = price_number(e.price)
+        e.free = e.price_num == 0.0
+        if e.kind in ("concert", "festival", "club"):
+            artistdb.record_event(adb, e.artists, e.venue, e.genres, e.genre_norm, f"{e.venue}|{e.url}", seen_ev)
+    try:
+        artistdb.musicbrainz_lookup(adb, budget=int(os.environ.get("MB_BUDGET", "150")), log=log)
+        artistdb.spotify_lookup(adb, budget=int(os.environ.get("SPOTIFY_BUDGET", "300")), log=log)
+    except Exception as ex:  # noqa: BLE001
+        log(f"externe lookup mislukt: {type(ex).__name__}: {str(ex)[:120]}")
+    artistdb.derive_genres(adb)
+    filled = 0
+    for e in all_events:
+        if not e.genre_norm and e.artists:
+            g, subs = artistdb.genres_for(adb, e.artists)
+            if g:
+                e.genre_norm = g
+                if not e.genres:
+                    e.genres = subs
+                filled += 1
+    artistdb.save(adb)
+    seen_ev_path.write_text(json.dumps(sorted(seen_ev)[-30000:]))
+    log(f"Artiestenbank: {len(adb)} artiesten; {filled} events kregen genre via de kennisbank")
+    report["unknown_genres"] = dict(sorted(unknown_genres.items(), key=lambda x: -x[1])[:150])
+    report["artists"] = len(adb)
+    report["genre_groups"] = {k: v["label"] for k, v in _taxonomy()[0].items()}
+    for rv in report["venues"]:
+        meta = vmeta.get(rv["name"], {})
+        rv["section"] = meta.get("section", "poppodium")
+        rv["capacity"] = meta.get("capacity")
+    report["kinds"] = {k: sum(1 for e in all_events if e.kind == k) for k in ("concert", "club", "festival", "other")}
 
     all_events.sort(key=lambda e: (e.start, e.venue, e.title))
     (DATA / "events.json").write_text(json.dumps([asdict(e) for e in all_events], ensure_ascii=False, indent=1), encoding="utf-8")
