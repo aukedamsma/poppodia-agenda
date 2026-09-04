@@ -458,6 +458,7 @@ button:focus-visible{outline:none}
     return EVENTS.filter(e=>{
       const d=e.start.slice(0,10);
       if (d < TODAY || d > limit) return false;
+      if (e.status==='afgelast') return false;   // geannuleerd: niet tonen
       if (state.view==='new' && !isNew(e)) return false;
       if (state.view==='all' && d !== state.day) return false;
       if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
