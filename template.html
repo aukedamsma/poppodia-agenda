@@ -61,7 +61,7 @@ footer details[open] summary::before{content:'▾'}
 .tabs button:hover{background:var(--card)}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .tabs button .n{font-size:11px;color:inherit;opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}
-.tabs button.ico{display:inline-flex;align-items:center;gap:2px;padding:0 9px}.tabs button.ico svg{display:block}
+.tabs button.ico{display:inline-flex;align-items:center;justify-content:center;gap:0;padding:0;width:40px;flex:0 0 40px}.tabs button.ico .n{display:none}.tabs button.ico svg{display:block}
 .newdot{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:3px;background:var(--accent)}.newdot svg{width:10px;height:10px}
 .tabs button[aria-pressed="true"] .newdot{background:var(--accent)}
 .fbtn:disabled{opacity:.35;cursor:default}
@@ -115,8 +115,11 @@ main{padding:6px 0 60px}
 .weekhead .rng{font-family:var(--sans);font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:400}
 .weekhead .cnt{font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
 .wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:start}
-.wcol{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px 4px;min-height:90px;box-shadow:var(--shadow);min-width:0}
-.wcol h3{font-size:12px;font-weight:600;margin:0 0 4px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:baseline}
+.wcol{min-height:60px;min-width:0}
+.wcards{display:grid;gap:8px}
+.wgrid .card .date{display:none}
+.wgrid .card .t,.wgrid .card .s,.wgrid .card .w{padding-right:52px}
+.wcol h3{font-size:12px;font-weight:600;margin:0 0 6px;padding:0 2px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:baseline}
 .wcol h3 .dn{font-size:11px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .wcol.today h3{color:var(--accent)}
 .wcol.past{opacity:.45}
@@ -151,7 +154,7 @@ main{padding:6px 0 60px}
 .mi:hover .save,.mi .save[aria-pressed="true"]{opacity:1}
 .mi .save svg{width:12px;height:12px}
 .wcol h3 a{color:inherit;text-decoration:none} .wcol h3 a:hover{text-decoration:underline}
-.wcol .none{color:var(--ink-3);font-size:11.5px;padding:4px 0}
+.wcol .none{color:var(--ink-3);font-size:11.5px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px}
 .dayhead .cnt{font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .card{display:block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px 8px;text-decoration:none;box-shadow:var(--shadow);position:relative;min-width:0}
@@ -320,7 +323,7 @@ button:focus-visible{outline:none}
   document.getElementById('updated').textContent = gen ? gen.toLocaleString('nl-NL',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
   document.getElementById('total').textContent = EVENTS.filter(e=>e.start.slice(0,10)>=TODAY).length;
   document.getElementById('venuesOk').textContent = REPORT.venues.filter(v=>v.ok).length;
-  const nNew = EVENTS.filter(isNew).length; document.getElementById('newCount').textContent = nNew ? nNew : '';
+  const nNew = EVENTS.filter(isNew).length; document.getElementById('newCount').textContent = nNew ? nNew : ''; document.querySelector('[data-view="new"]').title = `Nieuw aangekondigd (${nNew})`;
 
   // podia-paneel
   const byVenue = {}; EVENTS.forEach(e => { if (e.start.slice(0,10)>=TODAY) byVenue[e.venue]=(byVenue[e.venue]||0)+1; });
@@ -523,15 +526,7 @@ button:focus-visible{outline:none}
       const a=days[0], b=days[6];
       const rng=`${a.getDate()} ${MON[a.getMonth()]}${a.getMonth()!==b.getMonth()?'':''} – ${b.getDate()} ${MON[b.getMonth()]}${b.getFullYear()!==today.getFullYear()?' '+b.getFullYear():''}`;
       const cols=days.map((d,i)=>{ const k=isoOf(d); const evs=byDay.get(k)||[];
-        const items = evs.length ? evs.map(e=>{ const t=e.start.length>10&&e.start.slice(11,16)!=='00:00'?e.start.slice(11,16):'';
-          const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(e.genres||[]).filter(x=>!main.some(m=>m.toLowerCase()===x.toLowerCase())).slice(0,2);
-          const g=[...main, ...subs].map(esc).join(' · ');
-          return `<a class="wi${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener" title="${esc(e.title)} · ${esc(e.venue)}">
-            <button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
-            <span class="tt">${isNew(e)?'<span class="dot"></span>':''}${esc(e.title)}</span>
-            <span class="st">${e.subtitle?esc(e.subtitle):''}</span>
-            <span class="vn"><b>${esc(e.venue)}</b> · ${esc(e.city)}</span>
-            <span class="meta2"><span class="gg">${g}</span><span class="tp">${t?`<span class="tm${e.time_est?' est':''}">${e.time_est?'~':''}${t}</span>`:''}${e.price?`<span class="pr${e.price_est?' est':''}">${e.price_est?'~ ':''}${esc(e.price)}</span>`:''}</span></span></a>`; }).join('')
+        const items = evs.length ? `<div class="wcards">${evs.map(card).join('')}</div>`
           : '<div class="none">—</div>';
         return `<div class="wcol${k===TODAY?' today':''}${k<TODAY?' past':''}"><h3><a href="#" data-goto="${k}" title="Open deze dag in Per dag">${DOW[i]} ${d.getDate()}</a>${k===TODAY?' <span class="dn">vandaag</span>':`<span class="dn">${evs.length||''}</span>`}</h3>${items}</div>`; }).join('');
       html.push(`<section class="week"><h2 class="weekhead">week ${isoWeek(a)} <span class="rng">${rng}</span><span class="cnt">${total}</span></h2><div class="wgrid">${cols}</div></section>`);
