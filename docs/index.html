@@ -96,6 +96,13 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
+.pnav{width:330px;flex:0 0 330px}
+.pnav .plabel{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.pnav .plabel:hover,.daynav .dow:hover{color:var(--accent)}
+.daynav .dow{cursor:pointer}
+input.ghost{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+#pnavpick{padding:0;width:0}
+.daynav .dow{font-size:13px;font-weight:500;color:var(--ink-2);padding:0 12px 0 0;white-space:nowrap}
 .pnav button:disabled{opacity:.35}
 .pnav .plabel{position:relative;padding:0 12px;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pnav .plabel small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:6px}
@@ -244,7 +251,8 @@ button:focus-visible{outline:none}
     <button id="nextP" aria-label="Volgende">›</button>
     <button id="todayP">Vandaag</button>
     <span class="plabel" id="plabel"></span>
-    <span class="daynav" id="daynav" hidden><span class="dow" id="dow"></span><input type="date" id="dayPick" title="Spring naar dag"></span>
+    <span class="daynav" id="daynav" hidden><span class="dow" id="dow" title="Kies een dag"></span><input type="date" id="dayPick" class="ghost" tabindex="-1" aria-hidden="true"></span>
+    <span class="daynav" id="pnavpick" hidden><input type="date" id="periodPick" class="ghost" tabindex="-1" aria-hidden="true"></span>
   </div>
   <button class="fbtn" id="exportSaved" hidden>Lijstje naar agenda (.ics)</button>
   <div class="filters">
@@ -619,10 +627,11 @@ button:focus-visible{outline:none}
     }));
     updateSavedCount();
     document.getElementById('daynav').hidden = state.view!=='all';
+    document.getElementById('pnavpick').hidden = !['week','month'].includes(state.view);
     document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
     const an=document.getElementById('artistnav'); const wasHidden=an.hidden; an.hidden = state.view!=='search'; if (!an.hidden && wasHidden) setTimeout(()=>document.getElementById('aq').focus(),0);
     const pl=document.getElementById('plabel');
-    if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = DOWS[dd.getDay()]; }
+    if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = `${DOWS[dd.getDay()]} ${String(dd.getDate()).padStart(2,'0')}-${String(dd.getMonth()+1).padStart(2,'0')}-${dd.getFullYear()}`; }
     if (state.view==='week'){ const w=new Date((state.wk||TODAY)+'T12:00:00'); const mon0=new Date(today); mon0.setDate(mon0.getDate()-((mon0.getDay()+6)%7)); const d0=state.wk&&state.wk>isoOf(mon0)?w:mon0; const d6=new Date(d0); d6.setDate(d6.getDate()+6); pl.innerHTML=`Week ${isoWeek(d0)}<small>${d0.getDate()} ${MONS[d0.getMonth()]} – ${d6.getDate()} ${MONS[d6.getMonth()]}</small>`; pl.hidden=false; }
     else if (state.view==='month'){ const m=new Date((state.mo||isoOf(new Date(today.getFullYear(),today.getMonth(),1)))+'T12:00:00'); pl.textContent=`${MON[m.getMonth()]} ${m.getFullYear()}`; pl.hidden=false; }
     else pl.hidden=true;
@@ -640,6 +649,14 @@ button:focus-visible{outline:none}
     render(false); window.scrollTo({top:0});
   }
   dayPick.addEventListener('change', ()=> goToDay(dayPick.value||TODAY));
+  const periodPick=document.getElementById('periodPick'); periodPick.min=TODAY;
+  // het week-/maandlabel zelf is ook klikbaar en opent de datumkiezer
+  document.getElementById('plabel').addEventListener('click',()=>{ try{ periodPick.showPicker(); }catch(e){ periodPick.focus(); periodPick.click(); } });
+  document.getElementById('dow').addEventListener('click',()=>{ try{ dayPick.showPicker(); }catch(e){ dayPick.focus(); } });
+  periodPick.addEventListener('change', ()=>{ const v=periodPick.value||TODAY; const d=new Date(v+'T12:00:00');
+    if (state.view==='week'){ const mon=new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7)); state.wk=isoOf(mon); }
+    else { state.mo=isoOf(new Date(d.getFullYear(),d.getMonth(),1)); }
+    save(); render(false); window.scrollTo({top:0}); });
   document.getElementById('list').addEventListener('click', ev=>{ const j=ev.target.closest('[data-goto]'); if(j){ ev.preventDefault(); goToDay(j.dataset.goto); } });
   // lijstje exporteren als .ics
   document.getElementById('exportSaved').addEventListener('click', ()=>{
