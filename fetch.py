@@ -100,7 +100,9 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
         return None
     if isinstance(value, (int, float)):
         try:
-            return datetime.fromtimestamp(value, tz=timezone.utc).astimezone().replace(tzinfo=None)
+            if value > 1e12:  # milliseconden
+                value = value / 1000
+            return to_local(datetime.fromtimestamp(value, tz=timezone.utc))
         except (OverflowError, OSError, ValueError):
             return None
     s = str(value).strip()
@@ -263,6 +265,8 @@ def _find_date(obj: dict) -> datetime | None:
         if DATE_KEYS.match(k) and isinstance(val, (str, int, float)):
             dt = parse_dt(val)
             if dt and 2000 < dt.year < 2100:
+                if isinstance(val, (int, float)) and dt.minute == 0 and dt.hour in (0, 1, 2, 12, 13, 14):
+                    dt = dt.replace(hour=0, minute=0)  # timestamp op middernacht/middag UTC = alleen een datum
                 return dt
     for k, val in obj.items():
         if isinstance(val, dict) and re.search(r"date|start|datum", k, re.I):
@@ -313,7 +317,7 @@ def _walk_event_lists(obj, depth=0, found=None):
     """Zoekt lijsten van dicts die op events lijken (titel + datum)."""
     if found is None:
         found = []
-    if depth > 12:
+    if depth > 40:
         return found
     if isinstance(obj, list):
         dicts = [x for x in obj if isinstance(x, dict)]
@@ -476,7 +480,7 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
             sub = acf.get("one_liner") or acf.get("subtitle") or acf.get("support_act") if isinstance(acf, dict) else None
             if not dt and v.get("detail_jsonld", True):
                 # datum staat alleen op de eventpagina -> JSON-LD of HTML daar lezen
-                ev = fetch_detail(v, link, detail_cache)
+                ev = fetch_detail(v, link, detail_cache, title=title)
                 if ev:
                     ev.genres = ev.genres or genres
                     ev.source = "wp_event+detail"
@@ -521,7 +525,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
     return out
 
 
-def fetch_detail(v: dict, url: str, cache: dict) -> Event | None:
+def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
     """Leest een eventpagina; cache op URL zodat dit maar zelden opnieuw hoeft."""
     c = cache.get(url)
     if c and c.get("fetched") and date.fromisoformat(c["fetched"]) > TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
@@ -544,17 +548,24 @@ def fetch_detail(v: dict, url: str, cache: dict) -> Event | None:
         t = s.find("time", attrs={"datetime": True})
         h1 = s.find("h1")
         dt = parse_dt(t["datetime"]) if t else date_from_url(url)
+        if title is None and h1:
+            title = clean(h1.get_text())
+        if title is None:
+            og = s.find("meta", property="og:title")
+            title = clean(og["content"]).split(" - ")[0] if og and og.get("content") else None
         if not dt:
             # voluit geschreven Nederlandse datum in de paginatekst ("zaterdag 3 oktober 2026")
             body = s.find("main") or s.body or s
             m = re.search(r"\b(\d{1,2})\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\s+(\d{4})", body.get_text(" "), re.I)
             if m:
                 dt = parse_dt(m.group(0))
-                tm = re.search(r"(?:aanvang|start|begin)\D{0,12}(\d{1,2})[:.](\d{2})", body.get_text(" "), re.I)
+                txt = body.get_text(" ")
+                tm = re.search(r"(?:aanvang|start|begin)\D{0,12}(\d{1,2})[:.](\d{2})", txt, re.I) or \
+                     re.search(r"(?:deuren|deur|open|zaal open)\D{0,12}(\d{1,2})[:.](\d{2})", txt, re.I)
                 if dt and tm:
                     dt = dt.replace(hour=int(tm.group(1)), minute=int(tm.group(2)))
-        if dt and h1:
-            ev = Event(venue=v["name"], city=v["city"], title=clean(h1.get_text()) or "?", start=dt.isoformat(timespec="minutes"), url=url, source="detail_time")
+        if dt and title:
+            ev = Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=url, source="detail_text")
     cache[url] = {"fetched": TODAY.isoformat(), "event": asdict(ev) if ev else None}
     return ev
 
