@@ -10,7 +10,8 @@
 # Pas als dat niets oplevert hoef je zelf iets in te vullen: type: html + CSS-selectors (zie README).
 #
 # Optionele velden:
-#   type          auto | jsonld | embedded | tribe | wp_event | jsonld_detail | sitemap_detail | html | disabled
+#   type          auto | jsonld | embedded | tribe | wp_event | json_api | jsonld_detail | sitemap_detail | html | disabled
+#   api / items / fields / page_param   json_api: eigen JSON-eindpunt met veldafbeelding (zie fetch.strat_json_api)
 #   only_genres   alleen events met een van deze genres/typen houden (bijv. [Muziek, Clubnacht])
 #   time_is_local ISO-tijden van dit podium als Nederlandse lokale tijd lezen, ook al staat er +00:00/Z achter
 #   sitemap / sitemap_pattern / last_files   voor sitemap_detail: sitemap-index, regex voor eventbestanden, hoeveel laatste bestanden
@@ -22,6 +23,7 @@
 #   list_pages    extra overzichtspagina's (bijv. paginering) voor jsonld_detail
 #   list_pages_template / list_pages_max / list_pages_offset   paginering: URL met {n} (n=2,3,… + offset), tot 404 of geen nieuwe links
 #   category_pages  eigen genre-/type-/locatiefilters van het podium als tagbron (zie fetch.category_tags en README)
+#   extra_sources   lijst van extra bronnen voor hetzelfde podium, elk met eigen url/type (bv. de Stager-ticketshop); dubbelen worden samengevoegd
 #   link_pattern  regex waaraan eventlinks moeten voldoen (jsonld_detail)
 #   max_detail    max. aantal eventpagina's per run (jsonld_detail; standaard 80, gecached 10 dagen)
 #   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
@@ -226,12 +228,14 @@
 - name: Vera
   city: Groningen
   capacity: 530
-  url: https://www.vera-groningen.nl/programma/
   type: html
   item: "a.event-link"
   title: ".artist"
   date: ".date"
-  notes: WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; datum Engels zonder jaar
+  notes: "WP zonder event-API; eventlinks zijn ?post_type=events&p=ID; de site toont maar ~3 weken vooruit (21 events), de Stager-ticketshop 50 events tot 3 maanden vooruit (JSON-LD ItemList) -> extra bron. Zonder lang=nl komt de Engelse versie (lang=en in links)"
+  url: https://www.vera-groningen.nl/programma/?category=all&history=0&lang=nl
+  extra_sources:
+    - {url: "https://vera.stager.co/shop/default/events", type: jsonld, enrich: false}
   category_pages:
     url: "https://www.vera-groningen.nl/programma/?category={slug}&history=0&lang=nl"
     tags: {concert: Concert, dansen: Clubnacht, festival: Festival, zienema: Film}
@@ -305,12 +309,10 @@
   city: Zoetermeer
   capacity: 850
   url: https://poppodiumboerderij.nl/programma/
-  type: html
-  item: "li.programm-card"
-  title: ".programm-card__title"
-  date: ".programm-card__date"
-  subtitle: ".programm-card__description"
-  notes: <time datetime="undefined">, datumtekst "ZA 5 SEP '26"; wp-json geeft redirect-loop
+  type: json_api
+  api: "https://poppodiumboerderij.nl/includes/ajax/events.php?filters=&search=&limit=69420&offset=0&lang_id=1&rooms=2,1&month=&year="
+  fields: {title: title, subtitle: subtitle, date: event_date, url: "https://poppodiumboerderij.nl/programma/{seo_slug}/", status: label.title}
+  notes: agenda wordt via AJAX geladen (JSON met title/subtitle/event_date/seo_slug/stage); tijd en prijs staan op de eventpagina ("Deuren open 19:30 Aanvang 20:30 Voorverkoop € 29,50"); JSON-LD daar heeft een lege startDate
 - {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/", capacity: 220}
 - name: Rotown
   city: Rotterdam
@@ -342,12 +344,12 @@
   city: Breda
   capacity: 750
   url: https://www.mezz.nl/programma/
-  type: html
-  item: "li.program-item"
-  title: ".program-item__title"
-  date: ".program-item__date"
-  subtitle: ".program-item__subtitle"
-  notes: "tijd/prijs via enrich ('15:00 (Doors: 15:00)')"
+  type: json_api
+  api: "https://www.mezz.nl/wp-json/wp/v2/event?per_page=100&filter%5Borderby%5D=event_date&order=asc"
+  page_param: page
+  page_size: 100
+  fields: {title: prod.title, subtitle: event.remark, date: event.start, url: prod.link, status: event.status}
+  notes: "Vue-agenda (HTML-selectors leeg); WP REST wp_theatre_event met eigen velden: event.start = '4 september 2026', prod.link, event.status = Gratis/_soldout/_cancelled; tijd/prijs op de eventpagina ('20:30 (Doors: 20:30) | Grote Zaal € 17,50')"
 - name: Willem Twee
   city: Den Bosch
   capacity: 1630
@@ -386,7 +388,13 @@
 
 # ---------------- Batch 3: de overige VNPF-podia (automatische detectie) ----------------
 - {name: PX, city: Volendam, url: "https://pxvolendam.nl/evenementen/"}
-- {name: De Gelderlandfabriek, city: Culemborg, url: "https://degelderlandfabriek.nl/agenda/", capacity: 410}
+- name: De Gelderlandfabriek
+  city: Culemborg
+  url: https://degelderlandfabriek.nl/agenda/
+  capacity: 410
+  type: wp_event
+  api: "https://degelderlandfabriek.nl/wp-json/wp/v2/jeero_event?per_page=100&_embed=1"
+  notes: "Jeero-plugin: REST zonder datum, datum/tijd/prijs op de eventpagina ('zaterdag 19 september 2026', 'Deuren open 19:30 uur Start 19:45 uur', 'Regulier: € 10,00'); de <time class=entry-date> daar is de publicatiedatum (nu generiek genegeerd). Categorie (Concert/Expositie/Theater) via wp:term"
 - {name: Bolwerk (Poort), city: Sneek, url: "https://ontdekpoort.nl/programma/", capacity: 650, notes: "Bolwerk is opgegaan in Poort; programma gecombineerd met theater"}
 - name: "'t Beest"
   city: Goes
@@ -396,8 +404,31 @@
     url: "https://tbeest.nl/evenementen/?category={slug}"
     link_pattern: "tbeest\\.nl/productie/[^/?#]+/?$"
     tags: {concert: Concert, dance: Clubnacht, film: Film, overige: Overig}
-- {name: De Pul, city: Uden, url: "https://www.livepul.com/agenda", capacity: 750}
-- {name: De Piek, city: Vlissingen, url: "https://depiek.nl/", capacity: 200}
+- name: De Pul
+  city: Uden
+  url: https://www.livepul.com/agenda
+  capacity: 750
+  type: html
+  api: "https://www.livepul.com/query.php?source=agenda&agenda_page=true&month=all&search=false&amount_of_events_already_shown={offset}"
+  api_html_key: output
+  item: "a.agenda-event"
+  title: ".agenda-event__title"
+  date: ".agenda-event__date"
+  genre: ".agenda-event__date"
+  subtitle: ".agenda-event__tagline"
+  notes: "agenda laadt in blokken van 18 via query.php (JSON met HTML-fragment 'output'); datum en genres in één regel 'VR 04 SEP | Rock, Symfo- & Progressive Rock'; tijd/prijs op de eventpagina"
+- name: De Piek
+  city: Vlissingen
+  url: https://depiek.nl/nl/Programma.html
+  capacity: 200
+  type: html
+  item: ".event_overview_container"
+  title: ".event_overview_info_container h2"
+  date: ".event_overview_info_container p.subtitle"
+  link: 'a[href*="/Programma/"]'
+  subtitle: ".event_overview_info_container p.padding_ver_20"
+  enrich: false
+  notes: "eigen CMS; alles staat in de lijst: 'zaterdag 12 september 2026', 'Door open 20:00 | Start 21:00', 'Presale € 23,00 | Tickets € 25,00'; homepage had geen agenda"
 - {name: Estrado, city: Harderwijk, url: "https://www.estrado.nl/agenda", capacity: 420}
 - name: Volt
   city: Sittard

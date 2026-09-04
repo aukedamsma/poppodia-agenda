@@ -194,6 +194,21 @@ def learn_kinds(learned: dict, raw_tags: list[str], kind: str) -> None:
 
 
 NON_MUSIC_GROUPS = {"overig", "party", "kids", "comedy", "spokenword"}
+# woorden die een eventtype aanduiden; alleen tags met zo'n woord mogen een niet-concerttype leren als ze ook een
+# muziekgenre zijn ("clubnacht", "dance nights", "rave" wel; "postpunk", "latin", "emo", "disco", "elektronisch" niet)
+KIND_WORDS = re.compile(r"club|nacht|night|dans|dance|party|feest|festival|rave|\bdj|film|docu|quiz|bingo|comedy|cabaret|lezing|talk|podcast|kids|jeugd|familie|theater|toneel|expo|workshop|jam|sessie|markt", re.I)
+
+
+def _may_learn(f: str, k: str) -> bool:
+    """Mag tag f het type k leren? Muziekgenre-tags zonder typewoord leren nooit een ander type dan concert."""
+    if k == "concert":
+        return False
+    g = normalize_tag(f)
+    if g and g not in NON_MUSIC_GROUPS and not KIND_WORDS.search(f):
+        return False
+    if g and g not in NON_MUSIC_GROUPS and k in ("talk", "other") and not re.search(r"film|docu|quiz|bingo|comedy|cabaret|lezing|talk|podcast|kids|jeugd|familie|theater|toneel|expo|workshop|markt", f):
+        return False
+    return True
 
 
 @lru_cache(maxsize=1)
@@ -210,19 +225,15 @@ def promote_kinds(learned: dict, min_obs: int = 5, min_share: float = 0.85) -> i
     overrides = _kind_overrides()
     n = 0
     for f in list(accepted):  # eerder geleerde koppelingen die tegen de beveiligingen ingaan, opruimen
-        g = normalize_tag(f)
-        if f in overrides or (g and g not in NON_MUSIC_GROUPS and accepted[f].get("kind") in ("talk", "other")):
+        if f in overrides or (not accepted[f].get("manual") and not _may_learn(f, accepted[f].get("kind", ""))):
             del accepted[f]
     for f, v in learned.get("votes", {}).items():
         total = sum(v.values())
         if total < min_obs or f in accepted or f in overrides:
             continue
-        g = normalize_tag(f)
         k, c = max(v.items(), key=lambda x: x[1])
-        if k == "concert":
-            continue  # concert is al de standaard
-        if g and g not in NON_MUSIC_GROUPS and k in ("talk", "other"):
-            continue  # een muziekgenre-tag kan geen talk/overig leren
+        if not _may_learn(f, k):
+            continue  # concert is al de standaard; een muziekgenre-tag zonder typewoord leert geen ander type
         if c / total >= min_share:
             accepted[f] = {"kind": k, "obs": total}
             n += 1

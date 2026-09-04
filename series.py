@@ -8,9 +8,10 @@ Voorbeelden van reeksen: "VroegZat" (FLUOR), "Paardcafé: …" (PAARD), "Kelderb
   kinds      {type: aantal}                         eventtype (concert/club/festival/talk/other)
   seen       aantal afzonderlijke events, first_seen, last_seen
 
-Gebruik: events zonder prijs (of zonder tijd) krijgen de dominante waarde uit de reeks, mits die minstens
-MIN_OBS keer is gezien en minstens MIN_SHARE van de waarnemingen uitmaakt. Zulke waarden zijn een schatting
-en worden gemarkeerd (Event.price_est / Event.time_est), zodat de site ze herkenbaar toont (~ € 7,50).
+Gebruik: events zonder tijd krijgen de dominante tijd uit de reeks, mits die minstens MIN_OBS keer is gezien en
+minstens MIN_SHARE van de waarnemingen uitmaakt; dat is een schatting en wordt gemarkeerd (Event.time_est, ~20:30).
+Prijzen worden NOOIT geschat (besluit sept. 2026): een prijs staat alleen op de kaart als hij van de site is gelezen.
+Het reeksengeheugen onthoudt prijzen wel (onderzoeksdata) en het type corrigeert twijfelgevallen.
 """
 from __future__ import annotations
 

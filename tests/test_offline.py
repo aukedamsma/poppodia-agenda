@@ -14,7 +14,7 @@ FUT2 = (date.today() + timedelta(days=45)).isoformat()
 
 class FakeResp:
     def __init__(self, text="", json_=None, headers=None):
-        self.text = text; self._json = json_; self.headers = headers or {}
+        self.text = text; self._json = json_; self.headers = headers or {}; self.status_code = 200; self.ok = True
     def json(self): return self._json
     def raise_for_status(self): pass
 
@@ -315,6 +315,76 @@ def test_category_pages_tags():
         assert fetch.category_tags(v, cache)[0]["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
     finally:
         fetch.SESSION = old
+
+
+def test_json_api_boerderij():
+    """Boerderij: AJAX-eindpunt geeft JSON-lijst (content-type text/html); url uit template, status uit label.title."""
+    v = {"name": "Boerderij", "city": "Zoetermeer", "url": "https://poppodiumboerderij.nl/programma/", "type": "json_api",
+         "api": "https://poppodiumboerderij.nl/includes/ajax/events.php?limit=69420",
+         "fields": {"title": "title", "subtitle": "subtitle", "date": "event_date", "url": "https://poppodiumboerderij.nl/programma/{seo_slug}/", "status": "label.title"},
+         "enrich": False, "min_events": 2}
+    items = [{"id": 1, "title": "The Tangent", "subtitle": "prog // + support Molstone", "event_date": FUT, "seo_slug": "thetangent", "label": False, "stage": "CreativeColors zaal"},
+             {"id": 2, "title": "Geoff Tate", "subtitle": "", "event_date": FUT2, "seo_slug": "geofftate", "label": {"title": "Uitverkocht", "color": "green"}},
+             {"id": 3, "title": "Zonder slug", "event_date": FUT, "seo_slug": ""}]
+    fake_session({"events.php": FakeResp(text=json.dumps(items), json_=items)})
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert strat == "json_api" and len(evs) == 2, (strat, note)
+    assert evs[0].url == "https://poppodiumboerderij.nl/programma/thetangent/" and evs[0].start.startswith(FUT)
+    assert evs[0].subtitle == "prog // + support Molstone" and evs[0].status is None
+    assert evs[1].status == "uitverkocht"
+
+
+def test_detail_ignores_publish_time_tag():
+    """Gelderlandfabriek: <time class="entry-date updated"> is de publicatiedatum (verleden); de eventdatum staat in de tekst."""
+    html = f"""<html><head><title>x</title></head><body><header><time class="entry-date updated" datetime="2026-08-18T13:06:14">18 augustus 2026</time></header>
+    <h1>The Groove Youth</h1><div class="date">zaterdag {FUT[8:10].lstrip('0')} {['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'][int(FUT[5:7])-1]} {FUT[:4]}</div>
+    <div class="details">Deuren open 19:30 uurStart 19:45 uur Verwachte eindtijd 23:00 uur Kaarten Regulier: € 10,00</div></body></html>"""
+    fake_session({"degelderlandfabriek.nl/events/": FakeResp(text=html)})
+    v = {"name": "De Gelderlandfabriek", "city": "Culemborg", "url": "https://degelderlandfabriek.nl/agenda/"}
+    ev = fetch.fetch_detail(v, "https://degelderlandfabriek.nl/events/the-groove-youth/", {})
+    assert ev is not None and ev.start == FUT + "T19:45" and ev.price == "€ 10" , ev
+
+
+def test_html_api_de_pul():
+    """De Pul: 'laad meer'-eindpunt geeft JSON {"output": "<html>"}; paginering via {offset}; datum+genre in één regel."""
+    d1 = date.fromisoformat(FUT); d2 = date.fromisoformat(FUT2)
+    mon = ["JAN", "FEB", "MRT", "APR", "MEI", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"]
+    def frag(items):
+        return "".join(f'<a href="/agenda/{slug}/" class="agenda-event"><span class="agenda-event__date">VR {d:%d} {mon[d.month-1]} | Rock, Symfo- &amp; Progressive Rock</span>'
+                       f'<h3 class="agenda-event__title">{t}</h3><span class="agenda-event__tagline">sub</span></a>' for slug, t, d in items)
+    pages = {"0": frag([("a", "Band A", d1), ("b", "Band B", d1)]), "2": frag([("c", "Band C", d2)]), "3": ""}
+    def route(url, kw):
+        n = url.rsplit("=", 1)[-1]
+        return FakeResp(text=json.dumps({"output": pages.get(n, ""), "show_more_possible": n != "3"}), json_={"output": pages.get(n, "")})
+    fake_session({"query.php": route})
+    v = {"name": "De Pul", "city": "Uden", "url": "https://www.livepul.com/agenda", "type": "html", "enrich": False, "min_events": 2,
+         "api": "https://www.livepul.com/query.php?source=agenda&amount_of_events_already_shown={offset}", "api_html_key": "output",
+         "item": "a.agenda-event", "title": ".agenda-event__title", "date": ".agenda-event__date", "genre": ".agenda-event__date", "subtitle": ".agenda-event__tagline"}
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert strat == "html" and [e.title for e in evs] == ["Band A", "Band B", "Band C"], (strat, note, [e.title for e in evs])
+    assert evs[0].start.startswith(FUT) and evs[2].start.startswith(FUT2)
+    assert evs[0].genres == ["Rock", "Symfo- & Progressive Rock"] and evs[0].url == "https://www.livepul.com/agenda/a/"
+
+
+def test_extra_sources_stager_itemlist():
+    """Vera: eigen site (html) + Stager-shop (JSON-LD ItemList) als extra bron; dubbele dag+titel wordt samengevoegd."""
+    site = f'<a class="event-link" href="https://www.vera-groningen.nl/?post_type=events&p=1&lang=nl"><div class="date">{FUT}</div><h3 class="artist">Club VERA</h3></a>' \
+           f'<a class="event-link" href="https://www.vera-groningen.nl/?post_type=events&p=2&lang=nl"><div class="date">{FUT}</div><h3 class="artist">Kelderbar Open</h3></a>'
+    ld = {"@context": "https://schema.org", "@type": "ItemList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "item": {"@type": "Event", "name": "Club VERA", "startDate": FUT + "T23:00:00+02:00", "url": "https://Vera.stager.co/shop/default/events/1"}},
+        {"@type": "ListItem", "position": 2, "item": {"@type": "Event", "name": "Some Band", "startDate": FUT2 + "T20:30:00+02:00", "url": "https://Vera.stager.co/shop/default/events/2"}}]}
+    shop = f'<html><script type="application/ld+json">{json.dumps(ld)}</script></html>'
+    fake_session({"vera-groningen.nl/programma": FakeResp(text=site), "stager.co/shop/default/events": FakeResp(text=shop)})
+    v = {"name": "Vera", "city": "Groningen", "url": "https://www.vera-groningen.nl/programma/?category=all&history=0&lang=nl", "type": "html", "enrich": False,
+         "item": "a.event-link", "title": ".artist", "date": ".date", "min_events": 1,
+         "extra_sources": [{"url": "https://vera.stager.co/shop/default/events", "type": "jsonld", "enrich": False}]}
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert strat == "html" and "extra bron" in note, note
+    merged = fetch.dedupe(evs)
+    titles = sorted(e.title for e in merged)
+    assert titles == ["Club VERA", "Kelderbar Open", "Some Band"], titles
+    club = next(e for e in merged if e.title == "Club VERA")
+    assert club.start == FUT + "T23:00", club.start  # rijkste versie (met tijd) blijft
 
 
 if __name__ == "__main__":

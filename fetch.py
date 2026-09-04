@@ -35,7 +35,7 @@ from dateutil import parser as dtparser
 import artists as artistdb
 import series as seriesdb
 from taxonomy import (normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
-                      normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group)
+                      normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
@@ -83,6 +83,7 @@ class Event:
     price_num: float | None = None
     free: bool = False
     lineup: list[str] = field(default_factory=list)       # line-up van de eventpagina (JSON-LD performer of `lineup`-selector)
+    location: str | None = None    # locatie zoals het podium die noemt, als die afwijkt van het podium zelf (Paradiso in Tolhuistuin)
     subgenres: list[str] = field(default_factory=list)    # canonieke subgenres (genres.yaml -> subgenres, + zelfgeleerd)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
@@ -97,10 +98,27 @@ def log(msg: str) -> None:
     print(msg, flush=True)
 
 
+BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+BROWSER_HEADERS = {"User-Agent": BROWSER_UA, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                   "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8", "Upgrade-Insecure-Requests": "1"}
+_BROWSER_UA_HOSTS: set[str] = set()   # hosts die onze eigen user-agent weigeren (Cloudflare 403: Het Podium, So What!)
+
+
 def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
     if delay:
         time.sleep(delay)
+    host = urlparse(url).netloc
+    if host in _BROWSER_UA_HOSTS and "headers" not in kw:
+        kw["headers"] = BROWSER_HEADERS
     r = SESSION.get(url, timeout=TIMEOUT, **kw)
+    if getattr(r, "status_code", 200) in (403, 406, 429, 503) and host not in _BROWSER_UA_HOSTS:
+        # de site weigert de eigen user-agent van de agenda; probeer één keer als gewone browser (robots.txt staat crawlen toe)
+        kw["headers"] = BROWSER_HEADERS
+        r2 = SESSION.get(url, timeout=TIMEOUT, **kw)
+        if r2.ok:
+            _BROWSER_UA_HOSTS.add(host)
+            log(f"    {host}: eigen user-agent geweigerd ({r.status_code}), verder als browser")
+            r = r2
     r.raise_for_status()
     return r
 
@@ -275,6 +293,11 @@ def jsonld_blocks(html: str) -> list[dict]:
             if isinstance(it, dict):
                 if "@graph" in it and isinstance(it["@graph"], list):
                     out.extend(x for x in it["@graph"] if isinstance(x, dict))
+                elif "ItemList" in str(it.get("@type", "")) and isinstance(it.get("itemListElement"), list):
+                    # ItemList van ListItems met een Event als item (Stager-ticketshops: <podium>.stager.co/shop/default/events)
+                    for li in it["itemListElement"]:
+                        if isinstance(li, dict):
+                            out.append(li.get("item") if isinstance(li.get("item"), dict) else li)
                 else:
                     out.append(it)
     return out
@@ -655,6 +678,120 @@ def strat_wp_event(v: dict, base: str, detail_cache: dict) -> list[Event]:
     return out
 
 
+def _path(obj, path: str):
+    """Waarde uit geneste dicts/lijsten via een puntpad: 'label.title', 'dates.0.start'."""
+    cur = obj
+    for part in path.split("."):
+        if isinstance(cur, dict):
+            cur = cur.get(part)
+        elif isinstance(cur, list) and part.isdigit():
+            cur = cur[int(part)] if int(part) < len(cur) else None
+        else:
+            return None
+        if cur is None:
+            return None
+    return cur
+
+
+def _fill(template: str, item: dict):
+    """'https://site/programma/{seo_slug}/' -> ingevuld; een pad zonder accolades is een directe veldnaam."""
+    if "{" not in template:
+        return _path(item, template)
+    missing = False
+
+    def rep(m):
+        nonlocal missing
+        val = _path(item, m.group(1))
+        if val in (None, ""):
+            missing = True
+        return str(val) if val is not None else ""
+    out = re.sub(r"\{([^}]+)\}", rep, template)
+    return None if missing else out
+
+
+def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
+    """Eigen JSON-eindpunt van een podium (venues.yaml: type: json_api). Veel sites laden hun agenda via een
+    AJAX-call die een JSON-lijst teruggeeft (Boerderij: includes/ajax/events.php). De veldnamen verschillen per site,
+    dus `fields` beschrijft de afbeelding; de waarden zijn puntpaden of templates met {veld}:
+
+      type: json_api
+      api: https://…/includes/ajax/events.php?limit=69420
+      items: data.events            # optioneel: pad naar de lijst (standaard: het antwoord zelf, of het eerste lijstveld)
+      fields:
+        title: title                # verplicht
+        date: event_date            # verplicht: ISO-datum of datum+tijd (parse_dt)
+        url: "https://…/programma/{seo_slug}/"   # verplicht
+        subtitle: subtitle
+        price: ticket_price
+        time: start_time            # optioneel: "20:30" los van de datum
+        genres: genre               # string of lijst
+        status: label.title         # 'Uitverkocht' / 'Afgelast' e.d.
+      page_param: offset            # optioneel: paginering via ?offset=N (met page_size) of ?page=N
+    Ontbreken tijd/prijs, dan haalt de generieke verrijking ze van de eventpagina (JSON-LD of tekst)."""
+    api = v["api"]
+    f = v.get("fields") or {}
+    out: list[Event] = []
+    page, offset = 1, 0
+    while page <= int(v.get("max_pages", 5)):
+        url = api
+        if v.get("page_param") and page > 1:
+            sep = "&" if "?" in url else "?"
+            url = f"{url}{sep}{v['page_param']}={offset if v['page_param'] == 'offset' else page}"
+        r = get(url, delay=float(v.get("crawl_delay", 0.5)))
+        try:
+            data = r.json()
+        except ValueError:
+            data = json.loads(r.text.strip())
+        items = _path(data, v["items"]) if v.get("items") else data
+        if isinstance(items, dict):
+            items = next((x for x in items.values() if isinstance(x, list)), [])
+        if not isinstance(items, list) or not items:
+            break
+        for it in items:
+            if not isinstance(it, dict):
+                continue
+            title = clean(str(_fill(f.get("title", "title"), it) or ""))
+            link = _fill(f.get("url", "url"), it)
+            raw_date = _fill(f.get("date", "date"), it)
+            if not (title and link and raw_date):
+                continue
+            dt = parse_dt(str(raw_date))
+            if not dt:
+                continue
+            if f.get("time") and (dt.hour, dt.minute) == (0, 0):
+                tm = _fill(f["time"], it)
+                m = re.match(r"(\d{1,2})[:.u](\d{2})", str(tm or ""))
+                if m:
+                    dt = dt.replace(hour=int(m.group(1)), minute=int(m.group(2)))
+            link = urljoin(base, str(link))
+            genres = _fill(f["genres"], it) if f.get("genres") else None
+            genres = [clean(str(g)) for g in as_list(genres) if g] if genres else []
+            raw_status = clean(str(_fill(f["status"], it) or "")) if f.get("status") else None
+            status = None
+            price = fmt_price(_fill(f["price"], it)) if f.get("price") else None
+            if raw_status:
+                low = raw_status.lower()
+                if re.search(r"uitverkocht|sold[ _-]?out", low):
+                    status = "uitverkocht"
+                elif re.search(r"afgelast|cancel", low):
+                    status = "afgelast"
+                elif re.search(r"verplaatst|postponed|moved", low):
+                    status = "verplaatst"
+                elif re.search(r"gratis|free", low) and not price:
+                    price = "gratis"        # Mezz: event.status = "Gratis"
+            if price and not re.search(r"\d|gratis|free", price, re.I):
+                price = None                # statusachtige tekst ("Tickets via TIDT") is geen prijs
+            sub = _fill(f["subtitle"], it) if f.get("subtitle") else None
+            out.append(Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=link,
+                             subtitle=clean(str(sub)) if sub else None, genres=genres,
+                             price=normalize_price(price) if price else None, status=status, source="json_api"))
+        if not v.get("page_param") or len(items) < int(v.get("page_size", len(items) or 1)):
+            break
+        offset += len(items)
+        page += 1
+    return out
+
+
 # --- eventlinks volgen + JSON-LD op detailpagina --------------------------------
 
 NON_EVENT_PATH = re.compile(r"/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|/agenda/(concerten|exposities?|expo|film|films|kids|jeugd|kidsjeugd|theater|cabaret|comedy|dans|workshops?|cursussen|festivals?|clubs?|party|feesten|overig|alles|all)/?$|\.(pdf|jpe?g|png|ics)$", re.I)
@@ -700,7 +837,28 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
-CACHE_VERSION = 4  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 5  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+
+
+_PUBLISH_CLASS = re.compile(r"publish|updated|entry-date|post-date|author-date|posted|meta-date|byline", re.I)
+
+
+def _event_time_tag(s: BeautifulSoup):
+    """De <time datetime> van het event, niet die van het blogbericht. WordPress-thema's zetten de publicatiedatum
+    in <time class="entry-date updated"> (Gelderlandfabriek: 18 augustus, terwijl het event 19 september is); die
+    valt buiten het venster en het event verdween. Voorkeur: een <time> zonder publicatie-klasse met een datum in het
+    venster; anders de eerste zonder publicatie-klasse; anders niets (dan telt de datum uit de tekst)."""
+    tags = s.find_all("time", attrs={"datetime": True})
+    cands = []
+    for t in tags:
+        cls = " ".join(t.get("class", [])) + " " + " ".join(t.parent.get("class", []) if t.parent else [])
+        if _PUBLISH_CLASS.search(cls):
+            continue
+        cands.append(t)
+    for t in cands:
+        if in_window(parse_dt(t["datetime"])):
+            return t
+    return cands[0] if cands else None
 
 
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
@@ -737,7 +895,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         tstart, tdoors = times_from_embedded_json(html)
     if ev is None:
         s = soup_of(html)
-        t = s.find("time", attrs={"datetime": True})
+        t = _event_time_tag(s)
         h1 = s.find("h1")
         if title is None and h1:
             title = clean(h1.get_text())
@@ -794,10 +952,14 @@ def clean_lineup(names: list[str], title: str = "") -> list[str]:
 
 def _decoded(html: str) -> str:
     """HTML plus een URL-gedecodeerde variant: sommige thema's (Vorstin) zetten JSON URL-encoded in een attribuut."""
+    out = html
     if html.count("%22") > 20:
         from urllib.parse import unquote
-        return html + "\n" + unquote(html)
-    return html
+        out += "\n" + unquote(html)
+    if html.count("&quot;") > 20:
+        import html as _html   # JSON in attributen (Het Podium: onclick="gtm.push({&quot;price&quot;:&quot;21.50&quot;})")
+        out += "\n" + _html.unescape(html)
+    return out
 
 
 _JSON_TIME_START = re.compile(r'"(?:program_start|programme_start|start_time|starttime|startTime|aanvang|showtime|show_time)"\s*:\s*"?(\d{12}|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?|\d{1,2}:\d{2})"?', re.I)
@@ -873,14 +1035,18 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     def hm(pat):
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
-    start = hm(r"(?:aanvang|start|begin|show|showtime|concert)\W{0,12}(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
+    start = hm(r"(?:aanvang|start|begin|show|showtime|concert|hoofdprogramma|programma)\W{0,12}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
     # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang
     if not start and dt is not None and m:
-        after = low[m.end(): m.end() + 14]
-        mt = re.match(r"\W{0,4}(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
+        after = low[m.end(): m.end() + 18]
+        mt = re.match(r"\W{0,4}(?:om\s+)?(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
         if mt and int(mt.group(1)) < 24 and int(mt.group(2)) < 60:
             start = (int(mt.group(1)), int(mt.group(2)))
-    d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(\d{1,2})[:.u](\d{2})")
+    # "20:30 (Doors: 19:30)" (Mezz, Stager-widgets): de tijd vóór het haakje is de aanvang, die erin de deurtijd
+    mp = re.search(r"(\d{1,2})[:.u](\d{2})\s*\((?:doors?|deuren|zaal open)\W{0,4}(\d{1,2})[:.u](\d{2})\)", low)
+    if mp and not start:
+        start = (int(mp.group(1)), int(mp.group(2)))
+    d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})")
     d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
     if not start and doors:
@@ -967,7 +1133,8 @@ def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
     if fld("soldOut") == "yes":
         status = status or "uitverkocht"
     return Event(venue=v["name"], city=v["city"], title=title, start=start.isoformat(timespec="minutes"), url=url,
-                 subtitle=sub, genres=genres, price=(f"€ {price}" if price else None), status=status, source="flight_json", lineup=lineup)
+                 subtitle=sub, genres=genres, price=(f"€ {price}" if price else None), status=status, source="flight_json", lineup=lineup,
+                 location=_unesc(loc.group(1)) if loc else None)
 
 
 def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
@@ -1220,16 +1387,49 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
             if holder:
                 genres = [x.strip() for x in re.split(r"[,/|·•]", str(holder[v["genre_attr"]])) if x.strip()]
         for g in item.select(v["genre"]) if v.get("genre") else []:
-            genres += [x.strip() for x in re.split(r"[,/|·•]", clean(g.get_text()) or "") if x.strip()]
+            # "VR 04 SEP | Rock, Symfo- & Progressive Rock" (De Pul): datumdelen zijn geen genre
+            genres += [x.strip() for x in re.split(r"[,/|·•]", clean(g.get_text()) or "") if x.strip() and not re.search(r"\d", x)]
         sub = pick("subtitle")
         status = None
-        if item.find(class_=re.compile(r"sold-?out|uitverkocht", re.I)) or re.search(r"\buitverkocht\b", item.get_text(" "), re.I):
+        if item.find(class_=re.compile(r"sold-?out|uitverkocht", re.I)) or re.search(r"\buitverkocht\b|\bsold[ -]?out\b", item.get_text(" "), re.I):
             status = "uitverkocht"
         if item.find(class_=re.compile(r"cancel|afgelast", re.I)) or re.search(r"\bafgelast\b|\bgeannuleerd\b", item.get_text(" "), re.I):
             status = "afgelast"
         out.append(Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=url,
                          subtitle=clean(sub.get_text()) if sub else None, genres=list(dict.fromkeys(g for g in genres if g)),
                          price=tprice, status=status, source="html"))
+    return out
+
+
+def strat_html_api(v: dict, base: str) -> list[Event]:
+    """HTML-fragmenten uit een eigen 'laad meer'-eindpunt (De Pul: query.php?…&amount_of_events_already_shown={offset}
+    geeft {"output": "<a class=agenda-event>…"}). Dezelfde CSS-selectors als type: html, maar de bron is de API:
+      type: html
+      api: "https://…/query.php?source=agenda&amount_of_events_already_shown={offset}"   # {offset} = al getoonde items, {page} = paginanummer
+      api_html_key: output          # JSON-sleutel met het fragment; weglaten als het antwoord zelf HTML is
+    Stopt als een pagina geen (nieuwe) items meer oplevert."""
+    out: list[Event] = []
+    seen: set[str] = set()
+    offset, page = 0, 1
+    while page <= int(v.get("max_pages", 30)):
+        url = v["api"].replace("{offset}", str(offset)).replace("{page}", str(page))
+        r = get(url, delay=float(v.get("crawl_delay", 0.6)))
+        html = r.text
+        if v.get("api_html_key"):
+            try:
+                html = str(_path(r.json(), v["api_html_key"]) or "")
+            except ValueError:
+                html = str(_path(json.loads(r.text.strip()), v["api_html_key"]) or "")
+        n_items = len(soup_of(html).select(v["item"]))
+        evs = [e for e in strat_html(v, html, base) if e.url not in seen]
+        if not n_items or not evs:
+            break
+        seen.update(e.url for e in evs)
+        out += evs
+        offset += n_items
+        page += 1
+        if "{offset}" not in v["api"] and "{page}" not in v["api"]:
+            break
     return out
 
 
@@ -1260,17 +1460,17 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     base = v["url"]
     t = v.get("type", "auto")
     if t == "disabled" or v.get("enabled") is False:
-        return [], "disabled", "uitgeschakeld in venues.yaml"
+        return [], "disabled", "uitgeschakeld in venues.yaml", {}
 
     html = ""
-    if t not in ("tribe", "sitemap_detail"):
+    if t not in ("tribe", "sitemap_detail", "json_api") and not (t == "html" and v.get("api")):
         html = get(base, delay=float(v.get("crawl_delay", 0))).text
 
     order = {
         "auto": ["jsonld", "microdata", "embedded", "html_preset", "tribe", "wp_event", "jsonld_detail"],
         "microdata": ["microdata"],
         "jsonld": ["jsonld"], "embedded": ["embedded"], "nextdata": ["embedded"],
-        "tribe": ["tribe"], "wp_event": ["wp_event"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
+        "tribe": ["tribe"], "wp_event": ["wp_event"], "json_api": ["json_api"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
         "sitemap_detail": ["sitemap_detail"],
     }.get(t, [t])
     notes = []
@@ -1287,10 +1487,12 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 evs = strat_tribe(v, base)
             elif strat == "wp_event":
                 evs = strat_wp_event(v, base, cache)
+            elif strat == "json_api":
+                evs = strat_json_api(v, base, cache)
             elif strat == "jsonld_detail":
                 evs = strat_jsonld_detail(v, html, base, cache)
             elif strat == "html":
-                evs = strat_html(v, html, base)
+                evs = strat_html_api(v, base) if v.get("api") else strat_html(v, html, base)
             elif strat == "html_preset":
                 evs, preset_name = strat_html_preset(v, html, base)
                 if preset_name:
@@ -1316,6 +1518,18 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             break
         notes.append(f"{strat}: {len(evs)} events")
     evs, strat = best
+    # extra bronnen voor hetzelfde podium (eigen site toont maar 3 weken, de Stager-ticketshop 50 events; of een tweede
+    # agendapagina): elk met eigen type/instellingen; dubbele events (zelfde dag + titel) worden later samengevoegd
+    for src in as_list(v.get("extra_sources") or []):
+        sub = {**v, **src, "extra_sources": None, "category_pages": None, "name": v["name"], "city": v["city"]}
+        try:
+            more, sstrat, snote, _ = fetch_venue(sub, cache)
+            known = {e.url.rstrip("/") for e in evs}
+            new = [e for e in more if e.url.rstrip("/") not in known]
+            evs = evs + new
+            notes.append(f"extra bron {src.get('url')}: {len(more)} events via {sstrat}, {len(new)} nieuw")
+        except Exception as ex:  # noqa: BLE001
+            notes.append(f"extra bron {src.get('url')}: {type(ex).__name__} {str(ex)[:80]}")
     if len(evs) >= int(v.get("min_events", 3)):
         if v.get("enrich", True) and strat not in ("jsonld_detail", "sitemap_detail"):
             try:
@@ -1435,20 +1649,58 @@ def apply_category_tags(evs: list[Event], cats: dict[str, set[str]], exclude: se
     return kept, n
 
 
+def relabel_by_location(events: list[Event], venues: list[dict]) -> int:
+    """Een podium dat ook elders programmeert (Paradiso in Tolhuistuin, Doornroosje in De Vereeniging) levert events die
+    bij dat andere gebouw horen. Staat de genoemde locatie zelf als podium in venues.yaml, dan verhuist het event
+    daarheen (venue/stad); de dedupe hieronder haalt daarna de dubbele met het eigen programma van dat podium weg."""
+    by_name = {}
+    for v in venues:
+        by_name[_fold(v["name"])] = v
+        for a in as_list(v.get("aliases") or []):
+            by_name[_fold(a)] = v
+    n = 0
+    for e in events:
+        if not e.location:
+            continue
+        f = _fold(e.location)
+        target = by_name.get(f) or next((v for k, v in by_name.items() if len(k) > 4 and (f.startswith(k + " ") or f.startswith(k + " -"))), None)
+        if target and target["name"] != e.venue:
+            e.venue, e.city = target["name"], target["city"]
+            n += 1
+    return n
+
+
+def _richness(e: Event) -> int:
+    return len(e.genres) * 2 + (3 if e.price else 0) + (3 if e.start[11:16] not in ("", "00:00") else 0) + len(e.lineup) + (1 if e.subtitle else 0)
+
+
 def dedupe(events: list[Event]) -> list[Event]:
+    """Dubbele events weg: dezelfde URL binnen een podium, en daarna hetzelfde podium + dag + titel (bv. na verhuizing op
+    locatie, of als een site een event twee keer toont). De rijkste versie (tijd, prijs, genres, line-up) blijft."""
     seen, out = {}, []
     for e in events:
         key = (e.venue, e.url.rstrip("/").lower()) if e.url else (e.venue, e.title.lower(), e.start[:10])
         if key in seen:
-            # bewaar de rijkste versie
             old = seen[key]
-            if len(e.genres) > len(old.genres) or (e.price and not old.price):
+            if _richness(e) > _richness(old):
                 out[out.index(old)] = e
                 seen[key] = e
             continue
         seen[key] = e
         out.append(e)
-    return out
+    by_day: dict[tuple, Event] = {}
+    final = []
+    for e in out:
+        k2 = (e.venue, e.start[:10], _fold(NOISE_PAREN.sub("", e.title))[:40])
+        if k2 in by_day:
+            old = by_day[k2]
+            if _richness(e) > _richness(old):
+                final[final.index(old)] = e
+                by_day[k2] = e
+            continue
+        by_day[k2] = e
+        final.append(e)
+    return final
 
 
 def main(only: list[str] | None = None) -> int:
@@ -1480,6 +1732,13 @@ def main(only: list[str] | None = None) -> int:
         report["venues"].append({"name": v["name"], "city": v["city"], "url": v["url"], "strategy": strat,
                                  "events": len(evs), "note": note, "ok": len(evs) > 0, "audit": audit})
         all_events.extend(evs)
+    # events die een podium elders programmeert (Paradiso in Tolhuistuin) horen bij dat andere podium; daarna dubbelen weg
+    moved = relabel_by_location(all_events, venues)
+    before = len(all_events)
+    all_events = dedupe(all_events)
+    report["relocated"] = moved
+    report["deduped"] = before - len(all_events)
+    log(f"Locaties: {moved} events verhuisd naar het podium waar ze plaatsvinden; {before - len(all_events)} dubbele events samengevoegd")
 
     # 'nieuw' bepalen; een podium dat voor het eerst meedoet levert geen 'nieuwe' events op
     known_venues = {k.split("|", 1)[0] for k in seen}
@@ -1576,18 +1835,12 @@ def main(only: list[str] | None = None) -> int:
         if gk and gk != e.kind and e.kind == "concert":
             e.kind = gk
             est_k += 1
-        if e.price and (len(e.start) > 10 and e.start[11:16] != "00:00"):
-            continue
-        if not e.price and gp:
-            e.price, e.price_est = gp, True
-            e.price_num = price_number(gp)
-            e.free = e.price_num == 0.0
-            est_p += 1
+        # prijs wordt NOOIT geschat: alleen wat op de site staat telt (de reeks onthoudt prijzen wel, voor onderzoek)
         if gt and not (len(e.start) > 10 and e.start[11:16] != "00:00"):
             e.start, e.time_est = f"{e.start[:10]}T{gt}", True
             est_t += 1
     seriesdb.save(sdb, sseen)
-    log(f"Reeksengeheugen: {len(sdb)} reeksen; {est_p} prijzen, {est_t} tijden en {est_k} typen overgenomen uit eerdere edities")
+    log(f"Reeksengeheugen: {len(sdb)} reeksen; {est_t} tijden en {est_k} typen overgenomen uit eerdere edities (prijzen worden nooit geschat)")
     report["series"] = len(sdb)
     report["estimated"] = {"price": est_p, "time": est_t, "kind": est_k}
     report["unknown_genres"] = dict(sorted(unknown_genres.items(), key=lambda x: -x[1])[:150])
