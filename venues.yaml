@@ -26,7 +26,7 @@
 #   category_pages  eigen genre-/type-/locatiefilters van het podium als tagbron (zie fetch.category_tags en README)
 #   extra_sources   lijst van extra bronnen voor hetzelfde podium, elk met eigen url/type (bv. de Stager-ticketshop); dubbelen worden samengevoegd
 #   link_pattern  regex waaraan eventlinks moeten voldoen (jsonld_detail)
-#   max_detail    max. aantal eventpagina's per run (jsonld_detail; standaard 80, gecached 10 dagen)
+#   max_detail    max. aantal eventpagina's per run (jsonld_detail; standaard 400, gecached 10 dagen)
 #   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
 #   min_events    minimum aantal events voordat een strategie als geslaagd geldt (standaard 3)
 #   item/title/date/link/genre/subtitle  CSS-selectors voor type: html
@@ -253,7 +253,19 @@
   date: ".block__date"
   subtitle: ".block__subtitle"
   notes: datum als "vr 4.9"; tijd en prijs via eventpagina (enrich)
-- {name: SPOT, city: Groningen, url: "https://www.spotgroningen.nl/programma/", capacity: 1600}
+- name: SPOT
+  city: Groningen
+  url: https://www.spotgroningen.nl/programma/
+  capacity: 1600
+  type: html
+  item: "article.program__item"
+  title: "h2"
+  date: "time.program__date"
+  subtitle: ".program__content p"
+  genre_attr: [data-genres, data-subgenres]
+  only_genres: [muziek, klassiek]
+  max_detail: 700
+  notes: "De Oosterpoort + Stadsschouwburg: 616 events (alle disciplines) in één HTML met data-genres (muziek/klassiek/theater/cabaret/dans/familie), data-subgenres, <time datetime>. Alleen muziek + klassiek. jsonld_detail las eerder maar 80 pagina's (max_detail). Eventpagina: JSON-LD Event met offers (prijs)"
 - name: Neushoorn
   city: Leeuwarden
   capacity: 1000
@@ -315,7 +327,15 @@
   category_pages:
     url: "https://fluor033.nl/programma/categorie/{slug}/"
     tags: {concerten: Concert, dance: Clubnacht, en-de-rest: Overig}
-- {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
+- name: De Vorstin
+  city: Hilversum
+  url: https://vorstin.nl/agenda/
+  capacity: 1150
+  type: json_api
+  api: "https://vorstin.nl/?agenda_json"
+  fields: {title: title, subtitle: storyline, date: times.0.program_start, url: permalink, price: times.0.price, genres: tags.interests, status: times.0.status_label}
+  enrich: false
+  notes: "de agenda laadt via ?agenda_json: dict per slug met title, storyline, permalink, tags.interests ('Grunge | Tribute'), times[0].program_start '202609111915', door_open, price '34,75', status_label ('laatste kaarten'/'uitverkocht'). Alle 64 events (embedded gaf 47)"
 - name: P60
   city: Amstelveen
   url: https://www.p60.nl/agenda
@@ -458,7 +478,14 @@
   genre_taxonomies: [production_genre, production_type]
   notes: "Stager-WordPress-koppeling: zeer zware ACF-payload (per_page=100 loopt in de timeout), dus 20 per pagina; acf.stager_program_start/doors_open/tickets/production_free/production_subtitle worden generiek gelezen (_stager_acf)"
   notes: "WP REST 'event' (Stager-koppeling, 121 producties); datum staat in de slug (…-2026-09-18), tijd/prijs via eventpagina (enrich). Homepage-JSON-LD gaf maar 1 event."
-- {name: Nieuwe Nor, city: Heerlen, url: "https://www.nieuwenor.nl/agenda", capacity: 1100}
+- name: Nieuwe Nor
+  city: Heerlen
+  url: https://www.nieuwenor.nl/agenda
+  capacity: 1100
+  type: jsonld_detail
+  link_pattern: "nieuwenor\\.nl/programma/\\d{4}/\\d{2}/\\d{2}/[^/?#]+"
+  max_detail: 400
+  notes: "alle ~117 events staan in de HTML (/programma/2026/10/03/slug, datum in de URL); jsonld_detail stopte bij 80 (max_detail)"
 - name: Grenswerk
   city: Venlo
   capacity: 600
@@ -490,7 +517,14 @@
   type: wp_event
   api: "https://degelderlandfabriek.nl/wp-json/wp/v2/jeero_event?per_page=100&_embed=1"
   notes: "Jeero-plugin: REST zonder datum, datum/tijd/prijs op de eventpagina ('zaterdag 19 september 2026', 'Deuren open 19:30 uur Start 19:45 uur', 'Regulier: € 10,00'); de <time class=entry-date> daar is de publicatiedatum (nu generiek genegeerd). Categorie (Concert/Expositie/Theater) via wp:term"
-- {name: Bolwerk (Poort), city: Sneek, url: "https://ontdekpoort.nl/programma/", capacity: 650, notes: "Bolwerk is opgegaan in Poort; programma gecombineerd met theater"}
+- name: Bolwerk (Poort)
+  city: Sneek
+  url: https://ontdekpoort.nl/programma/
+  capacity: 650
+  type: wp_event
+  api: "https://ontdekpoort.nl/wp-json/wp/v2/event?per_page=100&_embed=1"
+  genre_taxonomies: [event-genre]
+  notes: "Poort = Bolwerk + Theater Sneek + Noorderkerk (locatie in de tekst: 'Locatie Bolwerk - Kerkgracht 8'). WP REST 'event' (507 posts, incl. verleden) zonder datum -> eventpagina ('Datum & tijd Vr 08 januari 2027 | Deuren open 20:00 | Aanvang 20:30', 'Voorverkoop: € 25,00 Deurverkoop: € 28,00'). Autodetectie viel in run #18 op 0 terug -> expliciet"
 - name: "'t Beest"
   city: Goes
   url: https://tbeest.nl/evenementen/
@@ -641,8 +675,9 @@
   link: "h3.title a"
   subtitle: "p.subtitle"
   genre: ".category-tag"
+  list_pages_template: "https://www.cacaofabriek.nl/agenda?type=concert&page={n}"
   enrich: false
-  notes: "gemengd programma (film/concert/expo); ?type=concert geeft alle concerten in één HTML (client-side paging). Datum 'donderdag 10 sep.' + tijd '19:00' in de kaart. Prijs staat alleen in de Ticketlab-shop (tickets.cacaofabriek.nl, JS/cookiemuur) -> geen prijs"
+  notes: "gemengd programma (film/concert/expo); ?type=concert, 10 per pagina (&page=n; in de browser stonden alle 41 in één HTML, de fetcher kreeg er 10). Datum 'donderdag 10 sep.' + tijd '19:00' in de kaart. Prijs staat alleen in de Ticketlab-shop (tickets.cacaofabriek.nl, JS/cookiemuur) -> geen prijs"
 - {name: Astrant, city: Ede, url: "https://astrant-ede.nl/programma-evenementen-en-activiteiten-ede/", capacity: 150}
 - {name: De Meester, city: Almere, url: "https://poppodiumdemeester.nl/", capacity: 300}
 

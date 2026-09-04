@@ -94,8 +94,13 @@ class Event:
 # hulpfuncties
 # ----------------------------------------------------------------------------
 
+_LOG: list[str] = []
+
+
 def log(msg: str) -> None:
     print(msg, flush=True)
+    if len(_LOG) < 5000:
+        _LOG.append(f"{datetime.now().strftime('%H:%M:%S')} {msg}")
 
 
 BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
@@ -247,7 +252,7 @@ def to_local(dt: datetime) -> datetime:
 
 def date_from_url(url: str) -> datetime | None:
     """Datum uit de slug: …-04-09-2026, …-04-09-26 of …-2026-09-04 (ISO eerst, anders wordt 2026-09-18 als 26-09-18 gelezen)."""
-    m = re.search(r"(\d{4})-(\d{2})-(\d{2})(?:/|$|[-_])", url)
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})(?:/|$|[-_])", url) or re.search(r"/(20\d{2})/(\d{2})/(\d{2})/", url)   # Nieuwe Nor: /programma/2026/10/03/slug
     if m:
         y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
     else:
@@ -349,7 +354,20 @@ def event_from_jsonld(n: dict, v: dict, page_url: str, source: str) -> Event | N
         end=(parse_dt(n.get("endDate")) or start).isoformat(timespec="minutes") if n.get("endDate") else None,
         subtitle=perf if perf and perf.lower() != (clean(n.get("name")) or "").lower() else None,
         genres=genres, price=price, status=status, source=source, lineup=lineup,
+        location=_ld_location(n, v),
     )
+
+
+def _ld_location(n: dict, v: dict) -> str | None:
+    """Locatienaam uit JSON-LD als die afwijkt van het podium zelf (Rotown programmeert in V11, LantarenVenster, Annabel…)."""
+    loc = n.get("location")
+    if isinstance(loc, list):
+        loc = loc[0] if loc else None
+    name = loc.get("name") if isinstance(loc, dict) else (loc if isinstance(loc, str) else None)
+    name = clean(name) if name else None
+    if not name or _fold(name) == _fold(v["name"]) or _fold(v["name"]) in _fold(name) or _fold(name) in _fold(v["name"]):
+        return None
+    return name
 
 
 # ----------------------------------------------------------------------------
@@ -792,7 +810,9 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
             data = json.loads(r.text.strip())
         items = _path(data, v["items"]) if v.get("items") else data
         if isinstance(items, dict):
-            items = next((x for x in items.values() if isinstance(x, list)), [])
+            # {"events": [...]} of een dict van dicts met de slug als sleutel (Vorstin ?agenda_json)
+            lst = next((x for x in items.values() if isinstance(x, list)), None)
+            items = lst if lst is not None else [x for x in items.values() if isinstance(x, dict)]
         if not isinstance(items, list) or not items:
             break
         for it in items:
@@ -803,7 +823,13 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
             raw_date = _fill(f.get("date", "date"), it)
             if not (title and link and raw_date):
                 continue
-            dt = parse_dt(str(raw_date))
+            raw_date = str(raw_date)
+            if re.fullmatch(r"\d{12}", raw_date):   # 202609111915 (Vorstin program_start)
+                dt = datetime.strptime(raw_date, "%Y%m%d%H%M")
+            elif re.fullmatch(r"\d{8}", raw_date):
+                dt = datetime.strptime(raw_date, "%Y%m%d")
+            else:
+                dt = parse_dt(raw_date)
             if not dt:
                 continue
             if f.get("time") and (dt.hour, dt.minute) == (0, 0):
@@ -964,7 +990,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
-CACHE_VERSION = 5  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 6  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 _PUBLISH_CLASS = re.compile(r"publish|updated|entry-date|post-date|author-date|posted|meta-date|byline", re.I)
@@ -995,6 +1021,8 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         stale = c.get("v", 1) < CACHE_VERSION or (c["event"].get("source") == "flight_json" and c.get("fv", 1) < FLIGHT_VERSION)
         if stale:
             c = None  # verouderd cache-item van een oudere parser (bv. zonder prijs/line-up, of met gelekte startMain): opnieuw ophalen
+    if c and c.get("fetched") and not c.get("event") and c.get("v", 1) < CACHE_VERSION:
+        c = None  # mislukking van een oudere parser: na een fix direct opnieuw proberen (Gelderlandfabriek, Q-factory)
     if c and c.get("fetched"):
         # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
         ttl = int(v.get("detail_ttl_days", 10)) if c.get("event") else 1
@@ -1502,7 +1530,7 @@ def strat_jsonld_detail(v: dict, html: str, base: str, cache: dict) -> list[Even
         for l in event_links(v, p, base):
             if l not in links:
                 links.append(l)
-    links = links[: int(v.get("max_detail", 80))]
+    links = links[: int(v.get("max_detail", 400))]   # was 80: Nieuwe Nor en SPOT bleven daardoor op precies 80 events hangen
     log(f"    {len(links)} eventlinks, detailpagina's ophalen (gecached)…")
     out = []
     for l in links:
@@ -1569,10 +1597,10 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
             hh, mm = tstart or tdoors
             dt = dt.replace(hour=hh, minute=mm)
         genres = []
-        if v.get("genre_attr"):
-            holder = item if item.has_attr(v["genre_attr"]) else item.find(attrs={v["genre_attr"]: True})
+        for ga in as_list(v.get("genre_attr") or []):   # één of meer data-attributen (SPOT: data-genres + data-subgenres)
+            holder = item if item.has_attr(ga) else item.find(attrs={ga: True})
             if holder:
-                genres = [x.strip() for x in re.split(r"[,/|·•]", str(holder[v["genre_attr"]])) if x.strip()]
+                genres += [x.strip() for x in re.split(r"[,/|·•]", str(holder[ga])) if x.strip()]
         for g in item.select(v["genre"]) if v.get("genre") else []:
             # "VR 04 SEP | Rock, Symfo- & Progressive Rock" (De Pul): datumdelen zijn geen genre
             genres += [x.strip() for x in re.split(r"[,/|·•]", clean(g.get_text()) or "") if x.strip() and not re.search(r"\d", x)]
@@ -1772,9 +1800,15 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     # ticketshops met server-side data als automatische extra bron: Stager (<slug>.stager.co/shop/default/events, JSON-LD
     # ItemList met 50 komende events incl. tijd) wordt herkend aan ticketlinks op de agenda- of eventpagina's
     if v.get("ticketshops", True) and not v.get("_is_extra"):
-        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", html or ""))
-        for e in evs[:60]:
-            shops.update(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (e.url or "") + " " + str(cache.get(e.url, {}).get("event") or "")))
+        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (html or "").lower()))
+        # alleen shops die bij dít podium horen: Luxor Live linkt ook naar willemeen.stager.co, De Spot naar deoostkerk, Neushoorn
+        # naar explorethenorth (festival) en veel sites naar app.stager.co — die zouden andermans events opleveren
+        vf = re.sub(r"[^a-z0-9]", "", _fold(v["name"]))
+        host = urlparse(v["url"]).netloc.replace("www.", "").split(".")[0].replace("-", "")
+        def mine(slug: str) -> bool:
+            sf = slug.replace("-", "")
+            return slug != "app" and len(sf) >= 3 and (sf in vf or vf in sf or sf in host or host in sf)
+        shops = {s_ for s_ in shops if mine(s_)}
         for slug in sorted(shops)[:2]:
             src = {"url": f"https://{slug}.stager.co/shop/default/events", "type": "stager", "enrich": False}
             if src["url"] not in [x.get("url") for x in as_list(v.get("extra_sources") or [])]:
@@ -1950,12 +1984,12 @@ def dedupe(events: list[Event]) -> list[Event]:
             continue
         seen[key] = e
         out.append(e)
-    by_day: dict[tuple, Event] = {}
+    by_day: dict[tuple, list[Event]] = {}
     final = []
     for e in out:
-        k2 = (e.venue, e.start[:10], _fold(NOISE_PAREN.sub("", e.title))[:40])
-        if k2 in by_day:
-            old = by_day[k2]
+        day_key = (e.venue, e.start[:10])
+        old = next((o for o in by_day.get(day_key, []) if _same_event(o, e)), None)
+        if old is not None:
             rich, poor = (e, old) if _richness(e) > _richness(old) else (old, e)
             # velden aanvullen uit de armere versie; de URL van de eigen site gaat vóór die van een ticketshop
             if not rich.price and poor.price:
@@ -1970,11 +2004,38 @@ def dedupe(events: list[Event]) -> list[Event]:
                 rich.url = poor.url
             if rich is e:
                 final[final.index(old)] = e
-                by_day[k2] = e
+                by_day[day_key][by_day[day_key].index(old)] = e
             continue
-        by_day[k2] = e
+        by_day.setdefault(day_key, []).append(e)
         final.append(e)
     return final
+
+
+def _title_key(t: str) -> str:
+    t = NOISE_PAREN.sub("", t or "")
+    t = re.sub(r"\b(uitverkocht|sold out|afgelast|verplaatst|nieuwe datum|support|presents?|live|concert|tour|show|20\d\d)\b", " ", t, flags=re.I)
+    t = re.sub(r"['’`´\"“”.,:;!?+&]", "", t)   # 90's / 90’s / 90s
+    return re.sub(r"\s+", " ", _fold(t)).strip()
+
+
+def _same_event(a: Event, b: Event) -> bool:
+    """Zelfde event op dezelfde dag bij hetzelfde podium? Titels gelijk, of de ene bevat de andere ("In The Flesh?" vs
+    "In The Flesh - The Dutch Pink Floyd"), of ze delen het grootste deel van hun woorden, of — als de titels niets
+    gemeen hebben (site: "Zeeuwse coverbands", ticketshop: "Band on the Run") — beide hebben dezelfde aanvangstijd."""
+    ta, tb = _title_key(a.title), _title_key(b.title)
+    if ta and tb:
+        if ta == tb or ta in tb or tb in ta:
+            return True
+        wa, wb = set(ta.split()), set(tb.split())
+        common = wa & wb
+        if len(common) >= 2 and len(common) >= min(len(wa), len(wb)) * 0.6:
+            return True
+    sa, sb = a.start[11:16], b.start[11:16]
+    if sa and sb and sa not in ("", "00:00") and sb not in ("", "00:00"):
+        ha, ma = int(sa[:2]), int(sa[3:]); hb, mb = int(sb[:2]), int(sb[3:])
+        if abs((ha * 60 + ma) - (hb * 60 + mb)) <= 30 and {a.source, b.source} & {"stager", "jsonld", "flight_json"} and a.source != b.source:
+            return True   # zelfde tijd, verschillende bronnen (site vs ticketshop): één event met twee namen
+    return False
 
 
 def main(only: list[str] | None = None) -> int:
@@ -1993,6 +2054,7 @@ def main(only: list[str] | None = None) -> int:
         except Exception as ex:  # noqa: BLE001
             evs, strat, note, audit = [], "error", f"{type(ex).__name__}: {str(ex)[:200]}", {}
             traceback.print_exc()
+            log(traceback.format_exc()[-1500:])
         evs = dedupe(evs)
         log(f"== {v['name']} ({v['city']}): {len(evs)} events via {strat} ({time.time()-t0:.0f}s) {note}")
         return v, evs, strat, note, audit
@@ -2157,6 +2219,8 @@ def main(only: list[str] | None = None) -> int:
     (DATA / "events.json").write_text(json.dumps([asdict(e) for e in all_events], ensure_ascii=False, indent=1), encoding="utf-8")
     report["total_events"] = len(all_events)
     (DATA / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    # het logboek van deze run meeschrijven (data/run.log), zodat een mislukt podium ook zonder de GitHub-console te onderzoeken is
+    (DATA / "run.log").write_text("\n".join(_LOG)[-400000:], encoding="utf-8")
     seen_path.write_text(json.dumps(seen, ensure_ascii=False, indent=0), encoding="utf-8")
     cache_path.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
 
