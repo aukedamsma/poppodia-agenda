@@ -226,6 +226,20 @@ def test_series_memory():
     assert s.series_key("Melkweg", "Cheeky Monday: MURDOCK!") == "melkweg|cheeky monday"
 
 
+def test_text_and_json_extraction():
+    # 013: tijd vóór het label, prijs onder 'Entree'
+    assert fetch.extract_from_text("Entree € 44,30 incl. servicekosten 19:30 Zaal Open 20:00 - 20:30 Support acts")[1:] == ((20, 0), (19, 30), "€ 44,30")
+    # Nobel: tijdschema zonder 'aanvang' -> eerste tijd na deuren is de start
+    assert fetch.extract_from_text("Tijdschema 19:00 - Deuren open 19:30 - Hakselaer 20:45 - Velozza")[1:3] == ((19, 30), (19, 0))
+    # Melkweg: prijs alleen in ingebedde JSON, primary ticket wint
+    html = '{"ticket1":{"price":"€ 24,05","primary":true},"ticket2":{"price":"€ 16","primary":false}}'
+    assert fetch.price_from_embedded_json(html) == "€ 24,05"
+    # Vorstin: URL-gecodeerde JSON met program_start/door_open/price
+    enc = '<div data-x="%7B%22program_start%22%3A%22202609111915%22%2C%22door_open%22%3A%22202609111830%22%2C%22price%22%3A%2234%2C75%22%7D">' + "%22" * 25
+    assert fetch.times_from_embedded_json(enc) == ((19, 15), (18, 30))
+    assert fetch.price_from_embedded_json(enc) == "€ 34,75"
+
+
 def test_classify_kind():
     from taxonomy import classify_kind as ck
     assert ck("Two Door Cinema Club", None, [], [], "2026-10-01T20:00") == "concert"

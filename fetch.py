@@ -674,9 +674,14 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
     return out
 
 
+CACHE_VERSION = 2  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+
+
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
     """Leest een eventpagina; cache op URL zodat dit maar zelden opnieuw hoeft."""
     c = cache.get(url)
+    if c and c.get("fetched") and c.get("v", 1) < CACHE_VERSION and c.get("event") and c["event"].get("start", "9999") >= TODAY.isoformat():
+        c = None  # verouderd cache-item van een oudere parser (bv. zonder prijs/line-up): opnieuw ophalen
     if c and c.get("fetched"):
         # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
         ttl = int(v.get("detail_ttl_days", 10)) if c.get("event") else 1
@@ -698,6 +703,10 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         ev = event_from_flight_json(html, url, v)
     txt = page_text(html)
     tdt, tstart, tdoors, tprice = extract_from_text(txt)
+    if not tprice:
+        tprice = price_from_embedded_json(html)
+    if not tstart and not tdoors:
+        tstart, tdoors = times_from_embedded_json(html)
     if ev is None:
         s = soup_of(html)
         t = s.find("time", attrs={"datetime": True})
@@ -729,12 +738,68 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
         if not ev.price and tprice:
             ev.price = tprice
-    cache[url] = {"fetched": TODAY.isoformat(), "event": asdict(ev) if ev else None}
+    cache[url] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "event": asdict(ev) if ev else None}
     return ev
 
 
 MONTH_RE = r"(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december|jan|feb|mrt|apr|jun|jul|aug|sep|sept|okt|nov|dec|january|february|march|may|june|july|october|mar|oct)"
 WEEKDAY_RE = r"(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|ma|di|wo|do|vr|za|zo|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)"
+
+
+_JSON_PRICE = re.compile(r'"(?:price|prijs|ticketPrice|ticket_price|minPrice|lowestPrice|priceFrom|price_from)"\s*:\s*"?(€?\s?\d{1,3}(?:[.,]\d{1,2})?|gratis|free)"?', re.I)
+
+
+def _decoded(html: str) -> str:
+    """HTML plus een URL-gedecodeerde variant: sommige thema's (Vorstin) zetten JSON URL-encoded in een attribuut."""
+    if html.count("%22") > 20:
+        from urllib.parse import unquote
+        return html + "\n" + unquote(html)
+    return html
+
+
+_JSON_TIME_START = re.compile(r'"(?:program_start|programme_start|start_time|starttime|startTime|aanvang|showtime|show_time)"\s*:\s*"?(\d{12}|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?|\d{1,2}:\d{2})"?', re.I)
+_JSON_TIME_DOORS = re.compile(r'"(?:door_open|doors_open|doorsOpen|doorTime|door_time|deuren|doors)"\s*:\s*"?(\d{12}|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?|\d{1,2}:\d{2})"?', re.I)
+
+
+def _hm_from_json(val: str) -> tuple[int, int] | None:
+    m = re.fullmatch(r"\d{12}", val)
+    if m:
+        return int(val[8:10]), int(val[10:12])
+    m = re.search(r"(\d{1,2}):(\d{2})$|T(\d{2}):(\d{2})", val)
+    if m:
+        g = [x for x in m.groups() if x is not None]
+        return int(g[0]), int(g[1])
+    return None
+
+
+def times_from_embedded_json(html: str) -> tuple[tuple[int, int] | None, tuple[int, int] | None]:
+    """(aanvang, deuren) uit ingebedde JSON, bv. "program_start":"202609111915","door_open":"202609111830"."""
+    h = _decoded(html)
+    st = next((_hm_from_json(m.group(1)) for m in _JSON_TIME_START.finditer(h)), None)
+    dr = next((_hm_from_json(m.group(1)) for m in _JSON_TIME_DOORS.finditer(h)), None)
+    return st, dr
+
+
+def price_from_embedded_json(html: str) -> str | None:
+    """Prijs uit ingebedde JSON (Next.js/Nuxt-data) als de zichtbare tekst hem niet heeft (Melkweg: "price":"€ 24,05").
+    Voorkeur voor het ticket dat als 'primary' is gemarkeerd, anders de laagste prijs > 0."""
+    html = _decoded(html)
+    hits = [(m.start(), m.group(1)) for m in _JSON_PRICE.finditer(html)]
+    if not hits:
+        return None
+    for pos, val in hits:
+        if re.search(r'"primary"\s*:\s*true', html[pos:pos + 200]):
+            return fmt_price(val)
+    nums = []
+    for _, val in hits:
+        if re.search(r"gratis|free", val, re.I):
+            continue
+        m = re.search(r"\d{1,3}(?:[.,]\d{1,2})?", val)
+        if m:
+            nums.append((float(m.group(0).replace(",", ".")), val))
+    if nums:
+        return fmt_price(min(nums)[1])
+    return "gratis"
 
 
 def page_text(html: str) -> str:
@@ -765,8 +830,19 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     def hm(pat):
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
-    start = hm(r"(?:aanvang|start|begin|show|showtime|concert)\W{0,12}(\d{1,2})[:.u](\d{2})")
-    doors = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(\d{1,2})[:.u](\d{2})")
+    start = hm(r"(?:aanvang|start|begin|show|showtime|concert)\W{0,12}(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
+    d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(\d{1,2})[:.u](\d{2})")
+    d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
+    doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
+    if not start and doors:
+        # tijdschema zonder het woord 'aanvang' (Nobel: "19:00 - Deuren open 19:30 - Hakselaer 20:45 - …"):
+        # de eerste tijd ná de deurtijd is de start van het programma
+        dm = re.search(r"(?:deur|deuren|doors|zaal open|open)", low)
+        if dm:
+            after = low[dm.end():dm.end() + 160]
+            later = [(int(h), int(m)) for h, m in re.findall(r"(\d{1,2})[:.](\d{2})", after) if (int(h), int(m)) > doors and int(h) < 24 and int(m) < 60]
+            if later:
+                start = min(later)
     pm = (re.search(r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
           or re.search(r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)", low)
           or re.search(r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", low)
@@ -863,7 +939,7 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
     """Gestructureerde + tekstuele gegevens van een eventpagina (gecached onder "x|url"); None als niet opgehaald."""
     key = "x|" + url
     c = cache.get(key)
-    if c and date.fromisoformat(c["fetched"]) >= TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
+    if c and c.get("v", 1) >= CACHE_VERSION and date.fromisoformat(c["fetched"]) >= TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
         return c.get("extra") or {}
     try:
         html = get(url, delay=float(v.get("crawl_delay", 0.6))).text
@@ -878,13 +954,17 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
             break
     txt = page_text(html)
     tdt, tstart, tdoors, tprice = extract_from_text(txt)
+    if not tprice:
+        tprice = price_from_embedded_json(html)
+    if not tstart and not tdoors:
+        tstart, tdoors = times_from_embedded_json(html)
     extra.update({"start": tstart, "doors": tdoors, "price": tprice})
     if v.get("lineup") and not extra.get("lineup"):
         names = [clean(x.get_text()) for x in soup_of(html).select(v["lineup"])]
         extra["lineup"] = [x for x in dict.fromkeys(names) if x and 1 < len(x) <= 60][:20]
     if not extra.get("ld_genres"):
         extra["hint_genres"] = genre_hints(txt[:1500])
-    cache[key] = {"fetched": TODAY.isoformat(), "extra": extra}
+    cache[key] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "extra": extra}
     return extra
 
 

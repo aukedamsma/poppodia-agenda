@@ -49,6 +49,9 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Line-up en genre alleen in de beschrijving (Tivoli, pop-agenda) | JSON-LD `performer`, een `lineup`-selector of de beschrijving leveren artiesten; specifieke genrewoorden in de beschrijving ("postpunk", "garagerock") worden tags als het podium er geen geeft. |
 | Bandnamen die op feesten lijken ("Jungle By Night", "Two Door Cinema Club") | Zwakke feestwoorden (night, club, disco) tellen alleen samen met een late aanvang. |
 | Terugkerende events zonder prijs/tijd | Reeksengeheugen vult aan uit eerdere edities, gemarkeerd als schatting. |
+| Prijs/tijd alleen in ingebedde JSON (Melkweg `"price":"€ 24,05"`, Vorstin URL-gecodeerde `program_start`/`door_open`) | `price_from_embedded_json` en `times_from_embedded_json` lezen JSON-blobs in de HTML (ook URL-gecodeerd) als de zichtbare tekst niets oplevert; het 'primary' ticket wint. |
+| Tijd vóór het label ("19:30 Zaal Open", 013) en tijdschema's zonder 'aanvang' (Nobel "19:00 - Deuren open 19:30 - Band") | Beide woordvolgordes worden herkend; de vroegste tijd is de deurtijd, de eerste tijd erna de start. |
+| Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
 Elk podium krijgt in `data/report.json` een `audit` met dekking (aandeel events met tijd / prijs / genre) en
 waarschuwingen; de voettekst van de site toont dezelfde cijfers. Zo is in één blik te zien waar de data dun is.
