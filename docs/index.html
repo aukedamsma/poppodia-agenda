@@ -478,7 +478,7 @@ button:focus-visible{outline:none}
   function fmtCard(iso){ const d=new Date(iso.slice(0,10)+'T12:00:00'); return `${DOWS[d.getDay()]} ${d.getDate()} ${MONS[d.getMonth()]}`; }
   function card(e, compact=false){
     const time = e.start.length>10 && e.start.slice(11,16)!=='00:00' ? e.start.slice(11,16) : '';
-    const badges = isNew(e)?'<span class="badge new">nieuw</span>':'';
+    const badges = isNew(e)?'<span class="dot" title="nieuw aangekondigd"></span>':'';   // klein rood stipje i.p.v. NIEUW-label
     const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(subsOf(e).length?subsOf(e).map(k=>SUBL[k]||k):(e.genres||[])).filter(t=>!main.some(m=>m.toLowerCase()===t.toLowerCase())).slice(0,3);
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const tm = time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:'';
