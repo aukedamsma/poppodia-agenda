@@ -261,7 +261,6 @@ button:focus-visible{outline:none}
   <div class="pop">
     <button class="fbtn" id="kindBtn" aria-expanded="false" aria-controls="kindPanel">Type <span class="cnt" id="kindCnt" hidden></span><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg></button>
     <div class="panel" id="kindPanel" hidden style="min-width:260px">
-      <div class="row">Type <button id="clearKinds">standaard</button></div>
       <div class="chips" id="mainChips"></div>
       <div id="kindBlock">
         <div class="row" style="margin-top:12px">Subtype</div>
@@ -405,7 +404,6 @@ button:focus-visible{outline:none}
   Object.entries(MAINS).forEach(([m,def])=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=def.label; b.setAttribute('aria-pressed', state.mains.includes(m));
     b.addEventListener('click',()=>{ state.mains=state.mains.includes(m)?state.mains.filter(x=>x!==m):[...state.mains,m]; b.setAttribute('aria-pressed', state.mains.includes(m)); save(); buildKinds(); render(); }); mainChips.append(b); });
   buildKinds();
-  document.getElementById('clearKinds').addEventListener('click',()=>{ state.mains=['muziek']; state.kinds=[]; save(); mainChips.querySelectorAll('.chip').forEach((c,i)=>c.setAttribute('aria-pressed', i===0)); buildKinds(); render(); });
   // omvang: totale capaciteit per podium (uit venues.yaml -> report.venues[].capacity)
   const CAP={}; REPORT.venues.forEach(v=>{ CAP[v.name]=v.capacity||null; });
   const SIZES={s:'Klein (tot 400)',m:'Middel (400–1000)',l:'Groot (1000–2500)',xl:'Zeer groot (2500+)',u:'Onbekend'};
