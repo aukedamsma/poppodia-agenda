@@ -1464,6 +1464,21 @@ def main(only: list[str] | None = None) -> int:
         rv["capacity"] = meta.get("capacity")
     report["kinds"] = {k: sum(1 for e in all_events if e.kind == k) for k in ("concert", "club", "festival", "talk", "other")}
 
+    # --- archief: elk event dat ooit is gezien blijft bewaard (onderzoeksdata: programmering, prijzen, genres per podium) ---
+    arch_path = DATA / "archive.json"
+    archive = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else {}
+    for e in all_events:
+        k = f"{e.venue}|{e.url}"
+        rec = archive.get(k, {"first_seen": e.first_seen or TODAY.isoformat()})
+        rec.update({"venue": e.venue, "city": e.city, "title": e.title, "start": e.start, "url": e.url, "subtitle": e.subtitle,
+                    "genres": e.genres, "genre_norm": e.genre_norm, "subgenres": e.subgenres, "kind": e.kind, "price": e.price,
+                    "price_num": e.price_num, "status": e.status, "artists": e.artists, "lineup": e.lineup, "section": e.section,
+                    "last_seen": TODAY.isoformat()})
+        archive[k] = rec
+    arch_path.write_text(json.dumps(archive, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    report["archive"] = len(archive)
+    log(f"Archief: {len(archive)} events bewaard (data/archive.json)")
+
     all_events.sort(key=lambda e: (e.start, e.venue, e.title))
     (DATA / "events.json").write_text(json.dumps([asdict(e) for e in all_events], ensure_ascii=False, indent=1), encoding="utf-8")
     report["total_events"] = len(all_events)

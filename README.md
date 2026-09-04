@@ -65,6 +65,12 @@ Twee zelflerende lagen (bewijs verzamelen → bij voldoende consistentie promove
 Elk podium krijgt in `data/report.json` een `audit` met dekking (aandeel events met tijd / prijs / genre) en
 waarschuwingen; de voettekst van de site toont dezelfde cijfers. Zo is in één blik te zien waar de data dun is.
 
+## Archief
+
+`data/archive.json` bewaart elk event dat ooit is opgehaald (sleutel podium|url) met titel, datum, prijs, genres, type,
+artiesten, status en first/last_seen. De site toont alleen wat nog komt; het archief groeit elke run en is bedoeld als
+onderzoeksdata (programmering en prijzen per podium door de tijd).
+
 ## Een podium toevoegen
 
 Voeg een blok toe aan `venues.yaml`. Meestal is dit genoeg:

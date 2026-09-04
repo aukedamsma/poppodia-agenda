@@ -315,6 +315,7 @@ button:focus-visible{outline:none}
   const today = new Date(); today.setHours(12,0,0,0);
   const isoOf = d => { const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
   const TODAY = isoOf(today);
+  const NOW_ISO = (()=>{ const n=new Date(); const p=x=>String(x).padStart(2,'0'); return `${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())}T${p(n.getHours())}:${p(n.getMinutes())}`; })();
   const plusDays = n => { const d=new Date(today); d.setDate(d.getDate()+n); return isoOf(d); };
   const NEW_SINCE = plusDays(-7);
   const PAGE = 40; // dagen per keer renderen
@@ -459,6 +460,7 @@ button:focus-visible{outline:none}
       const d=e.start.slice(0,10);
       if (d < TODAY || d > limit) return false;
       if (e.status==='afgelast') return false;   // geannuleerd: niet tonen
+      if (d===TODAY && e.start.length>10 && e.start.slice(11,16)!=='00:00' && e.start < NOW_ISO) return false;   // vandaag, maar al begonnen
       if (state.view==='new' && !isNew(e)) return false;
       if (state.view==='all' && d !== state.day) return false;
       if (state.view==='saved' && !saved.has(keyOfEv(e))) return false;
