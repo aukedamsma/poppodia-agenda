@@ -321,6 +321,9 @@ def event_from_jsonld(n: dict, v: dict, page_url: str, source: str) -> Event | N
     url = n.get("url") or page_url
     if isinstance(url, dict):
         url = url.get("@id") or page_url
+    if source in ("jsonld_detail", "x") and isinstance(url, str) and "://" in url and "://" in page_url \
+            and urlparse(url).netloc.replace("www.", "").lower() != urlparse(page_url).netloc.replace("www.", "").lower():
+        url = page_url   # Metropool: JSON-LD op de eventpagina wijst naar de site van een ander podium (zelfde CMS-leverancier); de pagina zelf is de bron
     offers = as_list(n.get("offers"))
     price = None
     if offers and isinstance(offers[0], dict):
@@ -839,7 +842,7 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
 
 # --- eventlinks volgen + JSON-LD op detailpagina --------------------------------
 
-NON_EVENT_PATH = re.compile(r"/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|/agenda/(concerten|exposities?|expo|film|films|kids|jeugd|kidsjeugd|theater|cabaret|comedy|dans|workshops?|cursussen|festivals?|clubs?|party|feesten|overig|alles|all)/?$|\.(pdf|jpe?g|png|ics)$", re.I)
+NON_EVENT_PATH = re.compile(r"/page/?\d+/?$|/page/\d+|/en/|/english|/tag/|/tags/|/genre/|/genres/|/categor|/zoek|/search|/filter|/feed|/wp-|/nieuws|/news|/blog|/over|/about|/contact|/vacature|/verhuur|/faq|/privacy|/cookie|/algemene|/login|/account|/cart|/winkel|/shop|/merch|/pers|/partners|/steun|/vrienden|/locatie|/route|/tickets?$|/programma/?$|/agenda/?$|/events?/?$|/evenementen/?$|/agenda/(concerten|exposities?|expo|film|films|kids|jeugd|kidsjeugd|theater|cabaret|comedy|dans|workshops?|cursussen|festivals?|clubs?|party|feesten|overig|alles|all)/?$|\.(pdf|jpe?g|png|ics)$", re.I)
 
 
 def event_links(v: dict, html: str, base: str) -> list[str]:
@@ -951,7 +954,13 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         # datum van vandaag in een header/agenda-widget (ECI: 74 "voorstellingen" op één dag)
         if tdt and tdt.date() == TODAY and not (tstart or tdoors):
             tdt = None
-        dt = (parse_dt(t["datetime"]) if t else None) or date_from_url(url) or tdt
+        sel_dt = None
+        if v.get("detail_date"):
+            # vaste plek van de datum op de eventpagina (P60: eerste .datum- element; de rest zijn 'binnenkort'-tips)
+            el = s.select_one(v["detail_date"])
+            if el is not None:
+                sel_dt = parse_dt(clean(el.get_text())) or extract_from_text(el.get_text(" "))[0]
+        dt = sel_dt or (parse_dt(t["datetime"]) if t else None) or date_from_url(url) or tdt
         if dt and (dt.hour, dt.minute) == (0, 0) and (tstart or tdoors):
             dt = dt.replace(hour=(tstart or tdoors)[0], minute=(tstart or tdoors)[1])
         if dt and title:
@@ -1081,7 +1090,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     def hm(pat):
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
-    start = hm(r"(?:aanvang|start|begin|show|showtime|concert|hoofdprogramma|programma)\W{0,12}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
+    start = hm(r"(?:aanvang|start|begin|show|showtime|concert|hoofdprogramma|programma|\btijd)\W{0,12}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
     # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang
     if not start and dt is not None and m:
         after = low[m.end(): m.end() + 18]
@@ -1117,7 +1126,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     return dt, start, doors, price
 
 
-_DISCOUNT_CTX = re.compile(r"leden|members?|lid\b|cjp|student|scholier|jeugd|jongeren|kinderen|kids|t/m \d+ jaar|tot en met \d+|65\+|vrienden|donateur|korting|reduced|early\b|deurprijs|dagkassa|aan de deur|at the door|door ?sale|\bdoor\s*:|deur\s*:|late\b", re.I)
+_DISCOUNT_CTX = re.compile(r"leden|members?|lid\b|cjp|student|scholier|jeugd|jongeren|kinderen|kids|t/m \d+ jaar|tot en met \d+|65\+|vrienden|donateur|korting|reduced|early\b|deurprijs|dagkassa|avondkassa|deurverkoop|aan de deur|at the door|door ?sale|\bdoor\s*:|deur\s*:|late\b", re.I)
 _PREFERRED_CTX = re.compile(r"regulier|regular|normaal|standaard|voorverkoop|vvk|presale|pre-?sale|tickets?|entree|kaarten", re.I)
 
 
@@ -1465,6 +1474,12 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
             continue
         # tijd en prijs uit de tekst van het item (bijv. "Open 17:30 / Aanvang 18:00 / € 8,50")
         _, tstart, tdoors, tprice = extract_from_text(item.get_text(" "))
+        if not tprice:
+            # prijs als data-attribuut (Metropool: data-event-price="17.00" op de ticketknop)
+            holder = item if any(k.endswith("price") for k in item.attrs) else item.find(lambda tag: any(k.endswith("price") for k in tag.attrs))
+            if holder is not None:
+                key = next(k for k in holder.attrs if k.endswith("price"))
+                tprice = normalize_price(fmt_price(holder[key]))
         if not tstart and not tdoors:
             # één losse tijd in de kaart zonder label (Willemeen "12:00"): dat is de aanvang
             times = re.findall(r"(?<!\d)(\d{1,2})[:.](\d{2})(?!\d)", item.get_text(" "))
@@ -1628,6 +1643,22 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                         evs = strat_html(v, html, base)
                 else:
                     evs = strat_html(v, html, base)
+                    if v.get("list_pages_template"):
+                        # gepagineerde HTML-agenda (Willem Twee ?page=2…): doorgaan tot een pagina niets nieuws oplevert
+                        known = {e.url for e in evs}
+                        for n in range(2, int(v.get("list_pages_max", 40)) + 1):
+                            try:
+                                r = SESSION.get(v["list_pages_template"].format(n=n + int(v.get("list_pages_offset", 0))), timeout=TIMEOUT)
+                            except requests.RequestException:
+                                break
+                            time.sleep(float(v.get("crawl_delay", 0.6)))
+                            if r.status_code != 200:
+                                break
+                            more = [e for e in strat_html(v, r.text, base) if e.url not in known]
+                            if not more:
+                                break
+                            known.update(e.url for e in more)
+                            evs += more
             elif strat == "html_preset":
                 evs, preset_name = strat_html_preset(v, html, base)
                 if preset_name:

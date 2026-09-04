@@ -29,6 +29,7 @@
 #   crawl_delay   seconden wachten tussen requests naar dit podium (standaard 1)
 #   min_events    minimum aantal events voordat een strategie als geslaagd geldt (standaard 3)
 #   item/title/date/link/genre/subtitle  CSS-selectors voor type: html
+#   detail_date   CSS-selector van de datum op de eventpagina (als de tekst ook andere datums bevat)
 #   group / group_date   type: html: datum staat als kop boven een groep kaarten (selector van de groep en van de datumkop)
 #   facetwp: true        type: html met FacetWP 'laad meer' (JSON-POST met paged); wordt ook automatisch herkend
 #   date_from_url true -> haal DD-MM-YYYY (of DD-MM-YY) uit de event-URL als datum ontbreekt
@@ -258,8 +259,10 @@
   url: https://www.neushoorn.nl/programma
   type: jsonld_detail
   link_pattern: "neushoorn\\.nl/events/[^/]+/?$"
-  max_detail: 150
-  notes: "Webflow; geen structured data, datum/tijd/prijs uit tekst van de eventpagina ('Datum Fri 4 Sep … Aanvang: 23:00 … € 25,-')"
+  list_pages_template: "https://www.neushoorn.nl/programma?d9baa62c_page={n}"
+  max_detail: 300
+  detail_date: ".program_date-wrapper.is-hero"
+  notes: "Webflow; lijst max 100 per pagina (?d9baa62c_page=2 geeft de rest); geen structured data, datum in .program_date-wrapper.is-hero ('Fri 4 Sep', verderop staan kaarten met andere datums), 'Deuren open: 17:00 | Aanvang: 21:00', 'Gratis' of '€ 25,-'"
 - {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/", capacity: 725}
 - name: Luxor Live
   city: Arnhem
@@ -280,9 +283,30 @@
   group_date: ".we__agenda-item-date"
   genre: ".we__agenda-item-genre"
   notes: "alle events (75) in de HTML, datum als kop per dag ('vr 04 sep'), tijd in de kaart ('12:00'), 'Gratis' als ticketknop; eventpagina: 'Zaal open: 19:30 Start: 20:00 … Door: €16,00 Early: €12,00 Regular: €14,50' (regular wint); Stager-shop willemeen.stager.co. Ook welzijn/nacht-activiteiten (type via titel)"
-- {name: GIGANT, city: Apeldoorn, url: "https://www.gigant.nl/concerten/", capacity: 500, type: disabled, notes: "403 voor geautomatiseerde clients (botblokkade); nog uitzoeken"}
+- name: GIGANT
+  city: Apeldoorn
+  url: https://www.gigant.nl/concerten/
+  capacity: 500
+  type: wp_event
+  api: "https://www.gigant.nl/wp-json/wp/v2/concert?per_page=100&_embed=1"
+  genre_taxonomies: [category]
+  extra_sources:
+    - {url: "https://www.gigant.nl/clubnachten/", type: wp_event, api: "https://www.gigant.nl/wp-json/wp/v2/clubnacht?per_page=100&_embed=1", genre_taxonomies: [category]}
+  notes: "Cloudflare weigerde onze user-agent (403) -> browser-fallback. WP REST 'concert' (36) en 'clubnacht' (10) zonder datum; eventpagina: 'Datum donderdag 18 februari | Tijd 20:30 | Deur open 30 minuten voor aanvang | Prijs Normaal € 27,00'. Genres in de gewone WP-categorieën (Rock)"
 - {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma", capacity: 450}
-- {name: Metropool, city: Hengelo, url: "https://metropool.nl/agenda", capacity: 1000}
+- name: Metropool
+  city: Hengelo
+  url: https://metropool.nl/agenda
+  capacity: 1000
+  type: html
+  item: "div.event"
+  title: ".event-title"
+  date: ".event-date"
+  link: "a.ticket-row"
+  subtitle: ".event-subtitle"
+  genre: ".event-genre"
+  list_pages_template: "https://metropool.nl/agenda?page={n}"
+  notes: "10 events per pagina (?page=n); kaart heeft datum 'vr 04 sep', tijd '20:00', locatie (Hengelo/Enschede), genre. Eerder gaf jsonld_detail URL's van stadsschouwburg-utrecht.nl (zelfde CMS-leverancier) -> html-lijst. Tickets via Ticketmaster (geen server-side data)"
 - name: FLUOR
   city: Amersfoort
   url: https://fluor033.nl/programma/
@@ -291,7 +315,15 @@
     url: "https://fluor033.nl/programma/categorie/{slug}/"
     tags: {concerten: Concert, dance: Clubnacht, en-de-rest: Overig}
 - {name: De Vorstin, city: Hilversum, url: "https://vorstin.nl/agenda/", capacity: 1150}
-- {name: P60, city: Amstelveen, url: "https://www.p60.nl/agenda", capacity: 680}
+- name: P60
+  city: Amstelveen
+  url: https://www.p60.nl/agenda
+  capacity: 680
+  type: wp_event
+  api: "https://p60.nl/wp-json/wp/v2/agenda_item?per_page=100&_embed=1"
+  genre_taxonomies: [eventtype]
+  detail_date: ".datum-"
+  notes: "Elementor 'meer laden' (JS); WP REST agenda_item (32 komende events) zonder datum -> eventpagina: datum in .datum- ('vr 06 nov'; verderop staan 'binnenkort'-tips met andere datums), 'Zaal Open 20:00 uur | Show 20:30 uur', 'Voorverkoop € 14 | Avondkassa € 17'"
 - name: Q-factory
   city: Amsterdam
   url: https://q-factory.com/nl
@@ -334,6 +366,8 @@
   type: json_api
   api: "https://poppodiumboerderij.nl/includes/ajax/events.php?filters=&search=&limit=69420&offset=0&lang_id=1&rooms=2,1&month=&year="
   fields: {title: title, subtitle: subtitle, date: event_date, url: "https://poppodiumboerderij.nl/programma/{seo_slug}/", status: label.title}
+  extra_sources:
+    - {url: "https://boerderij.stager.co/shop/default/events", type: jsonld, enrich: false}
   notes: agenda wordt via AJAX geladen (JSON met title/subtitle/event_date/seo_slug/stage); tijd en prijs staan op de eventpagina ("Deuren open 19:30 Aanvang 20:30 Voorverkoop € 29,50"); JSON-LD daar heeft een lege startDate
 - {name: Musicon, city: Den Haag, url: "https://musicon.nl/programma/", capacity: 220}
 - name: Rotown
@@ -395,7 +429,9 @@
 - name: Willem Twee
   city: Den Bosch
   capacity: 1630
-  url: https://www.willem-twee.nl/agenda
+  url: https://www.willem-twee.nl/agenda?locatie=poppodium
+  list_pages_template: "https://www.willem-twee.nl/agenda?locatie=poppodium&page={n}"
+  notes: "agenda is gepagineerd (20 per pagina, ?page=n) en mengt alle locaties (Toonzaal, Verkadefabriek, Grote Kerk…); ?locatie=poppodium geeft alleen het poppodium. Datum 'za 3 okt. - 20:30' in de kaart; Stager-shop willem-twee.stager.co"
   type: html
   item: ".article-wrapper"
   title: ".article-title"
@@ -404,7 +440,13 @@
   genre: ".tags .tag, .article-genre"
   only_genres: [Poppodium]
   notes: gemengd programma (kunstruimte, toonzaal); alleen tag Poppodium; datum "vr 14 aug. t/m zo 20 sep."
-- {name: Hall of Fame, city: Tilburg, url: "https://hall-fame.nl/programma", capacity: 400, type: disabled, notes: "Nuxt-app, data in devalue-formaat; nog uitzoeken"}
+- name: Hall of Fame
+  city: Tilburg
+  url: https://hall-fame.stager.co/shop/default/events
+  capacity: 400
+  type: jsonld
+  enrich: false
+  notes: "site hall-fame.nl is een Nuxt-SPA zonder server-side eventdata (10 events live, detailpagina's leeg); de Stager-ticketshop heeft alle 43 komende events als JSON-LD ItemList (met tijd, zonder prijs). Event-URL's wijzen dus naar de ticketshop"
 - name: Muziekgieterij
   city: Maastricht
   capacity: 1520
@@ -431,7 +473,15 @@
   notes: alles op de lijstpagina ("Open 17:30 / Aanvang 18:00 / € 8,50"); ticketlinks naar Stager
 
 # ---------------- Batch 3: de overige VNPF-podia (automatische detectie) ----------------
-- {name: PX, city: Volendam, url: "https://pxvolendam.nl/evenementen/"}
+- name: PX
+  city: Volendam
+  url: https://pxvolendam.nl/evenementen/
+  type: html
+  item: ".event-item"
+  title: "h2"
+  date: ".date"
+  list_pages_template: "https://pxvolendam.nl/evenementen/page{n}"
+  notes: "9 events per pagina (/evenementen/page2, page3); kaart heeft datum 'zo 4 okt 2026'; eventpagina zonder JSON-LD: 'Deur open 14:00 uur | Aanvang 15:00 uur | Tickets € 26,- (excl. service fee)'. 'page2' werd eerder als event gelezen"
 - name: De Gelderlandfabriek
   city: Culemborg
   url: https://degelderlandfabriek.nl/agenda/
@@ -473,7 +523,14 @@
   subtitle: ".event_overview_info_container p.padding_ver_20"
   enrich: false
   notes: "eigen CMS; alles staat in de lijst: 'zaterdag 12 september 2026', 'Door open 20:00 | Start 21:00', 'Presale € 23,00 | Tickets € 25,00'; homepage had geen agenda"
-- {name: Estrado, city: Harderwijk, url: "https://www.estrado.nl/agenda", capacity: 420}
+- name: Estrado
+  city: Harderwijk
+  url: https://www.estrado.nl/agenda
+  capacity: 420
+  type: jsonld_detail
+  list_pages_template: "https://www.estrado.nl/agenda/page/{n}/"
+  link_pattern: "estrado\\.nl/productie/[^/?#]+/?$"
+  notes: "WP Theater: 12 producties per pagina (/agenda/page/2/); eventpagina toont 'zaterdag 5 september 2026 14:30 uur' (tijd direct achter datum, zonder label). Tickets via Weeztix"
 - name: Volt
   city: Sittard
   url: https://www.poppodium-volt.nl/programma
