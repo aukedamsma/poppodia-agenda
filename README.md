@@ -75,6 +75,18 @@ Elk podium krijgt in `data/report.json` een `audit` met dekking (aandeel events 
 'dun' en krijgt een !), de horizon (verste datum) en waarschuwingen; de voettekst van de site toont dezelfde cijfers. Zo is in één blik
 te zien waar de data dun is of waar we minder ver vooruit kijken dan het podium zelf.
 
+## Wat (nog) niet lukt, en waarom
+
+| Podium | Ontbreekt | Reden | Alternatief |
+|---|---|---|---|
+| Manifesto (Hoorn) | prijs | staat alleen in de Paylogic-shop (JavaScript) | geen; tijd en programma wel compleet |
+| De Cacaofabriek | prijs | alleen in de Ticketlab-shop (JavaScript + cookiemuur) | geen |
+| Metropool | prijs deels | Ticketmaster; de lijst heeft `data-event-price` voor de meeste events | — |
+| Baroeg | tijd | "Het tijdschema wordt in de week van het evenement bekendgemaakt" | de Stager-shop levert de tijd zodra bekend |
+| Het Podium, So What!, GIGANT | alles, als Cloudflare ook de browser-headers weigert | botblokkade | dan alleen via de Stager-shop (So What!, GIGANT hebben er geen) |
+| Hall of Fame | prijs | eigen site is een lege Nuxt-app; de Stager-shop-API levert wel prijzen | — |
+| Skatecafe | alles | site onbereikbaar (DNS) | — |
+
 ## Archief
 
 `data/archive.json` bewaart elk event dat ooit is opgehaald (sleutel podium|url) met titel, datum, prijs, genres, type,
