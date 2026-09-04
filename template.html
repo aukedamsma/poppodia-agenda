@@ -282,7 +282,7 @@ button:focus-visible{outline:none}
       <div class="row">Hoofdgenre <button id="clearGenres">wissen</button></div>
       <div class="chips" id="genreChips"></div>
       <div id="subBlock" hidden>
-        <div class="row" style="margin-top:12px">Subgenre / tag <span id="subHint" style="font-weight:400;letter-spacing:0;text-transform:none">binnen gekozen hoofdgenre</span></div>
+        <div class="row" style="margin-top:12px">Subgenre</div>
         <div class="chips" id="subChips"></div>
       </div>
     </div>
@@ -376,17 +376,18 @@ button:focus-visible{outline:none}
   topG.forEach(g=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=GROUPS[g]||g; b.setAttribute('aria-pressed', state.genres.includes(g));
     b.addEventListener('click',()=>{ state.genres=state.genres.includes(g)?state.genres.filter(x=>x!==g):[...state.genres,g]; b.setAttribute('aria-pressed', state.genres.includes(g)); save(); buildSubs(); render(); }); chips.append(b); });
   const subChips=document.getElementById('subChips');
+  const SUBL = REPORT.subgenre_labels || {};
+  const subsOf = e => (e.subgenres && e.subgenres.length) ? e.subgenres : [];
   function buildSubs(){
     document.getElementById('subBlock').hidden = !state.genres.length;
     if (!state.genres.length) { state.subs=[]; subChips.innerHTML=''; return; }
-    const cnt={}; EVENTS.filter(e=>!state.genres.length || (e.genre_norm||[]).some(g=>state.genres.includes(g))).forEach(e=>(e.genres||[]).forEach(t=>{const k=t.trim(); if(k && !Object.values(GROUPS).some(l=>l.toLowerCase()===k.toLowerCase())) cnt[k]=(cnt[k]||0)+1;}));
-    const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,30).map(x=>x[0]);
-    state.subs = state.subs.filter(t=>top.includes(t)||cnt[t]);
+    const cnt={}; EVENTS.filter(e=>(e.genre_norm||[]).some(g=>state.genres.includes(g))).forEach(e=>subsOf(e).forEach(k=>{ cnt[k]=(cnt[k]||0)+1; }));
+    const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,24).map(x=>x[0]);
+    state.subs = state.subs.filter(t=>cnt[t]);
     subChips.innerHTML='';
-    top.forEach(t=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=t; b.setAttribute('aria-pressed', state.subs.includes(t));
+    top.forEach(t=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=SUBL[t]||t; b.setAttribute('aria-pressed', state.subs.includes(t));
       b.addEventListener('click',()=>{ state.subs=state.subs.includes(t)?state.subs.filter(x=>x!==t):[...state.subs,t]; b.setAttribute('aria-pressed', state.subs.includes(t)); save(); render(); }); subChips.append(b); });
   }
-  buildSubs();
   document.getElementById('clearGenres').addEventListener('click',()=>{ state.genres=[]; state.subs=[]; save(); chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false')); buildSubs(); render(); });
   // Type: hoofdsplitsing Muziek / Overig (standaard: Muziek), daaronder subtypes
   const MAINS={muziek:{label:'Muziek', kinds:['concert','club','festival']}, overig:{label:'Overig', kinds:['talk','other']}};
@@ -464,7 +465,7 @@ button:focus-visible{outline:none}
       { const k=e.kind||'concert'; const allowed=state.mains.flatMap(m=>MAINS[m]?MAINS[m].kinds:[]); if (state.mains.length && !allowed.includes(k)) return false; if (state.kinds.length && !state.kinds.includes(k)) return false; }
       if (state.sizes.length && !state.sizes.includes(sizeOf(CAP[e.venue]))) return false;
       if (state.genres.length && !(e.genre_norm||[]).some(g=>state.genres.includes(g))) return false;
-      if (state.subs.length && !(e.genres||[]).some(g=>state.subs.includes(g))) return false;
+      if (state.subs.length && !subsOf(e).some(g=>state.subs.includes(g))) return false;
       if (qq && state.view!=='search' && !fold([e.title,e.subtitle,e.venue,e.city,(e.genres||[]).join(' ')].join(' ')).includes(qq)) return false;
       return true;
     });
@@ -474,7 +475,7 @@ button:focus-visible{outline:none}
   function card(e, compact=false){
     const time = e.start.length>10 && e.start.slice(11,16)!=='00:00' ? e.start.slice(11,16) : '';
     const badges = isNew(e)?'<span class="badge new">nieuw</span>':'';
-    const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(e.genres||[]).filter(t=>!main.some(m=>m.toLowerCase()===t.toLowerCase())).slice(0,3);
+    const main=(e.genre_norm||[]).slice(0,2).map(x=>GROUPS[x]||x); const subs=(subsOf(e).length?subsOf(e).map(k=>SUBL[k]||k):(e.genres||[])).filter(t=>!main.some(m=>m.toLowerCase()===t.toLowerCase())).slice(0,3);
     const g = [...main.map(x=>`<b style="font-weight:500;color:var(--ink-2)">${esc(x)}</b>`), ...subs.map(esc)].join(' · ');
     const tm = time?`<span class="time${e.time_est?' est':''}"${e.time_est?' title="aanvang geschat op basis van eerdere edities"':''}>${e.time_est?'~':''}${time}</span>`:'';
     const pr = e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:'';
@@ -490,7 +491,7 @@ button:focus-visible{outline:none}
       </a>`;
     }
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-      <span class="side"><span class="date">${fmtCard(e.start)}</span>${tm}${pr}</span>
+      <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.price_est?' est':''}">${e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span></span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${sub}</div>
       <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>

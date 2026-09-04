@@ -34,7 +34,8 @@ from dateutil import parser as dtparser
 
 import artists as artistdb
 import series as seriesdb
-from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key
+from taxonomy import (classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
+                      normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group)
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data"
@@ -82,6 +83,7 @@ class Event:
     price_num: float | None = None
     free: bool = False
     lineup: list[str] = field(default_factory=list)       # line-up van de eventpagina (JSON-LD performer of `lineup`-selector)
+    subgenres: list[str] = field(default_factory=list)    # canonieke subgenres (genres.yaml -> subgenres, + zelfgeleerd)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
     section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
@@ -112,8 +114,23 @@ def clean(s: str | None) -> str | None:
     return s or None
 
 
+def normalize_price(p: str | None) -> str | None:
+    """Eén consequente prijsweergave. Bedragen onder € 1 (0, 0,00, 0,28 servicekosten) zijn 'gratis'."""
+    if not p:
+        return None
+    low = p.lower()
+    if "gratis" in low or re.search(r"\bfree\b", low):
+        return "gratis"
+    m = re.search(r"(\d{1,3})(?:[.,](\d{1,2}))?", p)
+    if m:
+        val = float(m.group(1)) + (float("0." + m.group(2)) if m.group(2) else 0.0)
+        if val < 1:
+            return "gratis"
+    return p
+
+
 def fmt_price(p) -> str | None:
-    if p in (None, "", 0, "0"):
+    if p in (None, "", 0, "0", "0.00", "0,00"):
         return None
     if isinstance(p, (int, float)):
         return f"€ {p:g}".replace(".", ",")
@@ -1358,8 +1375,12 @@ def main(only: list[str] | None = None) -> int:
     adb = artistdb.load()
     seen_ev_path = STATE / "artists_seen.json"
     seen_ev = set(json.loads(seen_ev_path.read_text())) if seen_ev_path.exists() else set()
+    kind_learn_path, sub_learn_path = STATE / "kind_learn.json", STATE / "subgenre_learn.json"
+    kind_learn = json.loads(kind_learn_path.read_text()) if kind_learn_path.exists() else {}
+    sub_learn = json.loads(sub_learn_path.read_text()) if sub_learn_path.exists() else {}
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
+        e.price = normalize_price(e.price)
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
             known = {artist_key(a) for a in e.artists}
@@ -1369,7 +1390,11 @@ def main(only: list[str] | None = None) -> int:
         e.genre_norm, unk = normalize_genres(e.genres, e.title, e.subtitle or "")
         for u in unk:
             unknown_genres[u] = unknown_genres.get(u, 0) + 1
-        e.kind = classify_kind(e.title, e.subtitle, e.genres, e.genre_norm, e.start)
+        e.kind, sure = classify_kind_ex(e.title, e.subtitle, e.genres, e.genre_norm, e.start, kind_learn)
+        if sure:
+            learn_kinds(kind_learn, e.genres, e.kind)
+        e.subgenres, unk_sub = normalize_subgenres(e.genres, e.genre_norm, sub_learn)
+        learn_subgenres(sub_learn, unk_sub, e.genre_norm)
         e.price_num = price_number(e.price)
         e.free = e.price_num == 0.0
         if e.kind in ("concert", "festival", "club"):
@@ -1391,6 +1416,16 @@ def main(only: list[str] | None = None) -> int:
                 filled += 1
     artistdb.save(adb)
     seen_ev_path.write_text(json.dumps(sorted(seen_ev)[-30000:]))
+    nk, ns = promote_kinds(kind_learn), promote_subgenres(sub_learn)
+    for e in all_events:
+        if not e.subgenres:
+            e.subgenres, _ = normalize_subgenres(e.genres, e.genre_norm, sub_learn)
+    kind_learn_path.write_text(json.dumps(kind_learn, ensure_ascii=False, indent=0), encoding="utf-8")
+    sub_learn_path.write_text(json.dumps(sub_learn, ensure_ascii=False, indent=0), encoding="utf-8")
+    log(f"Zelflerend: {len(kind_learn.get('accepted', {}))} tag->type-koppelingen (+{nk}), {len(sub_learn.get('accepted', {}))} geleerde subgenres (+{ns})")
+    report["learned"] = {"kind_tags": kind_learn.get("accepted", {}), "subgenres": sub_learn.get("accepted", {})}
+    report["subgenre_labels"] = {k: subgenre_label(k) for e in all_events for k in e.subgenres}
+    report["subgenre_labels"].update({k: v["label"] for k, v in sub_learn.get("accepted", {}).items()})
     log(f"Artiestenbank: {len(adb)} artiesten; {filled} events kregen genre via de kennisbank")
 
     # --- reeksengeheugen: prijs/tijd van terugkerende events onthouden en aanvullen ---

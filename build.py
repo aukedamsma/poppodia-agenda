@@ -14,15 +14,22 @@ report = json.loads((ROOT / "data" / "report.json").read_text(encoding="utf-8"))
 
 # Oudere data (van vóór de genre-taxonomie) ter plekke aanvullen, zodat een lokale build altijd
 # hoofdgenres, eventtype en artiesten toont. Nieuwe runs van fetch.py leveren dit al mee.
+if events and "genre_norm" in events[0] and "subgenres" not in events[0]:
+    from taxonomy import normalize_subgenres, subgenre_label
+    for e in events:
+        e["subgenres"], _ = normalize_subgenres(e.get("genres") or [], e.get("genre_norm") or [])
+    report["subgenre_labels"] = {k: subgenre_label(k) for e in events for k in e["subgenres"]}
 if events and "genre_norm" not in events[0]:
-    from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, _taxonomy
+    from taxonomy import classify_kind, extract_artists, normalize_genres, price_number, _taxonomy, normalize_subgenres, subgenre_label
     for e in events:
         e["artists"] = extract_artists(e["title"], e.get("subtitle"))
         e["genre_norm"], _ = normalize_genres(e.get("genres") or [], e["title"], e.get("subtitle") or "")
-        e["kind"] = classify_kind(e["title"], e.get("subtitle"), e.get("genres") or [], e["genre_norm"])
+        e["kind"] = classify_kind(e["title"], e.get("subtitle"), e.get("genres") or [], e["genre_norm"], e["start"])
         e["price_num"] = price_number(e.get("price"))
         e["free"] = e["price_num"] == 0.0
         e.setdefault("section", "poppodium")
+        e["subgenres"], _ = normalize_subgenres(e.get("genres") or [], e["genre_norm"])
+    report["subgenre_labels"] = {k: subgenre_label(k) for e in events for k in e.get("subgenres", [])}
     if "genre_groups" not in report:
         groups, _ = _taxonomy()
         report["genre_groups"] = {k: v.get("label", k) for k, v in groups.items()}

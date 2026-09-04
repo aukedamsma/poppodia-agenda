@@ -53,6 +53,15 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Tijd vóór het label ("19:30 Zaal Open", 013) en tijdschema's zonder 'aanvang' (Nobel "19:00 - Deuren open 19:30 - Band") | Beide woordvolgordes worden herkend; de vroegste tijd is de deurtijd, de eerste tijd erna de start. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
+Twee zelflerende lagen (bewijs verzamelen → bij voldoende consistentie promoveren tot regel; handmatig vast te zetten in `genres.yaml`):
+
+- **Subgenres** (`state/subgenre_learn.json`): ruwe tags worden afgebeeld op een vaste lijst van ~105 subgenres naar de indeling van
+  Bandcamp Discover (spellingvarianten via `aliases`; niet-genres via `subgenre_noise`). Een onbekende tag die ≥ 5 keer en in ≥ 80% van de
+  gevallen bij één hoofdgenre voorkomt, wordt automatisch subgenre van dat hoofdgenre.
+- **Type** (`state/kind_learn.json`): elke keer dat een regel het type zeker vaststelt, stemmen de podiumtags van dat event mee. Een tag die
+  ≥ 5 keer en in ≥ 85% van de gevallen bij één niet-muziektype hoort (Tivoli "Kennis & Debat" → talk) bepaalt daarna zelf het type van
+  events zonder andere aanwijzing. Zonder aanwijzing blijft het type muziek (concert).
+
 Elk podium krijgt in `data/report.json` een `audit` met dekking (aandeel events met tijd / prijs / genre) en
 waarschuwingen; de voettekst van de site toont dezelfde cijfers. Zo is in één blik te zien waar de data dun is.
 

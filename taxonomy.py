@@ -124,15 +124,23 @@ def _kind_rules():
         def rx(terms):
             terms = [_fold(x) for x in (terms or []) if _fold(x)]
             return re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(x) for x in sorted(terms, key=len, reverse=True)) + r")(?![a-z0-9])") if terms else None
-        out[kind] = (rx(spec.get("title")), {_fold(x) for x in spec.get("tags", [])}, rx(spec.get("strong")), rx(spec.get("weak")))
+        extra = [re.compile(x, re.I) for x in (spec.get("title_regex") or [])]
+        out[kind] = (rx(spec.get("title")), {_fold(x) for x in spec.get("tags", [])}, rx(spec.get("strong")), rx(spec.get("weak")), extra)
     kt = y.get("kind_time", {})
     out["_time"] = (kt.get("club_from", "23:00"), kt.get("weak_from", "21:30"))
     return out
 
 
-def classify_kind(title: str, subtitle: str | None, raw_tags: list[str], genre_norm: list[str], start: str | None = None) -> str:
-    """concert | club | festival | talk | other. Titel en podium-tags wegen; de ondertitel alleen voor sterke termen;
-    zwakke feest-termen en een late aanvang (start "YYYY-MM-DDTHH:MM") tellen alleen samen."""
+def classify_kind(title: str, subtitle: str | None, raw_tags: list[str], genre_norm: list[str], start: str | None = None,
+                  learned: dict | None = None) -> str:
+    return classify_kind_ex(title, subtitle, raw_tags, genre_norm, start, learned)[0]
+
+
+def classify_kind_ex(title: str, subtitle: str | None, raw_tags: list[str], genre_norm: list[str], start: str | None = None,
+                     learned: dict | None = None) -> tuple[str, bool]:
+    """(type, zeker). concert | club | festival | talk | other. Titel en podium-tags wegen; de ondertitel alleen voor
+    sterke termen; zwakke feest-termen en een late aanvang tellen alleen samen. Zonder duidelijk bewijs: concert (muziek),
+    niet zeker. `learned` = state/kind_learn.json: podiumtags die het systeem zelf aan een type heeft gekoppeld."""
     ft, fs = _fold(title), _fold(subtitle or "")
     time = start[11:16] if start and len(start) > 10 and start[11:16] != "00:00" else None
     tags = {_fold(x) for x in (raw_tags or [])}
@@ -144,22 +152,55 @@ def classify_kind(title: str, subtitle: str | None, raw_tags: list[str], genre_n
     for kind in KIND_ORDER:
         if kind not in rules:
             continue
-        title_rx, tag_set, strong_rx, weak_rx = rules[kind]
+        title_rx, tag_set, strong_rx, weak_rx, extra = rules[kind]
         if title_rx and title_rx.search(ft):
-            return kind
+            return kind, True
+        if any(x.search(title or "") for x in extra):
+            return kind, True
         if tag_set & (tags | tagwords):
-            return kind
+            return kind, True
         if strong_rx and strong_rx.search(fs):
-            return kind
+            return kind, True
         if weak_rx and time and time >= weak_from and weak_rx.search(ft):
-            return kind
+            return kind, True
     if "talk" in genre_norm:
-        return "talk"
+        return "talk", True
     if "kids" in genre_norm:
-        return "other"
+        return "other", True
+    # geleerde koppeling: een podiumtag die eerder consequent bij één type hoorde (bv. Tivoli "Kennis & Debat" -> talk)
+    if learned:
+        acc = learned.get("accepted", {})
+        for t in tags:
+            if t in acc:
+                return acc[t]["kind"], True
     if time and time >= club_from:
-        return "club"
-    return "concert"
+        return "club", False
+    return "concert", False
+
+
+def learn_kinds(learned: dict, raw_tags: list[str], kind: str) -> None:
+    """Stem per podiumtag op het (zeker vastgestelde) type."""
+    votes = learned.setdefault("votes", {})
+    for t in raw_tags or []:
+        f = _fold(t)
+        if f and len(f) <= 40:
+            v = votes.setdefault(f, {})
+            v[kind] = v.get(kind, 0) + 1
+
+
+def promote_kinds(learned: dict, min_obs: int = 5, min_share: float = 0.85) -> int:
+    """Tags die >= min_obs keer zijn gezien en in >= min_share van de gevallen bij één type: vanaf nu bepalend."""
+    accepted = learned.setdefault("accepted", {})
+    n = 0
+    for f, v in learned.get("votes", {}).items():
+        total = sum(v.values())
+        if total < min_obs or f in accepted:
+            continue
+        k, c = max(v.items(), key=lambda x: x[1])
+        if c / total >= min_share and k != "concert":  # alleen niet-muziek leren; concert is al de standaard
+            accepted[f] = {"kind": k, "obs": total}
+            n += 1
+    return n
 
 
 # ----------------------------------------------------------------------------
@@ -219,6 +260,91 @@ def artist_key(name: str) -> str:
     k = re.sub(r"^(the|de|het|los|las|les|die) ", "", k)
     k = re.sub(r"[^a-z0-9 ]", "", k)
     return re.sub(r"\s+", " ", k).strip()
+
+
+# ----------------------------------------------------------------------------
+# subgenres: vaste lijst (Bandcamp-indeling) + zelflerend
+# ----------------------------------------------------------------------------
+
+@lru_cache(maxsize=1)
+def _subgenres():
+    y = yaml.safe_load((ROOT / "genres.yaml").read_text(encoding="utf-8"))
+    alias: dict[str, str] = {}
+    for key, spec in (y.get("subgenres") or {}).items():
+        for a in [key] + list(spec.get("aliases") or []):
+            alias[_fold(a)] = key
+    noise = {_fold(x) for x in (y.get("subgenre_noise") or [])}
+    return y.get("subgenres") or {}, alias, noise
+
+
+@lru_cache(maxsize=1)
+def _group_words() -> set[str]:
+    groups, _ = _taxonomy()
+    words = set(groups.keys())
+    for g in groups.values():
+        for part in re.split(r"[/,]", g.get("label", "")):
+            words.add(_fold(part))
+    words |= {"popmuziek", "rockmuziek", "hip hop", "hip-hop", "hiphop", "r&b", "electronic", "dance", "klassiek", "classical"}
+    return words
+
+
+def subgenre_label(key: str) -> str:
+    specs, _, _ = _subgenres()
+    return specs.get(key, {}).get("label", key)
+
+
+def subgenre_group(key: str) -> str | None:
+    specs, _, _ = _subgenres()
+    return specs.get(key, {}).get("group")
+
+
+def normalize_subgenres(raw: list[str], genre_norm: list[str], learned: dict | None = None) -> tuple[list[str], list[str]]:
+    """Ruwe tags -> (canonieke subgenre-sleutels, onbekende tags). `learned` = state/subgenre_learn.json: tags die het
+    systeem zelf aan een hoofdgenre heeft gekoppeld (>= 5 keer gezien, >= 80% bij één groep) tellen ook als subgenre."""
+    specs, alias, noise = _subgenres()
+    out: list[str] = []
+    unknown: list[str] = []
+    for tag in raw or []:
+        for part in re.split(r"[,/|·•;]", str(tag)):
+            f = _fold(part)
+            if not f or len(f) > 40 or f in noise or normalize_tag(part) in ("overig",):
+                continue
+            if f in _group_words():
+                continue  # hoofdgenre-woord (pop, rock, jazz…) is geen subgenre
+            key = alias.get(f)
+            if not key and learned and f in learned.get("accepted", {}):
+                key = f  # zelfgeleerd subgenre (sleutel = de gevouwen tag)
+            if key:
+                if key not in out:
+                    out.append(key)
+            elif f not in unknown and not re.search(r"\d{2}[:.]\d{2}|^\d+$", f):
+                unknown.append(f)
+    return out[:6], unknown
+
+
+def learn_subgenres(learned: dict, unknown: list[str], genre_norm: list[str]) -> None:
+    """Tel per onbekende tag bij welke hoofdgenres hij voorkomt; promoveer bij voldoende bewijs."""
+    if not genre_norm:
+        return
+    votes = learned.setdefault("votes", {})
+    for f in unknown:
+        v = votes.setdefault(f, {})
+        for g in genre_norm[:1]:  # alleen het eerste (sterkste) hoofdgenre telt
+            v[g] = v.get(g, 0) + 1
+
+
+def promote_subgenres(learned: dict, min_obs: int = 5, min_share: float = 0.8) -> int:
+    accepted = learned.setdefault("accepted", {})
+    n = 0
+    for f, v in learned.get("votes", {}).items():
+        total = sum(v.values())
+        if total < min_obs or f in accepted:
+            continue
+        g, c = max(v.items(), key=lambda x: x[1])
+        if c / total >= min_share:
+            accepted[f] = {"group": g, "label": f, "obs": total}
+            n += 1
+    return n
 
 
 def price_number(p: str | None) -> float | None:
