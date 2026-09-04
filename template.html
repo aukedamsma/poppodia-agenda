@@ -136,9 +136,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 
 <div class="bar" role="region" aria-label="Filters">
   <div class="tabs" role="group" aria-label="Weergave">
-    <button data-view="week" aria-pressed="false">Deze week</button>
-    <button data-view="month" aria-pressed="false">30 dagen</button>
-    <button data-view="all" aria-pressed="true">Alles</button>
+    <button data-view="all" aria-pressed="true">Agenda</button>
     <button data-view="new" aria-pressed="false">Nieuw<span class="n" id="newCount"></span></button>
     <button data-view="day" aria-pressed="false">Per dag</button>
     <button data-view="saved" aria-pressed="false">Mijn lijstje<span class="n" id="savedCount"></span></button>
@@ -215,6 +213,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   const saveSaved = () => { try { localStorage.setItem('podiumagenda_saved', JSON.stringify([...saved])); } catch(e){} };
   const keyOfEv = e => e.venue + '|' + e.url;
   try { Object.assign(state, JSON.parse(localStorage.getItem('podiumagenda2') || '{}')); } catch(e){}
+  if (['week','month'].includes(state.view)) state.view='all';
   if (!state.day || state.day < TODAY) state.day = TODAY;
   const save = () => { try { localStorage.setItem('podiumagenda2', JSON.stringify(state)); } catch(e){} };
   const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -308,7 +307,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
   // render
   let shownDays = PAGE;
   function filtered(){
-    const limit = state.view==='week' ? plusDays(7) : state.view==='month' ? plusDays(30) : '9999';
+    const limit = '9999';
     const qq=fold(state.q).trim();
     return EVENTS.filter(e=>{
       const d=e.start.slice(0,10);
