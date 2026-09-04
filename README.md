@@ -49,6 +49,13 @@ geef dan CSS-selectors op:
   crawl_delay: 10                 # seconden tussen requests, als robots.txt daarom vraagt
 ```
 
+Twee bijzondere types voor lastige sites:
+
+- `sitemap_detail` (Paradiso): eventlinks komen uit de sitemap (`sitemap`, `sitemap_pattern`, `last_files`), de data uit de
+  eventpagina's (JSON-LD of de ingebedde React Server Components-payload). Zwaar bij de eerste run, daarna incrementeel via de cache.
+- `embedded` leest ook JSON die in HTML-attributen zit (Tolhuistuin: Vue-prop `:all-items`). Met `only_genres: [Muziek, Clubnacht]`
+  filter je een gemengd programma (theater, workshops) weg.
+
 Alle opties staan bovenin `venues.yaml`. Tijdelijk uitzetten: `type: disabled`.
 
 ## Zelf draaien

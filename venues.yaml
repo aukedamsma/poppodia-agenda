@@ -10,7 +10,10 @@
 # Pas als dat niets oplevert hoef je zelf iets in te vullen: type: html + CSS-selectors (zie README).
 #
 # Optionele velden:
-#   type          auto | jsonld | embedded | tribe | wp_event | jsonld_detail | html | disabled
+#   type          auto | jsonld | embedded | tribe | wp_event | jsonld_detail | sitemap_detail | html | disabled
+#   only_genres   alleen events met een van deze genres/typen houden (bijv. [Muziek, Clubnacht])
+#   sitemap / sitemap_pattern / last_files   voor sitemap_detail: sitemap-index, regex voor eventbestanden, hoeveel laatste bestanden
+#   detail_ttl_days  hoe lang een gelezen eventpagina in de cache blijft (standaard 10)
 #   api           expliciete API-URL (tribe / wp_event)
 #   list_pages    extra overzichtspagina's (bijv. paginering) voor jsonld_detail
 #   link_pattern  regex waaraan eventlinks moeten voldoen (jsonld_detail)
@@ -77,14 +80,22 @@
 - name: Paradiso
   city: Amsterdam
   url: https://www.paradiso.nl/
-  type: disabled
-  notes: v2 — Next.js/GraphQL zonder JSON-LD; vraagt eigen fetcher of headless browser
+  type: sitemap_detail
+  sitemap: https://www.paradiso.nl/sitemap.xml
+  sitemap_pattern: "/sitemap/event_\\d+\\.xml"
+  last_files: 7
+  link_pattern: "paradiso\\.nl/programma/[^/]+/\\d+$"
+  max_detail: 700
+  detail_ttl_days: 30
+  crawl_delay: 1
+  notes: geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml is op id gesorteerd, de laatste ~7 bestanden bevatten de komende events. Eerste run zwaar (~700 pagina's), daarna incrementeel.
 
 - name: Tolhuistuin
   city: Amsterdam
   url: https://tolhuistuin.nl/agenda
-  type: disabled
-  notes: v2 — Vue-app, datum alleen als dagkop zonder jaar; vraagt headless browser
+  type: embedded
+  only_genres: [Muziek, Clubnacht, Festival]
+  notes: complete agenda (~200 items) zit als JSON in het Vue-attribuut :all-items op de agendapagina; alleen muziek/club/festival, geen theater/workshops
 
 # ---------------- Landelijk ----------------
 - name: "013"

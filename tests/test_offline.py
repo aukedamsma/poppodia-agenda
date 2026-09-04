@@ -89,7 +89,7 @@ def test_embedded_angular_hedon_shape():
          "url_template": "https://www.hedon-zwolle.nl/voorstelling/{id}"}
     out, strat, _ = fetch.fetch_venue(v, {})
     assert len(out) == 10 and out[0].url == "https://www.hedon-zwolle.nl/voorstelling/33000"
-    assert out[0].genres == ["Nederlands", "Pop"] and out[0].price == "€ 23.5" and out[0].subtitle == "TOUR"
+    assert out[0].genres == ["Nederlands", "Pop"] and out[0].price == "€ 23,5" and out[0].subtitle == "TOUR"
 
 
 def test_embedded_effenaar_shape():
@@ -173,6 +173,46 @@ def test_failing_venue_does_not_break():
     v = {"name": "Kapot", "city": "Nergens", "url": "https://kapot.example/agenda", "type": "auto"}
     out, strat, note = fetch.fetch_venue(v, {}) if False else ([], "none", "")
     assert out == []
+
+
+def test_embedded_vue_attribute_tolhuistuin():
+    import html as h
+    items = [{"uid": str(i), "eventType": {"label": "Muziek" if i % 2 == 0 else "Theater", "value": "x"}, "eventStartCompare": FUT,
+              "eventStartDate": FUT.replace("-", "/") + " 20:30:00", "eventEndDate": None, "title": f"Act {i}", "freeEvent": i == 0,
+              "ticketPrice": None if i == 0 else "17.50", "soldOut": i == 2, "location": None, "url": f"https://tolhuistuin.nl/evenementen/act-{i}",
+              "description": "Zonnige popmuziek", "dateNotification": {"start": "04 sep", "end": None}} for i in range(8)]
+    page = "<html><body><div id=\"page-wrapper\"><agenda-filter-component inline-template :all-items='" + h.escape(json.dumps(items), quote=True).replace("'", "&#039;") + "'><ul></ul></agenda-filter-component></body></html>"
+    fake_session({"tolhuistuin": FakeResp(page)})
+    v = {"name": "Tolhuistuin", "city": "Amsterdam", "url": "https://tolhuistuin.nl/agenda", "type": "embedded", "only_genres": ["Muziek", "Clubnacht"]}
+    out, strat, note = fetch.fetch_venue(v, {})
+    assert strat == "embedded", note
+    assert len(out) == 4 and out[0].start == f"{FUT}T20:30" and out[0].genres == ["Muziek"] and out[0].price == "gratis"
+    assert out[1].status == "uitverkocht" and out[1].price == "€ 17,50" and out[0].subtitle == "Zonnige popmuziek"
+
+
+def test_sitemap_detail_paradiso_flight_json():
+    idx = "".join(f"<sitemap><loc>https://www.paradiso.nl/sitemap/event_{i}.xml</loc></sitemap>" for i in range(1, 12)) + "<sitemap><loc>https://www.paradiso.nl/sitemap/newsArticle_1.xml</loc></sitemap>"
+    def smap(url, kw):
+        n = int(url.split("_")[-1].split(".")[0])
+        return FakeResp("".join(f"<url><loc>https://www.paradiso.nl/programma/act-{n}-{k}/{n*100+k}</loc></url>" for k in range(3)))
+    def detail(url, kw):
+        ev_id = url.rsplit("/", 1)[-1]
+        inner = {"__typename": "event_default_Entry", "id": ev_id, "title": "Pip Millett", "subtitle": "Veelbelovende neo-soulzangeres",
+                 "uri": "programma/x/" + ev_id, "timetable": [], "startDateTime": FUT + "T18:30:00+00:00",
+                 "location": {"id": "1", "title": "Zonnehuis"}, "subBrand": [{"id": "95", "title": "Super-Sonic Jazz"}]}
+        return FakeResp("<html><body><script>self.__next_f.push([1," + json.dumps(json.dumps({"data": inner})) + "])</script></body></html>")
+    fake_session({"sitemap.xml": FakeResp(idx), "/sitemap/event_": smap, "/programma/": detail})
+    v = {"name": "Paradiso", "city": "Amsterdam", "url": "https://www.paradiso.nl/", "type": "sitemap_detail", "sitemap": "https://www.paradiso.nl/sitemap.xml",
+         "sitemap_pattern": r"/sitemap/event_\d+\.xml", "last_files": 2, "link_pattern": r"paradiso\.nl/programma/[^/]+/\d+$", "crawl_delay": 0}
+    cache = {}
+    out, strat, note = fetch.fetch_venue(v, cache)
+    assert strat == "sitemap_detail", note
+    assert len(out) == 6 and out[0].title == "Pip Millett" and out[0].start == f"{FUT}T20:30" and out[0].genres == ["Super-Sonic Jazz"]
+    assert out[0].subtitle == "Veelbelovende neo-soulzangeres · Zonnehuis" and out[0].source == "flight_json"
+
+
+def test_parse_ymd():
+    assert fetch.parse_dt("2026/09/04 20:30:00").hour == 20 and fetch.parse_dt("2026/09/04 20:30:00").day == 4
 
 
 if __name__ == "__main__":

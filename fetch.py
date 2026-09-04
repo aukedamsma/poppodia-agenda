@@ -94,6 +94,17 @@ def clean(s: str | None) -> str | None:
     return s or None
 
 
+def fmt_price(p) -> str | None:
+    if p in (None, "", 0, "0"):
+        return None
+    if isinstance(p, (int, float)):
+        return f"€ {p:g}".replace(".", ",")
+    p = clean(str(p)) or ""
+    if re.fullmatch(r"\d+([.,]\d{1,2})?", p):
+        return "€ " + p.replace(".", ",").removesuffix(",00")
+    return p or None
+
+
 def parse_dt(value, default_year: int | None = None) -> datetime | None:
     """Zet allerlei datumvormen om naar datetime. Geeft None bij mislukking."""
     if value is None:
@@ -120,6 +131,14 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
         pass
     # Nederlandse datum: "vr 4 sep 2026", "donderdag 29 april 2027 20:30", "do 25.03.27", "04-09-2026"
     low = s.lower()
+    m = re.search(r"(\d{4})[-./](\d{1,2})[-./](\d{1,2})(?:\D+(\d{1,2})[:.](\d{2}))?", low)
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        hh, mm = (int(m.group(4)), int(m.group(5))) if m.group(4) else (0, 0)
+        try:
+            return datetime(y, mo, d, hh, mm)
+        except ValueError:
+            return None
     m = re.search(r"(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})(?:\D+(\d{1,2})[:.](\d{2}))?", low)
     if m:
         d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -300,6 +319,12 @@ def _find_url(obj: dict) -> str | None:
 
 def _find_genres(obj: dict) -> list[str]:
     out = []
+    for k in ("eventType", "event_type", "category", "type", "profile"):
+        val = obj.get(k)
+        if isinstance(val, dict):
+            n = val.get("label") or val.get("name") or val.get("title")
+            if isinstance(n, str) and n.lower() not in ("event", "events", "evenement"):
+                out.append(clean(n))
     for k in ("genres", "genre", "tags", "categories", "categorieen", "styles"):
         for g in as_list(obj.get(k)):
             if isinstance(g, str) and not g.isdigit():
@@ -343,6 +368,9 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
         t = (sc.get("type") or "").lower()
         if sc.get("id") == "__NEXT_DATA__" or "json" in t and "ld+json" not in t:
             blobs.append(sc.string or sc.get_text())
+    # JSON in HTML-attributen (Vue-props zoals :all-items='[{&quot;...', data-events="...")
+    for m in re.finditer(r"=(['\"])((?:\[\{|\{)&quot;.{200,}?)\1", html, re.S):
+        blobs.append(unescape(m.group(2)))
     # ook window.__NUXT__ / __INITIAL_STATE__ als JSON-literal
     for m in re.finditer(r"window\.__(?:NUXT|INITIAL_STATE|APOLLO_STATE|PRELOADED_STATE)__\s*=\s*(\{.*?\})\s*;?\s*</script>", html, re.S):
         blobs.append(m.group(1))
@@ -386,14 +414,18 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
             sv = o.get(k)
             if isinstance(sv, str) and re.search(r"afgelast|cancel|uitverkocht|sold", sv, re.I):
                 status = "afgelast" if re.search(r"afgelast|cancel", sv, re.I) else "uitverkocht"
-        if o.get("isCancelled") is True:
+        if o.get("isCancelled") is True or o.get("cancelled") is True:
             status = "afgelast"
-        elif o.get("isSoldOut") is True:
+        elif o.get("isSoldOut") is True or o.get("soldOut") is True or o.get("sold_out") is True:
             status = status or "uitverkocht"
         if o.get("isPublished") is False or o.get("publish") is False:
             continue
-        price = o.get("price") or o.get("ticket_price") or o.get("priceFrom")
+        price = o.get("price") or o.get("ticket_price") or o.get("ticketPrice") or o.get("priceFrom")
+        if price in (None, "", 0) and o.get("freeEvent") is True:
+            price = "gratis"
         sub = o.get("subtitle") or o.get("tagline") or o.get("one_liner")
+        if not sub and isinstance(o.get("description"), str) and 0 < len(o["description"]) < 140:
+            sub = o["description"]
         end = None
         for k in ("endDate", "end_date", "end", "ends_at"):
             if isinstance(o.get(k), str):
@@ -403,7 +435,7 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
         out.append(Event(
             venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"),
             url=url, end=end, subtitle=clean(sub) if isinstance(sub, str) else None,
-            genres=list(dict.fromkeys(_find_genres(o) + extra_genres)), price=(f"€ {price}" if isinstance(price, (int, float)) and price else (clean(price) if isinstance(price, str) else None)),
+            genres=list(dict.fromkeys(_find_genres(o) + extra_genres)), price=fmt_price(price),
             status=status, source="embedded",
         ))
     return out
@@ -531,6 +563,8 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     if c and c.get("fetched"):
         # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
         ttl = int(v.get("detail_ttl_days", 10)) if c.get("event") else 1
+        if c.get("event") and c["event"].get("start", "9999") < TODAY.isoformat():
+            ttl = 3650  # voorbij: nooit meer ophalen
         if date.fromisoformat(c["fetched"]) > TODAY - timedelta(days=ttl):
             return Event(**c["event"]) if c.get("event") else None
     try:
@@ -543,6 +577,8 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         ev = event_from_jsonld(n, v, url, "jsonld_detail")
         if ev:
             break
+    if ev is None:
+        ev = event_from_flight_json(html, url, v)
     if ev is None and v.get("type") == "html":
         ev = None  # html-type haalt de datum uit de lijstpagina
     if ev is None:
@@ -571,6 +607,72 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev = Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=url, source="detail_text")
     cache[url] = {"fetched": TODAY.isoformat(), "event": asdict(ev) if ev else None}
     return ev
+
+
+def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
+    """Eventgegevens uit een React Server Components-payload (o.a. Paradiso: Craft CMS via Next.js)."""
+    ev_id = url.rstrip("/").rsplit("/", 1)[-1]
+    clean_html = html.replace('\\"', '"')
+    m = re.search(r'"__typename":\s*"event_\w+_Entry",\s*"id":\s*"%s".{0,4000}?"startDateTime":\s*"([^"]+)"' % re.escape(ev_id), clean_html, re.S)
+    if not m:
+        return None
+    block = clean_html[m.start(): m.end() + 2500]
+
+    def fld(name):
+        mm = re.search(r'"%s":\s*"([^"]*)"' % name, block)
+        return clean(mm.group(1)) if mm else None
+
+    start = parse_dt(m.group(1))
+    if not start:
+        return None
+    title = fld("title") or "?"
+    genres = []
+    if '"subBrand"' in block:
+        genres = [g for g in re.findall(r'"title":\s*"([^"]+)"', block.split('"subBrand"', 1)[1]) if g][:3]
+    loc = re.search(r'"location":\s*\{[^{}]*?"title":\s*"([^"]+)"', block)
+    status = None
+    if re.search(r'"(cancelled|isCancelled)":true', block) or "afgelast" in block.lower():
+        status = "afgelast"
+    elif re.search(r'"(soldOut|isSoldOut)":true', block) or "uitverkocht" in block.lower():
+        status = "uitverkocht"
+    sub = fld("subtitle")
+    if loc and loc.group(1).lower() not in (v["name"].lower(),):
+        sub = (sub + " · " if sub else "") + loc.group(1)
+    price = fld("price") or fld("priceFrom")
+    return Event(venue=v["name"], city=v["city"], title=title, start=start.isoformat(timespec="minutes"), url=url,
+                 subtitle=sub, genres=genres, price=(f"€ {price}" if price else None), status=status, source="flight_json")
+
+
+def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
+    """Eventlinks uit de sitemap (laatste N bestanden = nieuwste events), daarna per eventpagina lezen (gecached)."""
+    sitemap = v.get("sitemap") or urljoin(base, "/sitemap.xml")
+    idx = get(sitemap, delay=0.5).text
+    files = [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", idx)]
+    pat = re.compile(v.get("sitemap_pattern", r"event"))
+    files = [f for f in files if pat.search(f)]
+
+    def num(f):
+        mm = re.search(r"(\d+)\.xml$", f)
+        return int(mm.group(1)) if mm else 0
+
+    files.sort(key=num)
+    files = files[-int(v.get("last_files", 6)):] or [sitemap]
+    urls: list[str] = []
+    for f in files:
+        try:
+            urls += [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", get(f, delay=0.5).text)]
+        except requests.RequestException as ex:
+            log(f"    sitemap mislukt {f}: {ex}")
+    lp = re.compile(v["link_pattern"]) if v.get("link_pattern") else None
+    urls = [u for u in dict.fromkeys(urls) if not lp or lp.search(u)]
+    urls = urls[-int(v.get("max_detail", 600)):]
+    log(f"    {len(urls)} eventlinks uit sitemap, detailpagina's ophalen (gecached)…")
+    out = []
+    for u in urls:
+        ev = fetch_detail(v, u, cache)
+        if ev:
+            out.append(ev)
+    return out
 
 
 def strat_jsonld_detail(v: dict, html: str, base: str, cache: dict) -> list[Event]:
@@ -639,13 +741,14 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str]:
         return [], "disabled", "uitgeschakeld in venues.yaml"
 
     html = ""
-    if t not in ("tribe",):
+    if t not in ("tribe", "sitemap_detail"):
         html = get(base, delay=float(v.get("crawl_delay", 0))).text
 
     order = {
         "auto": ["jsonld", "embedded", "tribe", "wp_event", "jsonld_detail"],
         "jsonld": ["jsonld"], "embedded": ["embedded"], "nextdata": ["embedded"],
         "tribe": ["tribe"], "wp_event": ["wp_event"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
+        "sitemap_detail": ["sitemap_detail"],
     }.get(t, [t])
     notes = []
     for strat in order:
@@ -662,6 +765,8 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str]:
                 evs = strat_jsonld_detail(v, html, base, cache)
             elif strat == "html":
                 evs = strat_html(v, html, base)
+            elif strat == "sitemap_detail":
+                evs = strat_sitemap_detail(v, base, cache)
             else:
                 notes.append(f"onbekend type {strat}")
                 continue
@@ -672,6 +777,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str]:
             notes.append(f"{strat}: {type(ex).__name__} {str(ex)[:120]}")
             continue
         evs = [e for e in evs if in_window(datetime.fromisoformat(e.start))]
+        if v.get("only_genres"):
+            want = {g.lower() for g in v["only_genres"]}
+            evs = [e for e in evs if {g.lower() for g in e.genres} & want]
         if len(evs) >= int(v.get("min_events", 3)):
             return evs, strat, "; ".join(notes)
         notes.append(f"{strat}: {len(evs)} events")
