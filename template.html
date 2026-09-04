@@ -33,7 +33,7 @@
 html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.4}
 a{color:inherit}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+.wrap{max-width:none;margin:0 auto;padding:0 24px}
 
 /* kop */
 header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px;padding:18px 0 10px}
@@ -91,7 +91,7 @@ main{padding:6px 0 60px}
 .dayhead{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-size:24px;text-transform:uppercase;letter-spacing:.01em;line-height:1}
 .dayhead .rel{font-family:var(--sans);font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--accent);font-weight:600}
 .dayhead .cnt{font-family:var(--sans);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink-3);margin-left:auto;font-variant-numeric:tabular-nums}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .card{display:block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px 8px;text-decoration:none;box-shadow:var(--shadow);position:relative;min-width:0}
 .card:hover{border-color:var(--ink)}
 .card:hover .t{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
@@ -119,6 +119,7 @@ footer summary{cursor:pointer;color:var(--ink-2);font-weight:500}
 .statuslist .ok{color:#2E8B57}.statuslist .fail{color:var(--warn)}
 .statuslist .how{color:var(--ink-3);margin-left:auto}
 
+@media (max-width:1400px){ .grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:900px){ .grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 @media (max-width:560px){
   .grid{grid-template-columns:1fr} h1{font-size:32px} .meta{margin-left:0}
