@@ -460,7 +460,7 @@ button:focus-visible{outline:none}
 
   // status
   const st=document.getElementById('statusList');
-  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); const a=v.audit||{}; const cov=a.coverage; const warn=a.time_shift||a.date_cluster_removed||a.many_late||a.thin;
+  REPORT.venues.forEach(v=>{ const li=document.createElement('li'); const a=v.audit||{}; const cov=a.coverage; const warn=a.time_shift||a.date_cluster_removed||a.many_late||a.thin||a.regression||a.redirect;
     const pct=x=>Math.round((x||0)*100)+'%';
     const hor=a.horizon?` · tot ${a.horizon.slice(8,10)}-${a.horizon.slice(5,7)}-${a.horizon.slice(2,4)}`:''; const wk=(a.weekend!=null)?` · vr/za ${a.weekend}/16`:'';
     li.innerHTML=`<span class="${v.ok?(warn?'warn':'ok'):'fail'}">${v.ok?(warn?'!':'✓'):'✕'}</span><span>${esc(v.name)}</span><span class="how">${v.ok? v.events+(cov?` · tijd ${pct(cov.time)} · prijs ${pct(cov.price)} · genre ${pct(cov.genre)}`:'')+wk+hor : (v.strategy==='disabled'?'nog niet':'mislukt')}</span>`;

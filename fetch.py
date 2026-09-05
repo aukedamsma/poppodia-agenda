@@ -2048,7 +2048,15 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     notes = []
     if t not in ("tribe", "sitemap_detail", "graphql_detail", "json_api", "stager") and not (t == "html" and v.get("api")):
         try:
-            html = get(base, delay=float(v.get("crawl_delay", 0))).text
+            r0 = get(base, delay=float(v.get("crawl_delay", 0)))
+            html = r0.text
+            final = str(getattr(r0, "url", "") or "")
+            # verhuisde agenda: de agendapagina stuurt door naar een ander adres (andere host of ander pad)
+            if final and urlparse(final).netloc.replace("www.", "") != urlparse(base).netloc.replace("www.", "") \
+                    or (final and urlparse(final).path.rstrip("/") and urlparse(final).path.rstrip("/") != urlparse(base).path.rstrip("/")
+                        and not urlparse(final).path.rstrip("/").startswith(urlparse(base).path.rstrip("/"))):
+                notes.append(f"redirect: {base} -> {final} (controleer venues.yaml)")
+                v = {**v, "_redirect": final}
         except requests.RequestException as ex:
             # site weigert ons (Het Podium, So What!: Cloudflare 403 ook met browser-headers) -> toch de extra bronnen (ticketshop) proberen
             if not v.get("extra_sources") and not v.get("fallback_sources"):
@@ -2175,6 +2183,10 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             notes.append(f"extra bron {src.get('url')}: {len(more)} events via {sstrat}, {len(new)} nieuw")
         except Exception as ex:  # noqa: BLE001
             notes.append(f"extra bron {src.get('url')}: {type(ex).__name__} {str(ex)[:80]}")
+    if v.get("_redirect"):
+        audit_extra = {"redirect": v["_redirect"]}
+    else:
+        audit_extra = {}
     if len(evs) >= int(v.get("min_events", 3)):
         if v.get("enrich", True) and strat not in ("jsonld_detail", "sitemap_detail", "graphql_detail"):
             try:
@@ -2200,8 +2212,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             notes.append(f"{audit['date_cluster_removed']['events']} events zonder tijd op {audit['date_cluster_removed']['day']} verwijderd (datumcluster)")
         if audit.get("many_late"):
             notes.append(f"{int(audit['many_late']*100)}% van de events begint na 23:00")
+        audit.update(audit_extra)
         return evs, strat, "; ".join(notes), audit
-    return [], "none", "; ".join(notes), {}
+    return [], "none", "; ".join(notes), dict(audit_extra)
 
 
 def category_tags(v: dict, cache: dict) -> tuple[dict[str, set[str]], set[str]]:
@@ -2497,6 +2510,27 @@ def main(only: list[str] | None = None) -> int:
     report["relocated"] = moved
     report["deduped"] = before - len(all_events)
     log(f"Locaties: {moved} events verhuisd naar het podium waar ze plaatsvinden; {before - len(all_events)} dubbele events samengevoegd")
+    # regressie-alarm: per podium het aantal events (na verhuizing/dedupe) vergelijken met de vorige runs (state/history.json).
+    # Een daling tot onder 60% van het beste van de laatste 7 runs, of van >= 10 naar 0, is een parser- of blokkadeprobleem
+    # (Grenswerk 138 -> 1 door een datumparserfix, Groene Engel/De Helling gehalveerd door een dedupe-fout) en staat in het
+    # rapport en de log — ook als het podium 'ok' lijkt.
+    hist_path = STATE / "history.json"
+    history = json.loads(hist_path.read_text()) if hist_path.exists() else {}
+    counts = Counter(e.venue for e in all_events)
+    regressions = []
+    for r in report["venues"]:
+        name = r["name"]
+        now = counts.get(name, 0)
+        past = [h for h in history.get(name, []) if h.get("date") != TODAY.isoformat()][-7:]
+        best = max((h["events"] for h in past), default=None)
+        if best is not None and best >= 10 and now < 0.6 * best:
+            r["audit"]["regression"] = {"was": best, "now": now}
+            r["note"] = (r["note"] + "; " if r["note"] else "") + f"LET OP: {now} events, was {best} in de laatste 7 runs"
+            regressions.append((name, best, now))
+            log(f"LET OP regressie {name}: {now} events, was {best}")
+        history[name] = past + [{"date": TODAY.isoformat(), "events": now, "strategy": r["strategy"]}]
+    report["regressions"] = [{"venue": n, "was": b, "now": c} for n, b, c in regressions]
+    hist_path.write_text(json.dumps(history, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     # 'nieuw' bepalen; een podium dat voor het eerst meedoet levert geen 'nieuwe' events op
     known_venues = {k.split("|", 1)[0] for k in seen}
