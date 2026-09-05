@@ -320,7 +320,7 @@
   genre_taxonomies: [category]
   extra_sources:
     - {url: "https://www.gigant.nl/clubnachten/", type: wp_event, api: "https://www.gigant.nl/wp-json/wp/v2/clubnacht?per_page=100&_embed=1", genre_taxonomies: [category]}
-  notes: "Cloudflare weigerde onze user-agent (403) -> browser-fallback. WP REST 'concert' (36) en 'clubnacht' (10) zonder datum; eventpagina: 'Datum donderdag 18 februari | Tijd 20:30 | Deur open 30 minuten voor aanvang | Prijs Normaal € 27,00'. Genres in de gewone WP-categorieën (Rock)"
+  notes: "Cloudflare weigert python-requests op de TLS-handdruk (403 ook met browser-headers) -> browser-TLS via curl_cffi. WP REST 'concert' (36) en 'clubnacht' (10) zonder datum; eventpagina: 'Datum donderdag 18 februari | Tijd 20:30 | Deur open 30 minuten voor aanvang | Prijs Normaal € 27,00'. Genres in de gewone WP-categorieën (Rock)"
 - {name: Burgerweeshuis, city: Deventer, url: "https://www.burgerweeshuis.nl/programma", capacity: 450}
 - name: Metropool
   city: Hengelo
@@ -681,6 +681,7 @@
 - {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/", capacity: 400}
 - name: Groene Engel
   city: Oss
+  only_genres: [Concert, Dance, Specials, HorecaSpecials]   # film, theater, quiz, kids en lezingen vallen af (gemengd cultuurhuis)
   url: https://www.groene-engel.nl/programma/
   capacity: 650
   type: html

@@ -130,10 +130,31 @@ def _looks_blocked(r) -> bool:
     return False
 
 
-def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
-    if delay:
-        time.sleep(delay)
+_IMPERSONATE_HOSTS: set[str] = set()   # hosts waar alleen een browser-TLS-handdruk (curl_cffi) door de botmuur komt
+
+
+def _impersonated_get(url: str, **kw):
+    """Zelfde GET, maar met de TLS-vingerafdruk van Chrome (curl_cffi). Cloudflare/Vercel-botmuren (GIGANT, Het Podium,
+    Q-factory) keuren python-requests af op de TLS-handdruk, niet op de headers. Optionele dependency."""
+    try:
+        from curl_cffi import requests as creq  # type: ignore
+    except ImportError:
+        return None
+    try:
+        return creq.get(url, impersonate="chrome", timeout=TIMEOUT, headers=kw.get("headers") or BROWSER_HEADERS,
+                        params=kw.get("params"), allow_redirects=True)
+    except Exception as ex:  # noqa: BLE001
+        log(f"    {urlparse(url).netloc}: browser-TLS mislukt: {type(ex).__name__}")
+        return None
+
+
+def http_get(url: str, **kw):
+    """GET met botmuur-escalatie: eigen user-agent -> browser-headers -> browser-TLS (curl_cffi). Onthoudt per host wat nodig was."""
     host = urlparse(url).netloc
+    if host in _IMPERSONATE_HOSTS:
+        r = _impersonated_get(url, **kw)
+        if r is not None:
+            return r
     if host in _BROWSER_UA_HOSTS and "headers" not in kw:
         kw["headers"] = BROWSER_HEADERS
     r = SESSION.get(url, timeout=TIMEOUT, **kw)
@@ -142,10 +163,24 @@ def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
         # de site weigert de eigen user-agent van de agenda; probeer één keer als gewone browser (robots.txt staat crawlen toe)
         kw["headers"] = BROWSER_HEADERS
         r2 = SESSION.get(url, timeout=TIMEOUT, **kw)
-        if r2.ok:
+        if r2.ok and not _looks_blocked(r2):
             _BROWSER_UA_HOSTS.add(host)
             log(f"    {host}: eigen user-agent geweigerd ({r.status_code}), verder als browser")
-            r = r2
+            return r2
+        blocked = True
+    if blocked:
+        r3 = _impersonated_get(url, **kw)
+        if r3 is not None and r3.ok and not _looks_blocked(r3):
+            _IMPERSONATE_HOSTS.add(host)
+            log(f"    {host}: botmuur ({r.status_code}) -> verder met browser-TLS-handdruk")
+            return r3
+    return r
+
+
+def get(url: str, delay: float = 0.0, **kw):
+    if delay:
+        time.sleep(delay)
+    r = http_get(url, **kw)
     r.raise_for_status()
     return r
 
@@ -2105,6 +2140,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         sub = {**v, **src, "extra_sources": None, "category_pages": None, "name": v["name"], "city": v["city"], "_is_extra": True}
         try:
             more, sstrat, snote, _ = fetch_venue(sub, cache)
+            if v.get("only_genres"):   # ook de extra bron alleen muziek (Groene Engel: Stager-shop verkoopt ook FilmClub-kaarten)
+                want = {g.lower() for g in v["only_genres"]}
+                more = [e for e in more if {g.lower() for g in e.genres} & want]
             known = {e.url.rstrip("/") for e in evs}
             new = [e for e in more if e.url.rstrip("/") not in known]
             evs = evs + new
@@ -2186,7 +2224,7 @@ def category_tags(v: dict, cache: dict) -> tuple[dict[str, set[str]], set[str]]:
             else:
                 break
             try:
-                r = SESSION.get(page_url, timeout=TIMEOUT)
+                r = http_get(page_url)
             except requests.RequestException:
                 break
             time.sleep(delay)

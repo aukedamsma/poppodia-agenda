@@ -75,6 +75,7 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Coproductie-samenvoeging te gretig (run #22: 500 dubbelen, De Helling 79 → 34, Rotown 106 → 68: alles op dezelfde tijd in dezelfde stad werd één event) | Over podia heen telt alleen de titel (gelijk, bevat, of ≥ 75% gedeelde woorden); "zelfde tijd, andere bron" geldt alleen binnen één podium. Generieke titels (festival, clubnacht, quiz …) worden nooit samengevoegd. |
 | Kleine zaal met eigen adres zit verstopt in de agenda van het grote podium (Merleyn in Doornroosje; pop-agenda.nl telt er 42 events) | Locatiefilter van het podium met tag `@Merleyn` (@ = locatie, geen genre) en een passief podium in venues.yaml (`passive: true`, geen eigen bron): de events verhuizen daarheen. Zelfde mechanisme voor Zonnehuis (Paradiso). |
 | Grote zalen zonder server-side agenda (Ziggo Dome: Next.js, 0 events; AFAS Live: 15 van ~118) | Ziggo Dome via de eigen JSON-API (`/api/agenda/aankomend`, `time_utc: true` want showDate is UTC, genres als JSON-string); AFAS Live via de HTML-agenda (alle maanden in één pagina). Gevonden via pop-agenda.nl (79 resp. 44 events). |
+| Botmuur keurt de TLS-handdruk af, niet de headers (GIGANT, Het Podium: 403 ook met browser-headers; Q-factory: 202-challenge) | Derde trap in `http_get`: na eigen user-agent en browser-headers volgt een GET met de TLS-vingerafdruk van Chrome (`curl_cffi`, `impersonate="chrome"`); per host onthouden. Alleen voor sites waarvan robots.txt crawlen toestaat. |
 | Datum zonder herkenbare maand (Cinetol "Sun18.10" → 18 september i.p.v. oktober) | De fuzzy datumparser vult nooit meer een ontbrekende maand aan met de huidige maand: zonder maandnaam of volledige datum is er geen datum. Gevonden door onze data naast pop-agenda.nl te leggen — die vergelijking is een vaste controlestap. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
@@ -100,7 +101,7 @@ te zien waar de data dun is of waar we minder ver vooruit kijken dan het podium 
 | De Cacaofabriek | prijs | alleen in de Ticketlab-shop (JavaScript + cookiemuur) | geen |
 | Metropool | prijs deels | Ticketmaster; de lijst heeft `data-event-price` voor de meeste events | — |
 | Baroeg | tijd | "Het tijdschema wordt in de week van het evenement bekendgemaakt" | de Stager-shop levert de tijd zodra bekend |
-| Het Podium, So What!, GIGANT | alles, als Cloudflare ook de browser-headers weigert | botblokkade | dan alleen via de Stager-shop (So What!, GIGANT hebben er geen) |
+| Het Podium, GIGANT, Q-factory | alles, zolang de botmuur ook de browser-TLS-handdruk (curl_cffi) weigert | botblokkade op GitHub-IP's | So What! komt al via de Stager-shop; Het Podium staat op pop-agenda.nl (14 events) als laatste redmiddel |
 | Hall of Fame | prijs | eigen site is een lege Nuxt-app; de Stager-shop-API levert wel prijzen | — |
 | Skatecafe | alles | site onbereikbaar (DNS) | — |
 
