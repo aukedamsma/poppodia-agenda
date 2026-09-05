@@ -261,6 +261,24 @@ def canonical_price(p: str | None) -> str | None:
     return p
 
 
+def display_price(p: str | None) -> str | None:
+    """Eén weergave voor elke prijs: altijd een komma, twee decimalen (€ 24,50), hele bedragen zonder decimalen (€ 24);
+    een paar cent onder/boven een heel bedrag (€ 19,98, € 20,02) wordt afgerond op het hele getal. 'gratis' en
+    'uitverkocht' blijven staan; tekst zonder herkenbaar bedrag ook."""
+    if not p:
+        return p
+    t = p.strip()
+    if t in ("gratis", "uitverkocht") or t.startswith("~"):
+        return t
+    m = re.fullmatch(r"€?\s?(\d{1,4})(?:[.,](\d{1,2}))?\s?(?:€|euro)?", t, re.I)
+    if not m:
+        return p
+    val = float(m.group(1)) + (float("0." + m.group(2).ljust(2, "0")) if m.group(2) else 0.0)
+    if abs(val - round(val)) <= 0.04:
+        return f"€ {int(round(val))}"
+    return f"€ {val:.2f}".replace(".", ",")
+
+
 def fmt_price(p) -> str | None:
     if p in (None, "", 0, "0", "0.00", "0,00"):
         return None
@@ -2677,7 +2695,7 @@ def main(only: list[str] | None = None) -> int:
         v["group"] = artistdb.GROUP_RENAMES.get(v.get("group"), v.get("group"))
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
-        e.price = normalize_price(canonical_price(e.price))
+        e.price = display_price(normalize_price(canonical_price(e.price)))
         e.title = strip_city(strip_country(e.title), e.city)   # "junkyardUK", "Band (USA)", "Popronde Alkmaar": geen deel van de naam
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:

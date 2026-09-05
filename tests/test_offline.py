@@ -683,6 +683,13 @@ def test_two_shows_same_day_not_merged():
     assert len(fetch.dedupe([a, b])) == 2
 
 
+def test_display_price():
+    d = lambda p: fetch.display_price(fetch.normalize_price(fetch.canonical_price(p)))
+    assert d("€ 9.50") == "€ 9,50" and d("€ 19,5") == "€ 19,50" and d("12,50 euro") == "€ 12,50"
+    assert d("€ 19,98") == "€ 20" and d("€ 20,02") == "€ 20" and d("€ 22") == "€ 22"
+    assert d("€ 24,05") == "€ 24,05" and d("gratis") == "gratis" and d("uitverkocht") == "uitverkocht"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
