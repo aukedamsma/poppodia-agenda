@@ -444,6 +444,25 @@ def test_stager_api_strategy():
     assert b.price == "gratis" and b.status == "uitverkocht"
 
 
+def test_base_blocked_falls_back_to_extra_sources():
+    """So What!: agendapagina geeft 403 (ook als browser) -> de Stager-shop als extra bron levert alsnog events."""
+    class Resp403:
+        status_code = 403; ok = False; text = "Forbidden"; headers = {}
+        def raise_for_status(self): raise fetch.requests.HTTPError("403 Client Error")
+        def json(self): raise ValueError
+    ld = {"@type": "ItemList", "itemListElement": [{"@type": "ListItem", "item": {"@type": "Event", "name": "Band X", "startDate": FUT + "T20:00:00+02:00", "url": "https://so-what.stager.co/shop/default/events/1"}},
+                                                   {"@type": "ListItem", "item": {"@type": "Event", "name": "Band Y", "startDate": FUT2 + "T20:00:00+02:00", "url": "https://so-what.stager.co/shop/default/events/2"}},
+                                                   {"@type": "ListItem", "item": {"@type": "Event", "name": "Band Z", "startDate": FUT2 + "T21:00:00+02:00", "url": "https://so-what.stager.co/shop/default/events/3"}}]}
+    fake_session({"so-what.nl": Resp403(), "stager.co": FakeResp(text=f'<script type="application/ld+json">{json.dumps(ld)}</script>')})
+    v = {"name": "So What!", "city": "Gouda", "url": "https://www.so-what.nl/agenda/", "type": "wp_event", "api": "https://www.so-what.nl/wp-json/wp/v2/event",
+         "extra_sources": [{"url": "https://so-what.stager.co/shop/default/events", "type": "jsonld", "enrich": False}]}
+    fetch._BROWSER_UA_HOSTS.clear()
+    evs, strat, note, audit = fetch.fetch_venue(v, {})
+    assert len(evs) == 3 and "alleen extra bronnen" in note, (len(evs), note)
+    assert fetch._looks_blocked(FakeResp(text="<html><title>Just a moment...</title><script src=cf-chl></script></html>"))
+    assert not fetch._looks_blocked(FakeResp(text="<html>" + "x" * 30000 + " captcha</html>"))
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

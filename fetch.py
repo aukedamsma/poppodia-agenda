@@ -109,6 +109,24 @@ BROWSER_HEADERS = {"User-Agent": BROWSER_UA, "Accept": "text/html,application/xh
 _BROWSER_UA_HOSTS: set[str] = set()   # hosts die onze eigen user-agent weigeren (Cloudflare 403: Het Podium, So What!)
 
 
+_BLOCK_RE = re.compile(r"just a moment|cf-chl|challenge-platform|attention required|access denied|are you a robot|captcha|bot verification|ddos-guard|incapsula|_Incapsula_Resource", re.I)
+
+
+def _looks_blocked(r) -> bool:
+    """Een 200 met een botmuur erin (Cloudflare 'Just a moment…', Incapsula): geen echte pagina. Ook een HTML-antwoord op
+    een JSON-eindpunt (wp-json/…) wijst daarop (Bolwerk, Estrado: 'tribe: JSONDecodeError')."""
+    try:
+        ct = (r.headers.get("content-type") or "").lower()
+        head = (r.text or "")[:3000]
+    except Exception:  # noqa: BLE001
+        return False
+    if _BLOCK_RE.search(head) and len(r.text or "") < 20000:
+        return True
+    if "/wp-json/" in str(getattr(r, "url", "")) and "json" not in ct and head.lstrip()[:1] in ("<", ""):
+        return True
+    return False
+
+
 def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
     if delay:
         time.sleep(delay)
@@ -116,7 +134,8 @@ def get(url: str, delay: float = 0.0, **kw) -> requests.Response:
     if host in _BROWSER_UA_HOSTS and "headers" not in kw:
         kw["headers"] = BROWSER_HEADERS
     r = SESSION.get(url, timeout=TIMEOUT, **kw)
-    if getattr(r, "status_code", 200) in (403, 406, 429, 503) and host not in _BROWSER_UA_HOSTS:
+    blocked = getattr(r, "status_code", 200) in (403, 406, 429, 503) or _looks_blocked(r)
+    if blocked and host not in _BROWSER_UA_HOSTS:
         # de site weigert de eigen user-agent van de agenda; probeer één keer als gewone browser (robots.txt staat crawlen toe)
         kw["headers"] = BROWSER_HEADERS
         r2 = SESSION.get(url, timeout=TIMEOUT, **kw)
@@ -1720,8 +1739,16 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         return [], "disabled", "uitgeschakeld in venues.yaml", {}
 
     html = ""
+    notes = []
     if t not in ("tribe", "sitemap_detail", "json_api", "stager") and not (t == "html" and v.get("api")):
-        html = get(base, delay=float(v.get("crawl_delay", 0))).text
+        try:
+            html = get(base, delay=float(v.get("crawl_delay", 0))).text
+        except requests.RequestException as ex:
+            # site weigert ons (Het Podium, So What!: Cloudflare 403 ook met browser-headers) -> toch de extra bronnen (ticketshop) proberen
+            if not v.get("extra_sources"):
+                raise
+            notes.append(f"agendapagina mislukt: {type(ex).__name__} {str(ex)[:100]} -> alleen extra bronnen")
+            t = "none"
 
     order = {
         "auto": ["jsonld", "microdata", "embedded", "html_preset", "tribe", "wp_event", "jsonld_detail"],
@@ -1729,8 +1756,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         "jsonld": ["jsonld"], "embedded": ["embedded"], "nextdata": ["embedded"],
         "tribe": ["tribe"], "wp_event": ["wp_event"], "json_api": ["json_api"], "stager": ["stager"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
         "sitemap_detail": ["sitemap_detail"],
-    }.get(t, [t])
-    notes = []
+    }.get(t, [t] if t != "none" else [])
     best: tuple[list[Event], str] = ([], "none")
     for strat in order:
         try:
