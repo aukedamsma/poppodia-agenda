@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-05T09:21:23",
+ "generated": "2026-09-05T10:28:57",
  "venues": [
   {
    "name": "TivoliVredenburg",
@@ -272,6 +272,21 @@
    "capacity": 1700
   },
   {
+   "name": "Merleyn",
+   "city": "Nijmegen",
+   "url": "https://www.doornroosje.nl/programma/?location=merleyn",
+   "strategy": "passive",
+   "events": 0,
+   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
+   "ok": true,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "poppodium",
+   "capacity": 250
+  },
+  {
    "name": "Patronaat",
    "city": "Haarlem",
    "url": "https://www.patronaat.nl/programma/",
@@ -290,8 +305,8 @@
      ]
     },
     "coverage": {
-     "time": 0.99,
-     "price": 0.94,
+     "time": 1.0,
+     "price": 0.95,
      "genre": 0.9
     },
     "weekend": 15,
@@ -528,7 +543,7 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.88,
+     "price": 0.89,
      "genre": 0.53
     },
     "weekend": 15,
@@ -569,13 +584,27 @@
    "name": "GIGANT",
    "city": "Apeldoorn",
    "url": "https://www.gigant.nl/concerten/",
-   "strategy": "none",
-   "events": 0,
-   "note": "agendapagina mislukt: HTTPError 403 Client Error: Forbidden for url: https://www.gigant.nl/concerten/ -> alleen extra bronnen; extra bron https://www.gigant.nl/clubnachten/: HTTPError 403 Client Error: Forbidden for url: https://www.gigant.nl/clubnachten/",
-   "ok": false,
+   "strategy": "wp_event",
+   "events": 46,
+   "note": "extra bron https://www.gigant.nl/clubnachten/: 10 events via wp_event, 10 nieuw",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 1.0
+    },
+    "weekend": 13,
+    "horizon": "2027-05-29"
    },
    "section": "poppodium",
    "capacity": 500
@@ -1283,13 +1312,28 @@
    "name": "Bolwerk (Poort)",
    "city": "Sneek",
    "url": "https://ontdekpoort.nl/programma/",
-   "strategy": "none",
-   "events": 0,
-   "note": "wp_event: JSONDecodeError Expecting value: line 1 column 1 (char 0)",
-   "ok": false,
+   "strategy": "wp_event",
+   "events": 134,
+   "note": "dun programma: 9/16 weekenddagen met een event (podium van 650 plaatsen)",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.91,
+     "price": 1.0,
+     "genre": 0.6
+    },
+    "weekend": 9,
+    "horizon": "2027-09-19",
+    "thin": true
    },
    "section": "poppodium",
    "capacity": 650
@@ -1382,13 +1426,28 @@
    "name": "Estrado",
    "city": "Harderwijk",
    "url": "https://www.estrado.nl/agenda",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld_detail: 0 events",
-   "ok": false,
+   "strategy": "jsonld_detail",
+   "events": 20,
+   "note": "dun programma: 10/16 weekenddagen met een event (podium van 420 plaatsen)",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.85,
+     "genre": 0.55
+    },
+    "weekend": 10,
+    "horizon": "2027-03-08",
+    "thin": true
    },
    "section": "poppodium",
    "capacity": 420
@@ -1511,9 +1570,9 @@
      ]
     },
     "coverage": {
-     "time": 0.98,
-     "price": 0.91,
-     "genre": 0.31
+     "time": 1.0,
+     "price": 0.93,
+     "genre": 0.33
     },
     "weekend": 9,
     "horizon": "2027-04-26"
@@ -1669,18 +1728,26 @@
    "name": "So What!",
    "city": "Gouda",
    "url": "https://www.so-what.nl/agenda/",
-   "strategy": "none",
-   "events": 28,
-   "note": "agendapagina mislukt: HTTPError 403 Client Error: Forbidden for url: https://www.so-what.nl/agenda/ -> alleen extra bronnen; extra bron https://so-what.stager.co/shop/default/events: 28 events via stager, 28 nieuw",
+   "strategy": "wp_event",
+   "events": 46,
+   "note": "extra bron https://so-what.stager.co/shop/default/events: 28 events via stager, 28 nieuw",
    "ok": true,
    "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.0
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
     },
-    "weekend": 11,
-    "horizon": "2027-03-19"
+    "coverage": {
+     "time": 0.99,
+     "price": 0.97,
+     "genre": 0.6
+    },
+    "weekend": 16,
+    "horizon": "2027-06-28"
    },
    "section": "poppodium",
    "capacity": 420
@@ -1834,13 +1901,14 @@
    "city": "Oss",
    "url": "https://www.groene-engel.nl/programma/",
    "strategy": "html",
-   "events": 116,
-   "note": "ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 98 events via stager, 98 nieuw",
+   "events": 45,
+   "note": "ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 0 events via none, 0 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 3,
+     "sampled": 4,
      "offsets": [
+      0.0,
       0.0,
       0.0,
       0.0
@@ -1848,10 +1916,10 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.96,
-     "genre": 0.52
+     "price": 0.91,
+     "genre": 1.0
     },
-    "weekend": 13,
+    "weekend": 11,
     "horizon": "2027-06-28"
    },
    "section": "poppodium",
@@ -2018,6 +2086,21 @@
    "capacity": 150
   },
   {
+   "name": "Zonnehuis",
+   "city": "Amsterdam",
+   "url": "https://www.paradiso.nl/",
+   "strategy": "passive",
+   "events": 0,
+   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
+   "ok": true,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "overig",
+   "capacity": 400
+  },
+  {
    "name": "Poppodium Phoenix",
    "city": "Breda",
    "url": "https://www.poppodiumphoenix.nl/",
@@ -2157,14 +2240,19 @@
   {
    "name": "Ziggo Dome",
    "city": "Amsterdam",
-   "url": "https://www.ziggodome.nl/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
+   "url": "https://www.ziggodome.nl/agenda",
+   "strategy": "json_api",
+   "events": 118,
+   "note": "",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "coverage": {
+     "time": 1.0,
+     "price": 0.0,
+     "genre": 0.99
+    },
+    "weekend": 11,
+    "horizon": "2027-06-30"
    },
    "section": "overig",
    "capacity": 17000
@@ -2172,26 +2260,28 @@
   {
    "name": "AFAS Live",
    "city": "Amsterdam",
-   "url": "https://www.afaslive.nl/",
-   "strategy": "jsonld_detail",
-   "events": 15,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.afaslive.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 15 events; dun programma: 3/16 weekenddagen met een event (podium van 6000 plaatsen)",
+   "url": "https://www.afaslive.nl/agenda",
+   "strategy": "html",
+   "events": 93,
+   "note": "",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 1,
+     "sampled": 4,
      "offsets": [
+      0.0,
+      0.0,
+      0.0,
       0.0
      ]
     },
     "coverage": {
-     "time": 0.47,
-     "price": 0.93,
-     "genre": 0.27
+     "time": 0.52,
+     "price": 0.98,
+     "genre": 0.22
     },
-    "weekend": 3,
-    "horizon": "2027-05-26",
-    "thin": true
+    "weekend": 11,
+    "horizon": "2027-10-09"
    },
    "section": "overig",
    "capacity": 6000
@@ -2336,12 +2426,17 @@
    "city": "Dordrecht",
    "url": "https://muziekpodiumdjs.nl/",
    "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: JSONDecodeError Expecting value: line 1 column 1 (char 0); wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
+   "events": 43,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: muziekpodiumdjs.stager.co; extra bron https://muziekpodiumdjs.stager.co/shop/default/events: 43 events via stager, 43 nieuw",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "coverage": {
+     "time": 1.0,
+     "price": 0.58,
+     "genre": 0.0
+    },
+    "weekend": 13,
+    "horizon": "2026-12-20"
    },
    "section": "overig",
    "capacity": 100
@@ -2667,7 +2762,7 @@
    "capacity": null
   }
  ],
- "relocated": 235,
+ "relocated": 304,
  "deduped": 201,
  "learned": {
   "kind_tags": {
@@ -3094,6 +3189,38 @@
    "lezing": {
     "kind": "talk",
     "obs": 6
+   },
+   "intern evenement": {
+    "kind": "festival",
+    "obs": 5
+   },
+   "show & entertainment": {
+    "kind": "other",
+    "obs": 5
+   },
+   "muziektheater": {
+    "kind": "other",
+    "obs": 5
+   },
+   "muziekbingo": {
+    "kind": "other",
+    "obs": 5
+   },
+   "quiz popmuziek": {
+    "kind": "other",
+    "obs": 5
+   },
+   "lhbtiq+ gooise pride maand": {
+    "kind": "club",
+    "obs": 5
+   },
+   "pop, dansfeest": {
+    "kind": "club",
+    "obs": 5
+   },
+   "70's 80's disco": {
+    "kind": "club",
+    "obs": 5
    },
    "presentatie": {
     "kind": "other",
@@ -4151,6 +4278,101 @@
     "group": "kids",
     "label": "jeugd muziek",
     "obs": 6
+   },
+   "blues & roots": {
+    "group": "blues",
+    "label": "blues & roots",
+    "obs": 10
+   },
+   "toneel": {
+    "group": "spokenword",
+    "label": "toneel",
+    "obs": 5
+   },
+   "theatercollege": {
+    "group": "hiphop",
+    "label": "theatercollege",
+    "obs": 5
+   },
+   "klassiek & opera": {
+    "group": "classical",
+    "label": "klassiek & opera",
+    "obs": 5
+   },
+   "muziekbingo": {
+    "group": "party",
+    "label": "muziekbingo",
+    "obs": 5
+   },
+   "talent": {
+    "group": "soul",
+    "label": "talent",
+    "obs": 5
+   },
+   "nederlandstalige pop": {
+    "group": "nederlandstalig",
+    "label": "nederlandstalige pop",
+    "obs": 5
+   },
+   "pop & rock": {
+    "group": "rock",
+    "label": "pop & rock",
+    "obs": 5
+   },
+   "r&b en pop": {
+    "group": "soul",
+    "label": "r&b en pop",
+    "obs": 5
+   },
+   "symphonische rock": {
+    "group": "party",
+    "label": "symphonische rock",
+    "obs": 5
+   },
+   "80's tot nu": {
+    "group": "party",
+    "label": "80's tot nu",
+    "obs": 5
+   },
+   "nostalgie": {
+    "group": "party",
+    "label": "nostalgie",
+    "obs": 5
+   },
+   "gooise pride maand": {
+    "group": "party",
+    "label": "gooise pride maand",
+    "obs": 5
+   },
+   "70's 80's": {
+    "group": "party",
+    "label": "70's 80's",
+    "obs": 5
+   },
+   "nederlandstalige hip hop": {
+    "group": "nederlandstalig",
+    "label": "nederlandstalige hip hop",
+    "obs": 5
+   },
+   "60s rock": {
+    "group": "party",
+    "label": "60s rock",
+    "obs": 5
+   },
+   "uitverkocht!": {
+    "group": "electronic",
+    "label": "uitverkocht!",
+    "obs": 5
+   },
+   "calypso": {
+    "group": "latin",
+    "label": "calypso",
+    "obs": 5
+   },
+   "eigen special (dance)": {
+    "group": "electronic",
+    "label": "eigen special (dance)",
+    "obs": 5
    }
   }
  },
@@ -4396,6 +4618,7 @@
   "cross over": "cross over",
   "muziektheater": "muziektheater",
   "koren": "koren",
+  "theatercollege": "theatercollege",
   "jeugd muziek": "jeugd muziek",
   "electronisch live": "electronisch live",
   "global dance tunes": "global dance tunes",
@@ -4439,7 +4662,16 @@
   "terror": "terror",
   "hardcore gabber": "hardcore gabber",
   "alternatief (dance)": "alternatief (dance)",
+  "muziekbingo": "muziekbingo",
+  "talent": "talent",
+  "nederlandstalige pop": "nederlandstalige pop",
+  "pop & rock": "pop & rock",
+  "r&b en pop": "r&b en pop",
+  "80's tot nu": "80's tot nu",
+  "nostalgie": "nostalgie",
   "bingo": "bingo",
+  "gooise pride maand": "gooise pride maand",
+  "nederlandstalige hip hop": "nederlandstalige hip hop",
   "k-pop": "K-pop",
   "schorem": "schorem",
   "garage punk rock 'n roll": "garage punk rock 'n roll",
@@ -4464,13 +4696,22 @@
   "detroit techno": "detroit techno",
   "klein kunst": "klein kunst",
   "dialect": "dialect",
+  "blues & roots": "blues & roots",
+  "cabaret & comedy": "cabaret & comedy",
+  "jeugd & familie": "jeugd & familie",
+  "toneel": "toneel",
+  "klassiek & opera": "klassiek & opera",
   "pubquiz": "pubquiz",
   "wereld": "wereld",
   "theaterconcert": "theaterconcert",
+  "eigen special (dance)": "eigen special (dance)",
+  "calypso": "calypso",
   "street art": "street art",
   "spoken word": "Spoken word",
-  "cabaret & comedy": "cabaret & comedy",
-  "jeugd & familie": "jeugd & familie"
+  "symphonische rock": "symphonische rock",
+  "70's 80's": "70's 80's",
+  "60s rock": "60s rock",
+  "uitverkocht!": "uitverkocht!"
  },
  "subgenre_groups": {
   "post-punk": "punk",
@@ -4714,6 +4955,7 @@
   "cross over": "classical",
   "muziektheater": "classical",
   "koren": "classical",
+  "theatercollege": "hiphop",
   "jeugd muziek": "kids",
   "electronisch live": "electronic",
   "global dance tunes": "electronic",
@@ -4757,7 +4999,16 @@
   "terror": "metal",
   "hardcore gabber": "metal",
   "alternatief (dance)": "electronic",
+  "muziekbingo": "party",
+  "talent": "soul",
+  "nederlandstalige pop": "nederlandstalig",
+  "pop & rock": "rock",
+  "r&b en pop": "soul",
+  "80's tot nu": "party",
+  "nostalgie": "party",
   "bingo": "party",
+  "gooise pride maand": "party",
+  "nederlandstalige hip hop": "nederlandstalig",
   "k-pop": "pop",
   "schorem": "electronic",
   "garage punk rock 'n roll": "punk",
@@ -4782,18 +5033,27 @@
   "detroit techno": "electronic",
   "klein kunst": "hiphop",
   "dialect": "nederlandstalig",
+  "blues & roots": "blues",
+  "cabaret & comedy": "spokenword",
+  "jeugd & familie": "kids",
+  "toneel": "spokenword",
+  "klassiek & opera": "classical",
   "pubquiz": "party",
   "wereld": "jazz",
   "theaterconcert": "spokenword",
+  "eigen special (dance)": "electronic",
+  "calypso": "latin",
   "street art": "electronic",
   "spoken word": "spokenword",
-  "cabaret & comedy": "spokenword",
-  "jeugd & familie": "kids"
+  "symphonische rock": "party",
+  "70's 80's": "party",
+  "60s rock": "party",
+  "uitverkocht!": "electronic"
  },
- "series": 7267,
+ "series": 7548,
  "estimated": {
   "price": 0,
-  "time": 6,
+  "time": 5,
   "kind": 9
  },
  "unknown_genres": {
@@ -4817,15 +5077,15 @@
   "Activiteit": 9,
   "DJ": 8,
   "Dansfeest": 8,
-  "Quiz": 8,
+  "Toneel": 8,
   "Uitgaan": 8,
   "Multidisciplinair": 7,
+  "Theatercollege": 7,
   "00's": 6,
   "muziektheater": 6,
   "Elektronische dansmuziek": 6,
   "Hardcorepunk": 6,
   "Clubnight": 6,
-  "KidsTheater": 6,
   "EKKO40": 5,
   "dordtpas": 5,
   "Theaterconcert": 5,
@@ -4835,15 +5095,19 @@
   "Cultuureducatie & talentontwikkeling": 4,
   "gratis": 4,
   "Dialect": 4,
+  "Musical": 4,
   "Talentontwikkeling": 4,
   "Diep In De Groef": 3,
   "Le Guess Who?": 3,
   "TikTok-sensatie": 3,
   "Fantasy": 3,
+  "Muziekcafé": 3,
   "Uitverkocht": 3,
   "PULS": 3,
   "Singersongwriter": 3,
+  "Schoolvoorstelling": 3,
   "Lokaal": 3,
+  "Thema": 3,
   "front": 3,
   "Soulful": 2,
   "Actie": 2,
@@ -4869,7 +5133,7 @@
   "Gratis aanmelden": 2,
   "Beeldende kunst": 2,
   "Wereld": 2,
-  "FilmSpecials": 2,
+  "Themafeest": 2,
   "Street art": 2,
   "karaEKKO": 1,
   "ZORA": 1,
@@ -4940,15 +5204,11 @@
   "gabba": 1,
   "acidcore": 1,
   "terror": 1,
+  "Raw": 1,
   "Muziekbingo": 1,
-  "Talent": 1,
-  "nostalgie": 1,
-  "Hazes": 1,
-  "Gooise Pride Maand": 1,
-  "Schorem": 1,
-  "Volkskeuken": 1
+  "Talent": 1
  },
- "artists": 6224,
+ "artists": 6396,
  "genre_groups": {
   "electronic": "Elektronisch",
   "rock": "Rock",
@@ -4979,12 +5239,12 @@
   "overig": "Overig"
  },
  "kinds": {
-  "concert": 5914,
-  "club": 735,
-  "festival": 196,
-  "talk": 196,
-  "other": 341
+  "concert": 6224,
+  "club": 776,
+  "festival": 208,
+  "talk": 213,
+  "other": 347
  },
- "archive": 8633,
- "total_events": 7382
+ "archive": 8986,
+ "total_events": 7768
 }
