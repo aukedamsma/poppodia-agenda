@@ -1082,7 +1082,10 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
       4. GET  /shop/v1/events/{id}/tickets-overview -> ticketGroups[{name, priceInCents}] -> reguliere online prijs
     Lukt de sessie niet, dan valt de aanroeper terug op de JSON-LD van de shoppagina (type: jsonld)."""
     root = f"{urlparse(base).scheme}://{urlparse(base).netloc}"
-    html = get(f"{root}/shop/default/events", delay=0.3).text
+    # shopnaam uit de URL: meestal /shop/default/…, maar Luxor Live verkoopt via /shop/luxor-live/… (default is daar leeg)
+    ms = re.search(r"/shop/([a-z0-9_-]+)", urlparse(base).path, re.I)
+    shop = ms.group(1) if ms else "default"
+    html = get(f"{root}/shop/{shop}/events", delay=0.3).text
     m = re.search(r'data-flags="([^"]+)"', html)
     if not m:
         raise ValueError("Stager: geen data-flags/shopId op de shoppagina")
@@ -1109,7 +1112,7 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
         start = _stager_local(it.get("startsOn"))
         if not start or not it.get("eventId"):
             continue
-        url = f"{root}/shop/default/events/{it['eventId']}"
+        url = f"{root}/shop/{shop}/events/{it['eventId']}"
         # prijs per event, één keer per dag gecached
         ck = "stager|" + url
         c = cache.get(ck)
@@ -2328,7 +2331,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 scan = get(base, delay=0.3).text
             except requests.RequestException:
                 scan = ""
-        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (scan or "").lower()))
+        found = re.findall(r"https?://([a-z0-9-]+)\.stager\.co/(?:shop/([a-z0-9_-]+))?", (scan or "").lower())
+        shops = {f[0] for f in found}
+        shop_path = {f[0]: f[1] for f in found if f[1] and f[1] not in ("v1",)}
         if not shops and evs:
             # de ticketlink staat vaak alleen op de eventpagina (dB's: dbs.stager.co/shop/default/events/…): drie steekproeven
             for e in evs[:3]:
@@ -2336,7 +2341,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                     scan = get(e.url, delay=0.3).text if e.url and e.url.rstrip("/") != base.rstrip("/") else ""
                 except requests.RequestException:
                     continue
-                shops |= set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", scan.lower()))
+                found = re.findall(r"https?://([a-z0-9-]+)\.stager\.co/(?:shop/([a-z0-9_-]+))?", scan.lower())
+                shops |= {f[0] for f in found}
+                shop_path.update({f[0]: f[1] for f in found if f[1] and f[1] not in ("v1",)})
                 if shops:
                     break
         # alleen shops die bij dít podium horen: Luxor Live linkt ook naar willemeen.stager.co, De Spot naar deoostkerk, Neushoorn
@@ -2348,7 +2355,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             return slug != "app" and len(sf) >= 3 and (sf in vf or vf in sf or sf in host or host in sf)
         shops = {s_ for s_ in shops if mine(s_)}
         for slug in sorted(shops)[:2]:
-            src = {"url": f"https://{slug}.stager.co/shop/default/events", "type": "stager", "enrich": False}
+            src = {"url": f"https://{slug}.stager.co/shop/{shop_path.get(slug, 'default')}/events", "type": "stager", "enrich": False}
             if src["url"] not in [x.get("url") for x in as_list(v.get("extra_sources") or [])]:
                 v = {**v, "extra_sources": as_list(v.get("extra_sources") or []) + [src]}
                 notes.append(f"ticketshop herkend: {slug}.stager.co")
