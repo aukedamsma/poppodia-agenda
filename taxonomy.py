@@ -265,7 +265,7 @@ GENERIC_TITLE = re.compile(r"\b(festival|fest|clubnacht|club night|night|nacht|p
 # Alleen als suffix; nooit als het deel van de naam is ("UK Subs", "US Girls"). IS/NO/IT/DE/ES als los woord niet
 # (kunnen woorden zijn), wel tussen haakjes.
 _CN = r"(?:JAPAN|GERMANY|DUITSLAND|FRANCE|FRANKRIJK|BELGIUM|BELGIË|BELGIE|SPAIN|SPANJE|ITALY|ITALIË|SWEDEN|ZWEDEN|NORWAY|NOORWEGEN|DENMARK|DENEMARKEN|FINLAND|ICELAND|IJSLAND|IRELAND|IERLAND|CANADA|AUSTRALIA|AUSTRALIË|BRAZIL|BRAZILIË|PORTUGAL|POLAND|POLEN|AUSTRIA|OOSTENRIJK|SWITZERLAND|ZWITSERLAND|SCOTLAND|SCHOTLAND|ENGLAND|ENGELAND|WALES|MEXICO|ARGENTINA|CHILE|COLOMBIA|NIGERIA|GHANA|SOUTH AFRICA|ZUID-AFRIKA|KOREA|CHINA|INDIA|ISRAEL|TURKEY|TURKIJE|GREECE|GRIEKENLAND|NEW ZEALAND)"
-_CC = r"(?:UK|GB|USA|US|BE|NL|DE|GER|FR|IT|ITA|ES|ESP|PT|PL|AT|AUT|CH|SE|SWE|NO|NOR|DK|DNK|FI|FIN|IS|ISL|IE|IRL|CA|CAN|AU|AUS|NZ|JP|JPN|BR|BRA|AR|MX|ZA|RSA|GR|TR|CZ|HU|RO|UA|UKR|KR|CN|IN|IL|EU)"
+_CC = r"(?:UK|GB|USA|US|VS|BE|NL|DE|GER|FR|IT|ITA|ES|ESP|PT|PL|AT|AUT|CH|SE|SWE|NO|NOR|DK|DNK|FI|FIN|IS|ISL|IE|IRL|CA|CAN|AU|AUS|NZ|JP|JPN|BR|BRA|AR|MX|ZA|RSA|GR|TR|CZ|HU|RO|UA|UKR|KR|CN|IN|IL|EU)"
 COUNTRY_PAREN = re.compile(r"\s*[\(\[]\s*" + _CC + r"(?:\s*[/,+&]\s*" + _CC + r")*\s*[\)\]]")
 COUNTRY_NAME_PAREN = re.compile(r"\s*[\(\[]\s*" + _CN + r"(?:\s*[/,+&]\s*" + _CN + r")*\s*[\)\]]", re.I)
 COUNTRY_GLUED = re.compile(r"(?<=[a-z])" + _CC.replace("|NO|", "|").replace("|IS|", "|").replace("|IT|", "|").replace("|DE|", "|").replace("|ES|", "|").replace("|IN|", "|").replace("|CA|", "|") + r"$")

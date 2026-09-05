@@ -115,6 +115,7 @@ input.ghost{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none
 .save:hover{color:var(--accent);background:var(--accent-soft)}
 .save[aria-pressed="true"]{color:var(--accent)} .save[aria-pressed="true"] svg{fill:currentColor}
 .card .g{padding-right:30px}
+.card .w .co{color:var(--ink-3);font-weight:400}
 /* dagen en kaartjes */
 main{padding:6px 0 60px}
 .day{padding:10px 0 6px}
@@ -335,6 +336,9 @@ button:focus-visible{outline:none}
   try { saved = new Set(JSON.parse(localStorage.getItem('podiumagenda_saved') || '[]')); } catch(e){}
   const saveSaved = () => { try { localStorage.setItem('podiumagenda_saved', JSON.stringify([...saved])); } catch(e){} };
   const keyOfEv = e => e.venue + '|' + e.url;
+  // podiumregel: "Maassilo (BIRD & Rotown)" bij een samenwerking op een andere plek, "De Helling" bij een verhuisd event
+  const venueLabel = e => { const orgs=[e.venue].concat(e.co_venues||[]).map(esc); const loc=e.location&&e.location.toLowerCase()!==e.venue.toLowerCase()?esc(e.location):null;
+    return loc ? `<b>${loc}</b> <span class="co">(${orgs.join(' & ')})</span>` : (orgs.length>1 ? `<b>${orgs.join(' & ')}</b>` : `<b>${orgs[0]}</b>`); };
   try { Object.assign(state, JSON.parse(localStorage.getItem('podiumagenda2') || '{}')); } catch(e){}
   if (['week','month'].includes(state.view)) state.view='all';
   if (!state.day || state.day < TODAY) state.day = TODAY;
@@ -500,7 +504,7 @@ button:focus-visible{outline:none}
       // weekweergave, vier regels: titel · podium + stad · datum + tijd + prijs + bookmark · genre
       return `<a class="card compact${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
         <div class="t" title="${esc(e.title)}${isNew(e)?' · nieuw aangekondigd':''}">${isNew(e)?'<span class="dot"></span>':''}${esc(e.title)}</div>
-        <div class="w"><span class="wl"><b>${esc(e.venue)}</b> · ${esc(e.city)}</span></div>
+        <div class="w"><span class="wl">${venueLabel(e)} · ${esc(e.city)}</span></div>
         <div class="w dt"><span class="wl">${[tm,pr].filter(Boolean).join(' · ')||' '}</span>${saveBtn}</div>
         <div class="g"><span class="gl">${g}</span></div>
       </a>`;
@@ -509,7 +513,7 @@ button:focus-visible{outline:none}
       <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.status==='uitverkocht'?' soldout':e.price_est?' est':''}">${e.status==='uitverkocht'?'uitverkocht':e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span></span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${sub}</div>
-      <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}"><b>${esc(e.venue)}</b> · ${esc(e.city)}</div>
+      <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}">${venueLabel(e)} · ${esc(e.city)}</div>
       <div class="g">${g}</div>
       ${saveBtn}
     </a>`;

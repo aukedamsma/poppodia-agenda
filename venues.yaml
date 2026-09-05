@@ -319,8 +319,9 @@
   link: "a.ticket-row"
   subtitle: ".event-subtitle"
   genre: ".event-genre"
-  list_pages_template: "https://metropool.nl/agenda?page={n}"
-  notes: "10 events per pagina (?page=n); kaart heeft datum 'vr 04 sep', tijd '20:00', locatie (Hengelo/Enschede), genre. Eerder gaf jsonld_detail URL's van stadsschouwburg-utrecht.nl (zelfde CMS-leverancier) -> html-lijst. Tickets via Ticketmaster (geen server-side data)"
+  api: "https://metropool.nl/mvc/event/partial?pNumber={page}&keyword=&genre=&tag=&type=&StartDate=&EndDate=&locatie=&label=&newAnnounced=False"
+  max_pages: 40
+  notes: "10 events per pagina; ?page=n op /agenda werkt NIET (altijd pagina 1), de echte paginering is de XHR /mvc/event/partial?pNumber=n (HTML-fragment, ~17 pagina's, tot ~5 maanden vooruit). Kaart heeft datum 'vr 04 sep', tijd '20:00', locatie (Hengelo/Enschede: beide Metropool), genre. Eerder gaf jsonld_detail URL's van stadsschouwburg-utrecht.nl (zelfde CMS-leverancier) -> html-lijst. Tickets via Ticketmaster (geen server-side data)"
 - name: FLUOR
   city: Amersfoort
   url: https://fluor033.nl/programma/
@@ -691,6 +692,18 @@
   enrich: false
   notes: "gemengd programma (film/concert/expo); ?type=concert, 10 per pagina (&page=n; in de browser stonden alle 41 in één HTML, de fetcher kreeg er 10). Datum 'donderdag 10 sep.' + tijd '19:00' in de kaart. Prijs staat alleen in de Ticketlab-shop (tickets.cacaofabriek.nl, JS/cookiemuur) -> geen prijs"
 - {name: Astrant, city: Ede, url: "https://astrant-ede.nl/programma-evenementen-en-activiteiten-ede/", capacity: 150}
+- name: Maassilo
+  city: Rotterdam
+  url: https://www.maassilo.com/agenda/
+  capacity: 3500
+  aliases: [Now&Wow, Now & Wow]
+  type: html
+  item: ".x-core-card--agenda"
+  title: ".x-core-title--title"
+  date: ".x-core-title--pre"
+  link: "a.x-core-card--agenda__link"
+  subtitle: ".x-core-card--agenda__content"
+  notes: "vooral nachtprogramma (techno, hardcore, hardstyle) plus concerten; eigen agenda toont alleen eigen events (~7), samenwerkingen (BIRD + Rotown: Zwangere Guy) staan bij die podia en worden via merge_coproductions aan Maassilo gekoppeld. Kaart: datum '1 nov' + titel; eventpagina: 'De deuren openen om 19:00 uur en de show start om 20:00 uur … Tijd: 19:00 - 22:30 · Prijs: vanaf 59,90'. WP REST agenda-type zonder ACF; geen JSON-LD"
 - {name: De Meester, city: Almere, url: "https://poppodiumdemeester.nl/", capacity: 300}
 
 # ---------------- Batch 4: geen VNPF-poppodia, wel live muziek (section: overig) ----------------

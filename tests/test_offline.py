@@ -529,6 +529,22 @@ def test_strip_city():
     assert extract_artists("Popronde 2026") == ["Popronde"]
 
 
+def test_coproduction_merge():
+    """BIRD + Rotown: "Zwangere Guy | Maassilo Rotterdam" en "Zwangere Guy", zelfde dag/tijd/stad -> één kaart."""
+    a = fetch.Event(venue="BIRD", city="Rotterdam", title="Zwangere Guy | Maassilo Rotterdam", start="2026-12-03T20:00", url="https://bird/1", price="€ 28,50", genres=["Hiphop"])
+    b = fetch.Event(venue="Rotown", city="Rotterdam", title="Zwangere Guy", start="2026-12-03T20:00", url="https://rotown/1")
+    c = fetch.Event(venue="Rotown", city="Rotterdam", title="Zwangere Guy", start="2026-12-04T20:00", url="https://rotown/2")
+    r = fetch.dedupe([a, b, c])
+    assert len(r) == 2 and r[0].title == "Zwangere Guy" and r[0].location == "Maassilo" and r[0].co_venues == ["Rotown"]
+
+
+def test_canonical_price():
+    cp = lambda p: fetch.normalize_price(fetch.canonical_price(p))
+    assert cp("Voorverkoop €21,00 Deurticket €26,00") == "€ 21"   # De Peppel (Tribe cost-tabel)
+    assert cp("$18,50") == "€ 18,50" and cp("€ € 40,00") == "€ 40"  # FLUOR valutasymbool, Ahoy dubbel euroteken
+    assert cp("gratis") == "gratis" and cp("uitverkocht") == "uitverkocht"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

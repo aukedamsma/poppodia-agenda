@@ -18,6 +18,7 @@ import json
 from collections import Counter
 import os
 import re
+from functools import lru_cache
 import sys
 import time
 import traceback
@@ -85,6 +86,7 @@ class Event:
     free: bool = False
     lineup: list[str] = field(default_factory=list)       # line-up van de eventpagina (JSON-LD performer of `lineup`-selector)
     location: str | None = None    # locatie zoals het podium die noemt, als die afwijkt van het podium zelf (Paradiso in Tolhuistuin)
+    co_venues: list[str] = field(default_factory=list)    # medeorganiserende podia (BIRD + Rotown: Zwangere Guy in Maassilo)
     subgenres: list[str] = field(default_factory=list)    # canonieke subgenres (genres.yaml -> subgenres, + zelfgeleerd)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
@@ -169,6 +171,23 @@ def normalize_price(p: str | None) -> str | None:
         val = float(m.group(1)) + (float("0." + m.group(2)) if m.group(2) else 0.0)
         if val < 1:
             return "gratis"
+    return p
+
+
+def canonical_price(p: str | None) -> str | None:
+    """Ruwe prijstekst uit een bron (Tribe 'cost': "Voorverkoop €21,00 Deurticket €26,00") naar één bedrag volgens dezelfde
+    regels als eventpagina's: online/voorverkoop-prijs, inclusief servicekosten; 'uitverkocht' en 'gratis' blijven."""
+    if not p:
+        return None
+    p = re.sub(r"\$\s?(?=\d)", "€ ", p)   # FLUOR (Tribe met verkeerd valutasymbool): "$18,50" is € 18,50
+    if re.fullmatch(r"€ ?\d+(?:[.,]\d{1,2})?|gratis|uitverkocht|~.*", p.strip()):
+        return p
+    low, fee = _strip_service_fee(p.lower())
+    pm = _pick_price(low)
+    if pm:
+        return fmt_price(_add_fee(pm, fee))
+    if re.search(r"\bgratis\b|\bfree\b", low):
+        return "gratis"
     return p
 
 
@@ -397,13 +416,32 @@ def _ld_location(n: dict, v: dict) -> str | None:
 _LOC_TEXT = re.compile(r"(?i:vindt plaats (?:in|bij|op)|takes place (?:in|at)|locatie\s*[:\-]?|location\s*[:\-]?|\|\s*(?:in|@|at)|(?:^|\s)@)\s*((?:de |het |'t |the )?[A-Z0-9][\w'’&.\-]*(?: [A-Z0-9][\w'’&.\-]*){0,3})", re.M)
 
 
+@lru_cache(maxsize=1)
+def _known_venue_names() -> dict[str, str]:
+    """gefolde naam/alias -> podiumnaam, uit venues.yaml (voor locatieherkenning in tekst)."""
+    out = {}
+    try:
+        for v in yaml.safe_load((ROOT / "venues.yaml").read_text(encoding="utf-8")) or []:
+            out[_fold(v["name"])] = v["name"]
+            for a in as_list(v.get("aliases") or []):
+                out[_fold(a)] = v["name"]
+    except Exception:  # noqa: BLE001
+        pass
+    return out
+
+
 def location_from_text(txt: str, v: dict) -> str | None:
     """Andere locatie uit de paginatekst: Tivoli "Dit concert vindt plaats in De Helling, Helling 7 in Utrecht" /
-    ondertitel "… | in De Helling". Alleen namen die in venues.yaml staan tellen (relabel_by_location); de rest is ruis."""
+    ondertitel "… | in De Helling". Alleen podia uit venues.yaml tellen; zaalnamen ("Locatie: Ronda") zijn geen locatie."""
+    known = _known_venue_names()
     for m in _LOC_TEXT.finditer(txt[:6000]):
         cand = m.group(1).strip(" ,.")
-        if cand and _fold(cand) != _fold(v["name"]) and _fold(cand) not in _fold(v["name"]):
-            return cand
+        f = _fold(cand)
+        if not cand or f == _fold(v["name"]) or f in _fold(v["name"]):
+            continue
+        hit = known.get(f) or next((n for k, n in known.items() if len(k) > 4 and f.startswith(k + " ")), None)
+        if hit and hit != v["name"]:
+            return hit
     return None
 
 
@@ -1150,6 +1188,11 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
         if not ev.price and tprice:
             ev.price = tprice
+        elif tprice and ev.price and _fee_inclusive(txt):
+            # LantarenVenster: JSON-LD offers 19 (excl.), pagina "€ 22 incl. € 3,00 servicekosten": de prijs is wat je betaalt
+            a, b = price_number(ev.price), price_number(tprice)
+            if a and b and 0 < b - a <= 6:
+                ev.price = tprice
     cache[url] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "fv": FLIGHT_VERSION, "event": asdict(ev) if ev else None}
     return ev
 
@@ -1284,7 +1327,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     mp = re.search(r"(\d{1,2})[:.u](\d{2})\s*\((?:doors?|deuren|zaal open)\W{0,4}(\d{1,2})[:.u](\d{2})\)", low)
     if mp and not start:
         start = (int(mp.group(1)), int(mp.group(2)))
-    d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})")
+    d1 = hm(r"(?:deuren (?:openen|gaan open)|deur|deuren|doors|zaal open|open)\W{0,14}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})")
     d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
     if start and doors and start[0] < 6 and doors[0] >= 17:
@@ -1327,6 +1370,11 @@ def _strip_service_fee(low: str) -> tuple[str, float]:
     low = re.sub(r"(?:incl\.?|inclusief|inclusive of|excl\.?|exclusief|exclusive of|\+|plus)?\s*€?\s?\d{1,3}(?:[.,]\d{2})?\s*(?:aan\s+)?" + _FEE_WORDS + r"\b", " ", low)
     low = re.sub(_FEE_WORDS + r"\W{0,12}€?\s?\d{1,3}(?:[.,]\d{2})?", " ", low)
     return low, fee
+
+
+def _fee_inclusive(txt: str) -> bool:
+    """Staat er op de pagina een prijs 'incl. € x servicekosten'?"""
+    return bool(re.search(r"incl\w*\.?\s*(?:€\s?\d[\d.,]*\s*)?(?:aan\s+)?" + _FEE_WORDS, txt, re.I))
 
 
 def _add_fee(amount: str, fee: float) -> str:
@@ -1589,7 +1637,9 @@ def audit_venue(v: dict, evs: list[Event], cache: dict) -> dict:
                 st = datetime.fromisoformat(e.start)
                 diff = round(((hh * 60 + mm) - (st.hour * 60 + st.minute)) / 60, 1)
                 offsets.append(diff)
-                if diff:
+                # gestructureerde bronnen (JSON-LD, Stager, JSON-API) winnen van tekstheuristiek: LantarenVenster "Dezelfde
+                # avond om 20:30 uur treedt Teus Nobel op" gaf een valse -1u voor een event van 19:00. Alleen lijst-HTML corrigeren.
+                if diff and not (e.source or "").startswith(("jsonld", "stager", "json_api", "flight", "microdata", "tribe", "wp_event")):
                     e.start = st.replace(hour=hh, minute=mm).isoformat(timespec="minutes")
         if offsets:
             common = Counter(offsets).most_common(1)[0]
@@ -2125,7 +2175,51 @@ def dedupe(events: list[Event]) -> list[Event]:
             continue
         by_day.setdefault(day_key, []).append(e)
         final.append(e)
-    return final
+    return merge_coproductions(final)
+
+
+_LOC_IN_TITLE = re.compile(r"\s*[|@•]\s*(?:in\s+|@\s*)?([A-Z][\w'’&.\-]*(?: [A-Z][\w'’&.\-]*){0,3})\s*$")
+
+
+def merge_coproductions(events: list[Event]) -> list[Event]:
+    """Zelfde event bij twee podia in dezelfde stad, zelfde dag en (vrijwel) zelfde tijd = een samenwerking op één plek
+    (BIRD + Rotown: "Zwangere Guy | Maassilo Rotterdam" en "Zwangere Guy", beide do 3 dec 20:00). Eén kaart blijft, met
+    de medeorganisator in co_venues en de plek (uit de titel, "| Maassilo Rotterdam") in location."""
+    by_key: dict[tuple, list[Event]] = {}
+    out: list[Event] = []
+    for e in events:
+        if e.start[11:16] in ("", "00:00"):
+            out.append(e)
+            continue
+        key = (_fold(e.city), e.start[:10])
+        st = datetime.fromisoformat(e.start)
+        match = None
+        for o in by_key.get(key, []):
+            if o.venue != e.venue and o.venue not in e.co_venues and abs((datetime.fromisoformat(o.start) - st).total_seconds()) <= 1800 and _same_event(o, e):
+                match = o
+                break
+        if match is None:
+            by_key.setdefault(key, []).append(e)
+            out.append(e)
+            continue
+        rich, poor = (e, match) if _richness(e) > _richness(match) else (match, e)
+        rich.co_venues = sorted(set(rich.co_venues + poor.co_venues + [poor.venue]) - {rich.venue})
+        for t in (rich.title, poor.title):
+            m = _LOC_IN_TITLE.search(t)
+            if m and not rich.location:
+                rich.location = strip_city(m.group(1).strip(), rich.city)
+        if rich.location:
+            rich.title = _LOC_IN_TITLE.sub("", rich.title).strip() or rich.title
+        if not rich.price and poor.price:
+            rich.price = poor.price
+        if not rich.genres and poor.genres:
+            rich.genres = poor.genres
+        if not rich.subtitle and poor.subtitle:
+            rich.subtitle = poor.subtitle
+        if rich is e:
+            out[out.index(match)] = e
+            by_key[key][by_key[key].index(match)] = e
+    return out
 
 
 def _title_key(t: str) -> str:
@@ -2241,7 +2335,7 @@ def main(only: list[str] | None = None) -> int:
         v["group"] = artistdb.GROUP_RENAMES.get(v.get("group"), v.get("group"))
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
-        e.price = normalize_price(e.price)
+        e.price = normalize_price(canonical_price(e.price))
         e.title = strip_city(strip_country(e.title), e.city)   # "junkyardUK", "Band (USA)", "Popronde Alkmaar": geen deel van de naam
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
