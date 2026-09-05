@@ -923,6 +923,8 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
                 dt = parse_dt(raw_date)
             if not dt:
                 continue
+            if v.get("time_utc") and dt.tzinfo is None:
+                dt = to_local(dt.replace(tzinfo=timezone.utc))   # Ziggo Dome: "2026-09-05 13:00:00" is UTC (site toont 15:00)
             if f.get("time") and (dt.hour, dt.minute) == (0, 0):
                 tm = _fill(f["time"], it)
                 m = re.match(r"(\d{1,2})[:.u](\d{2})", str(tm or ""))
@@ -930,7 +932,13 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
                     dt = dt.replace(hour=int(m.group(1)), minute=int(m.group(2)))
             link = urljoin(base, str(link))
             genres = _fill(f["genres"], it) if f.get("genres") else None
-            genres = [clean(str(g)) for g in as_list(genres) if g] if genres else []
+            if isinstance(genres, str) and genres.strip().startswith("["):
+                try:
+                    genres = json.loads(genres)   # Ziggo Dome: '[{"name": "Pop"}, …]' als string
+                except ValueError:
+                    pass
+            genres = [g.get("name") or g.get("title") if isinstance(g, dict) else g for g in as_list(genres)] if genres else []
+            genres = [clean(str(g)) for g in genres if g]
             raw_status = clean(str(_fill(f["status"], it) or "")) if f.get("status") else None
             status = None
             price = fmt_price(_fill(f["price"], it)) if f.get("price") else None
@@ -1975,6 +1983,8 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     """Geeft (events, gebruikte strategie, opmerking, audit)."""
     base = v["url"]
     t = v.get("type", "auto")
+    if v.get("passive"):
+        return [], "passive", "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)", {}
     if t == "disabled" or v.get("enabled") is False:
         return [], "disabled", "uitgeschakeld in venues.yaml", {}
 
@@ -2216,6 +2226,11 @@ def apply_category_tags(evs: list[Event], cats: dict[str, set[str]], exclude: se
         if not tags:
             continue
         n += 1
+        # "@Merleyn": geen genre maar een locatie (Doornroosje ?location=merleyn) -> relabel_by_location verhuist het event
+        locs = [t[1:] for t in tags if t.startswith("@")]
+        if locs and not e.location:
+            e.location = locs[0]
+        tags = {t for t in tags if not t.startswith("@")}
         e.genres = sorted(tags) + [g for g in e.genres if g not in tags]
     return kept, n
 
@@ -2409,7 +2424,7 @@ def main(only: list[str] | None = None) -> int:
             audit["thin"] = True
             note = (note + "; " if note else "") + f"dun programma: {len(wk_days)}/16 weekenddagen met een event (podium van {cap} plaatsen)"
         report["venues"].append({"name": v["name"], "city": v["city"], "url": v["url"], "strategy": strat,
-                                 "events": len(evs), "note": note, "ok": len(evs) > 0, "audit": audit})
+                                 "events": len(evs), "note": note, "ok": len(evs) > 0 or bool(v.get("passive")), "audit": audit})
         all_events.extend(evs)
     # events die een podium elders programmeert (Paradiso in Tolhuistuin) horen bij dat andere podium; daarna dubbelen weg
     moved = relabel_by_location(all_events, venues)

@@ -195,6 +195,13 @@
              house: House, techno: Techno, afro: Afro, amapiano: Amapiano, disco-2: Disco, drum-bass: "Drum & bass"}
     - url: "https://www.doornroosje.nl/programma/?location={slug}"
       exclude: [de-vereeniging, openluchttheater-de-goffert]
+      tags: {merleyn: "@Merleyn"}   # @ = locatie, geen genre: Merleyn is Doornroosjes kleine zaal (eigen adres) -> eigen podium
+- name: Merleyn
+  city: Nijmegen
+  url: https://www.doornroosje.nl/programma/?location=merleyn
+  capacity: 250
+  passive: true
+  notes: "kleine zaal van Doornroosje (Hertogstraat), geen eigen agenda; events komen via Doornroosjes locatiefilter (tag @Merleyn) en verhuizen hierheen"
 
 - name: Patronaat
   city: Haarlem
@@ -262,6 +269,7 @@
   notes: datum als "vr 4.9"; tijd en prijs via eventpagina (enrich)
 - name: SPOT
   city: Groningen
+  aliases: [De Oosterpoort, Oosterpoort, SPOT Groningen]
   url: https://www.spotgroningen.nl/programma/
   capacity: 1600
   type: html
@@ -716,6 +724,7 @@
 # Bron: locatielijst van pop-agenda.nl (podia met recente events). Zichtbaar onder 'Alles'.
 - {name: Altstadt, city: Eindhoven, url: "https://www.altstadt.nl/", section: overig, capacity: 250}
 - {name: Popcentrale, city: Dordrecht, url: "https://www.popcentrale.nl/", section: overig, capacity: 150}
+- {name: Zonnehuis, city: Amsterdam, url: "https://www.paradiso.nl/", section: overig, capacity: 400, passive: true, notes: "Paradiso programmeert in het Zonnehuis (Amsterdam-Noord); events komen via Paradiso's GraphQL-locatie"}
 - {name: Poppodium Phoenix, city: Breda, url: "https://www.poppodiumphoenix.nl/", section: overig, capacity: 150}
 - {name: De Nieuwe Anita, city: Amsterdam, url: "https://www.denieuweanita.nl/", section: overig, capacity: 250}
 - {name: Skatecafe, city: Amsterdam, url: "https://www.skatecafe.nl/", section: overig, capacity: 300}
@@ -723,8 +732,32 @@
 - {name: The Cave, city: Amsterdam, url: "https://www.thecaveamsterdam.nl/", section: overig, capacity: 135}
 - {name: Maloe Melo, city: Amsterdam, url: "https://www.maloemelo.com/", section: overig, capacity: 150}
 - {name: Parallel, city: Amsterdam, url: "https://parallel.am/", section: overig, capacity: 750}
-- {name: Ziggo Dome, city: Amsterdam, url: "https://www.ziggodome.nl/", section: overig, capacity: 17000}
-- {name: AFAS Live, city: Amsterdam, url: "https://www.afaslive.nl/", section: overig, capacity: 6000}
+- name: Ziggo Dome
+  city: Amsterdam
+  url: https://www.ziggodome.nl/agenda
+  section: overig
+  capacity: 17000
+  type: json_api
+  api: "https://www.ziggodome.nl/api/agenda/aankomend?limit=50"
+  items: data
+  page_param: offset
+  page_size: 50
+  max_pages: 10
+  time_utc: true
+  enrich: false
+  fields: {title: "{performerName}", subtitle: event.title, date: showDate, url: "https://www.ziggodome.nl/nl/events/{id}", genres: genres, status: showState}
+  notes: "Next.js-site zonder server-side agenda; eigen JSON-API /api/agenda/aankomend (limit/offset, ~125 komende shows) met showDate in UTC, performerName, event.title als ondertitel, genres als JSON-string, showState (OnSale/SoldOut). Prijzen alleen bij Ticketmaster -> geen prijs"
+- name: AFAS Live
+  city: Amsterdam
+  url: https://www.afaslive.nl/agenda
+  section: overig
+  capacity: 6000
+  type: html
+  item: "article.agendaV2-item"
+  title: "h4"
+  date: "p.date .d"
+  link: "a.rowMain"
+  notes: "agenda met alle ~118 komende events in één HTML (per maand gegroepeerd); kaart: titel h4, datum 'zondag 06 september 2026'; eventpagina: 'vrijdag 4 september 2026 - 20:40 Entree vanaf € 57,22', 'Deuren open 18:30 uur'. Eerder jsonld_detail: 15 events"
 - {name: Amsterdamse Bostheater, city: Amsterdam, url: "https://bostheater.nl/", section: overig, capacity: 1400}
 - {name: Grounds, city: Rotterdam, url: "https://www.grounds.nu/", section: overig, capacity: 200}
 - {name: V11, city: Rotterdam, url: "https://www.vessel11.nl/", section: overig, capacity: 180}

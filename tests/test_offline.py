@@ -614,6 +614,15 @@ def test_coproduction_needs_title_match():
     assert len(fetch.dedupe([a, b])) == 2
 
 
+def test_category_location_tag_relabels():
+    """Doornroosje ?location=merleyn -> tag "@Merleyn" = locatie; het event verhuist naar het passieve podium Merleyn."""
+    e = fetch.Event(venue="Doornroosje", city="Nijmegen", title="Band", start=FUT + "T20:00", url="https://www.doornroosje.nl/event/band/")
+    kept, n = fetch.apply_category_tags([e], {"https://www.doornroosje.nl/event/band": {"@Merleyn", "Pop"}})
+    assert n == 1 and e.location == "Merleyn" and e.genres == ["Pop"]
+    venues = [{"name": "Doornroosje", "city": "Nijmegen"}, {"name": "Merleyn", "city": "Nijmegen", "passive": True}]
+    assert fetch.relabel_by_location(kept, venues) == 1 and e.venue == "Merleyn"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
