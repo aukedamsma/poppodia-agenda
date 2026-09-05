@@ -290,6 +290,20 @@ def fmt_price(p) -> str | None:
     return p or None
 
 
+def _ampm_to_24h(text: str) -> str:
+    """"8:30 PM" / "8 pm" / "12 AM" -> "20:30" / "20:00" / "00:00" (Engelstalige podiumsites en ticketshops)."""
+    def rep(m):
+        h, mi, ap = int(m.group(1)), int(m.group(2) or 0), m.group(3).lower().replace(".", "")
+        if h > 12 or mi > 59:
+            return m.group(0)
+        if ap == "pm" and h != 12:
+            h += 12
+        if ap == "am" and h == 12:
+            h = 0
+        return f"{h:02d}:{mi:02d}"
+    return re.sub(r"\b(\d{1,2})(?::(\d{2}))?\s?([ap]\.?m\.?)\b", rep, text, flags=re.I)
+
+
 def parse_dt(value, default_year: int | None = None) -> datetime | None:
     """Zet allerlei datumvormen om naar datetime. Geeft None bij mislukking."""
     if value is None:
@@ -301,7 +315,7 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
             return to_local(datetime.fromtimestamp(value, tz=timezone.utc))
         except (OverflowError, OSError, ValueError):
             return None
-    s = str(value).strip()
+    s = _ampm_to_24h(str(value).strip())
     if not s:
         return None
     # ISO of bijna-ISO
@@ -716,6 +730,7 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
                 if isinstance(o.get(k), dict):
                     tm = o[k].get("starts_at") or o[k].get("start") or o[k].get("aanvang")
             tm = tm or o.get("starts_at") or o.get("start_time") or o.get("startTime") or o.get("aanvang")
+            tm = _ampm_to_24h(tm) if isinstance(tm, str) else tm
             if isinstance(tm, str) and re.fullmatch(r"\d{1,2}[:.]\d{2}(:\d{2})?", tm.strip()):
                 hh, mm = re.split(r"[:.]", tm.strip())[:2]
                 dt = dt.replace(hour=int(hh), minute=int(mm))
@@ -1015,7 +1030,7 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
                 dt = to_local(dt.replace(tzinfo=timezone.utc))   # Ziggo Dome: "2026-09-05 13:00:00" is UTC (site toont 15:00)
             if f.get("time") and (dt.hour, dt.minute) == (0, 0):
                 tm = _fill(f["time"], it)
-                m = re.match(r"(\d{1,2})[:.u](\d{2})", str(tm or ""))
+                m = re.match(r"(\d{1,2})[:.u](\d{2})", _ampm_to_24h(str(tm or "")))
                 if m:
                     dt = dt.replace(hour=int(m.group(1)), minute=int(m.group(2)))
             link = urljoin(base, str(link))
@@ -1113,6 +1128,66 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
         out.append(Event(venue=v["name"], city=v["city"], title=clean(it.get("name")) or "?", start=start.isoformat(timespec="minutes"),
                          url=url, price=price, status="uitverkocht" if it.get("soldOut") else None, source="stager"))
     return out
+
+
+_STAGER_SESSIONS: dict[str, tuple[str, dict]] = {}   # shop-root -> (token, headers), één anonieme sessie per shop per run
+_STAGER_LINK = re.compile(r"https?://([a-z0-9-]+)\.stager\.co/shop/([a-z0-9_-]+)(?:/events/(\d+))?", re.I)
+
+
+def _stager_session(root: str, shop: str) -> dict | None:
+    key = f"{root}/shop/{shop}"
+    if key in _STAGER_SESSIONS:
+        return _STAGER_SESSIONS[key][1]
+    try:
+        html = get(f"{key}/events", delay=0.3).text
+        m = re.search(r'data-flags="([^"]+)"', html)
+        if not m:
+            return None
+        import html as _html
+        shop_id = json.loads(_html.unescape(m.group(1))).get("shopId")
+        r = http_post(f"{root}/shop/v1/session/new", params={"shopId": shop_id, "locale": "NL", "hasOrderToken": "false"}, json={})
+        r.raise_for_status()
+        hdr = {"Authorization": f"Bearer {r.json()['accessToken']['jwt']}", "Accept": "application/json"}
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        return None
+    _STAGER_SESSIONS[key] = (shop_id, hdr)
+    return hdr
+
+
+def stager_price_from_link(html: str, start: str | None, title: str | None) -> str | None:
+    """Prijs via de Stager-ticketlink op een eventpagina (WORM: elk event verkoopt via de shop van de organisator,
+    strictlykpop.stager.co/shop/strictlykpopworm; dB's: dbs.stager.co/shop/default/events/111671858). Met event-id direct
+    de tickets-overview; zonder id de shoplijst en het event met dezelfde dag (en liefst titel) kiezen."""
+    m = _STAGER_LINK.search(html or "")
+    if not m or m.group(1).lower() == "app":
+        return None
+    slug, shop, ev_id = m.group(1).lower(), m.group(2), m.group(3)
+    root = f"https://{slug}.stager.co"
+    hdr = _stager_session(root, shop)
+    if not hdr:
+        return None
+    try:
+        if not ev_id:
+            rr = SESSION.get(f"{root}/shop/v1/events", params={"offset": 0, "limit": 50}, headers=hdr, timeout=TIMEOUT)
+            rr.raise_for_status()
+            items = [it for it in (rr.json() or []) if isinstance(it, dict) and it.get("eventId")]
+            day = (start or "")[:10]
+            same_day = [it for it in items if (parse_dt(it.get("startsOn")) or datetime.min).date().isoformat() == day] if day else []
+            pick = None
+            if title:
+                tk = _title_key(title)
+                pick = next((it for it in same_day if tk and (tk in _title_key(it.get("name") or "") or _title_key(it.get("name") or "") in tk)), None)
+            pick = pick or (same_day[0] if len(same_day) == 1 else None) or (items[0] if len(items) == 1 else None)
+            if not pick:
+                return None
+            ev_id = str(pick["eventId"])
+        tv = SESSION.get(f"{root}/shop/v1/events/{ev_id}/tickets-overview", headers=hdr, timeout=TIMEOUT)
+        time.sleep(0.25)
+        if not tv.ok:
+            return None
+        return _stager_price(tv.json().get("ticketGroups") or [])
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        return None
 
 
 def _fee_cents(g: dict) -> int:
@@ -1300,6 +1375,8 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
         if not ev.price and tprice:
             ev.price = tprice
+        if not ev.price and v.get("ticketshops", True):
+            ev.price = stager_price_from_link(html, ev.start, ev.title)   # prijs via de Stager-link op de pagina (WORM, dB's)
         elif tprice and ev.price and _fee_inclusive(txt):
             # LantarenVenster: JSON-LD offers 19 (excl.), pagina "€ 22 incl. € 3,00 servicekosten": de prijs is wat je betaalt
             a, b = price_number(ev.price), price_number(tprice)
@@ -1406,7 +1483,7 @@ def page_text(html: str) -> str:
 def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None]:
     """(datum, aanvangstijd, deurtijd, prijs) uit vrije tekst van een eventpagina.
     Datum: liefst met weekdag of 'datum:' ervoor, anders de eerste dag+maand(+jaar)."""
-    low = txt.lower()
+    low = _ampm_to_24h(txt.lower())
     dt = None
     for pat in (rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
                 rf"\b{WEEKDAY_RE}\.\s?(\d{{1,2}})\.\s?{MONTH_RE}\b\.?(?:\s?(\d{{4}}))?",   # "Do.10.Sep" (Q-factory)
@@ -1470,6 +1547,8 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     price = None
     if re.search(r"\bgratis\b|\bfree\b(?! ?(wifi|parking))", low) and not pm:
         price = "gratis"   # gratis blijft gratis, ook met "incl. € 1,75 servicekosten" (FLUOR)
+    elif pm and float(pm.replace(",", ".")) == 0:
+        price = "gratis"   # Tivoli "€ 0,-": een bedrag van nul is gratis, geen ontbrekende prijs
     elif pm:
         price = fmt_price(_add_fee(pm, fee))
     return dt, start, doors, price
@@ -1778,6 +1857,8 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
         tprice = price_from_embedded_json(html)
     if not tstart and not tdoors:
         tstart, tdoors = times_from_embedded_json(html)
+    if not tprice and not extra.get("ld_price") and v.get("ticketshops", True):
+        tprice = stager_price_from_link(html, extra.get("ld_start"), None)
     extra.update({"start": tstart, "doors": tdoors, "price": tprice})
     if v.get("lineup") and not extra.get("lineup"):
         extra["lineup"] = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])])
@@ -2228,7 +2309,25 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     # ticketshops met server-side data als automatische extra bron: Stager (<slug>.stager.co/shop/default/events, JSON-LD
     # ItemList met 50 komende events incl. tijd) wordt herkend aan ticketlinks op de agenda- of eventpagina's
     if v.get("ticketshops", True) and not v.get("_is_extra"):
-        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (html or "").lower()))
+        scan = html
+        if not scan:
+            # API-typen (tribe, json_api, sitemap) halen de agendapagina niet op; voor de shopherkenning alsnog even kijken
+            # (dB's: tribe-API zonder prijzen, maar dbs.stager.co heeft ze)
+            try:
+                scan = get(base, delay=0.3).text
+            except requests.RequestException:
+                scan = ""
+        shops = set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", (scan or "").lower()))
+        if not shops and evs:
+            # de ticketlink staat vaak alleen op de eventpagina (dB's: dbs.stager.co/shop/default/events/…): drie steekproeven
+            for e in evs[:3]:
+                try:
+                    scan = get(e.url, delay=0.3).text if e.url and e.url.rstrip("/") != base.rstrip("/") else ""
+                except requests.RequestException:
+                    continue
+                shops |= set(re.findall(r"https?://([a-z0-9-]+)\.stager\.co/", scan.lower()))
+                if shops:
+                    break
         # alleen shops die bij dít podium horen: Luxor Live linkt ook naar willemeen.stager.co, De Spot naar deoostkerk, Neushoorn
         # naar explorethenorth (festival) en veel sites naar app.stager.co — die zouden andermans events opleveren
         vf = re.sub(r"[^a-z0-9]", "", _fold(v["name"]))

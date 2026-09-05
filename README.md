@@ -86,6 +86,9 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Botmuur ook op POST-verkeer (Stager-sessie, FacetWP, GraphQL) | `http_post` met dezelfde escalatie naar Chrome-TLS als `http_get`. |
 | Twee voorstellingen op één dag werden één (Ziggo Dome: Roxy Dekker 15:00 en 20:30) | Zelfde titel en dag maar tijden ≥ 2 uur uiteen én verschillende URL's = twee shows; gevonden door de groundtruth-toets. |
 | Prijsweergave wisselde (€ 9.50, € 19,5, 12,50 euro) | Eén weergave in de laatste stap (`display_price`): altijd komma, twee decimalen (€ 24,50), hele bedragen zonder decimalen (€ 24); tot 4 cent onder/boven een heel bedrag (€ 19,98) wordt afgerond op het hele getal. |
+| Prijs staat alleen in een ticketshop van de organisator (WORM: per event een andere Stager-shop, 78% zonder prijs; dB's: tribe-API zonder prijzen) | De Stager-link op de eventpagina wordt gevolgd: anonieme shopsessie, event op id of op dag + titel, `tickets-overview` → reguliere prijs incl. fee (`stager_price_from_link`). Shopherkenning kijkt nu ook op de agendapagina en drie eventpagina's als de API-lijst geen HTML heeft (dB's → dbs.stager.co). |
+| Engelstalige tijden ("Doors 7:30 PM") | AM/PM wordt vóór alle tijdpatronen omgezet naar 24-uurs (`_ampm_to_24h`). |
+| "€ 0,-" gold als ontbrekende prijs (Tivoli: 75 gratis events zonder prijs) | Een geparset bedrag van nul is 'gratis'. |
 | Datum zonder herkenbare maand (Cinetol "Sun18.10" → 18 september i.p.v. oktober) | De fuzzy datumparser vult nooit meer een ontbrekende maand aan met de huidige maand: zonder maandnaam of volledige datum is er geen datum. Gevonden door onze data naast pop-agenda.nl te leggen — die vergelijking is een vaste controlestap. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 

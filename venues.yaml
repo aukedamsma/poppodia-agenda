@@ -48,6 +48,7 @@
   link_pattern: "tivolivredenburg\\.nl/agenda/\\d+/"
   max_detail: 1500
   detail_ttl_days: 14
+  cache_version: 9   # "€ 0,-" was geen prijs; nu gratis (75 events zonder prijs)
   capacity: 2650
   notes: "JSON-LD MusicEvent per eventpagina; agenda is gepagineerd (~50 pagina's x 20), event-sitemap is leeg; WP REST afgeschermd"
   lineup: ".accordion__title h2"
@@ -424,7 +425,8 @@
   date: ".agenda-item__title__date"
   genre: ".agenda-item__title__cat"
   link: "a.agenda-item__link"
-  notes: eventpagina's onder /production/; starttijd via enrich ("Start → 20:30")
+  cache_version: 9   # prijzen via de Stager-link van de organisator per event (stager_price_from_link)
+  notes: eventpagina's onder /production/; starttijd via enrich ("Start → 20:30"); prijs staat alleen in de Stager-shop van de organisator (per event een andere shop, bv. strictlykpop.stager.co/shop/strictlykpopworm) -> via de ticketlink opgehaald
 - name: BIRD
   city: Rotterdam
   url: https://bird-rotterdam.nl/agenda

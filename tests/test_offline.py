@@ -478,6 +478,7 @@ def test_service_fee_included():
     assert ex("€ 22 + € 1,50 servicekosten")[3] == "€ 23,50"
     assert ex("Prijs € 20,00 excl. servicekosten")[3] == "€ 20"           # geen bedrag: niets optellen (niet schatten)
     assert ex("Gratis · incl. € 1,75 servicekosten")[3] == "gratis"
+    assert ex("Arabic Stand-Up Comedy Open Mic € 0,- BESTEL TICKETS")[3] == "gratis"   # Tivoli: nul is gratis, niet 'geen prijs'
     assert fetch._stager_price([{"name": "Regulier", "priceInCents": 1800, "feeInCents": 150}]) == "€ 19,50"
     assert fetch._stager_price([{"name": "Regulier", "priceInCents": 0, "feeInCents": 150}]) == "gratis"
     assert fetch._stager_acf({"stager_tickets": [{"stager_ticket_price": 20, "stager_ticket_online_fee": 1.5, "stager_ticket_type": "REGULAR"}]})["price"] == "€ 21,50"
@@ -688,6 +689,29 @@ def test_display_price():
     assert d("€ 9.50") == "€ 9,50" and d("€ 19,5") == "€ 19,50" and d("12,50 euro") == "€ 12,50"
     assert d("€ 19,98") == "€ 20" and d("€ 20,02") == "€ 20" and d("€ 22") == "€ 22"
     assert d("€ 24,05") == "€ 24,05" and d("gratis") == "gratis" and d("uitverkocht") == "uitverkocht"
+
+
+def test_ampm_times():
+    assert fetch.extract_from_text("Saturday 10 October 2026 Doors 7:30 PM Start 8:30 PM Tickets € 15")[1:3] == ((20, 30), (19, 30))
+    assert fetch.parse_dt("October 10, 2026 8:30 PM").hour == 20 and fetch._ampm_to_24h("12 AM") == "00:00"
+
+
+def test_stager_price_from_link():
+    """WORM: eventpagina zonder prijs maar met een Stager-link van de organisator -> prijs uit die shop (op dag + titel)."""
+    page = '<html><a href="https://strictlykpop.stager.co/shop/strictlykpopworm">BUY TICKETS</a></html>'
+    shop = '<html><script data-flags="{&quot;shopId&quot;:77}"></script></html>'
+    class S:
+        headers = {}
+        def get(self, url, params=None, headers=None, **kw):
+            if url.endswith("/shop/strictlykpopworm/events"): return FakeResp(text=shop)
+            if url.endswith("/shop/v1/events"): return FakeResp(json_=[{"eventId": 5, "name": "Strictly K-POP", "startsOn": FUT + "T21:30:00Z"}, {"eventId": 6, "name": "Ander", "startsOn": FUT2 + "T20:00:00Z"}])
+            if url.endswith("/5/tickets-overview"): return FakeResp(json_={"ticketGroups": [{"name": "Regular", "priceInCents": 1250, "feeInCents": 100}]})
+            raise fetch.requests.ConnectionError(url)
+        def post(self, url, params=None, json=None, **kw):
+            return FakeResp(json_={"accessToken": {"jwt": "t"}})
+    fetch.SESSION = S(); fetch._STAGER_SESSIONS.clear()
+    assert fetch.stager_price_from_link(page, FUT + "T23:30", "Strictly K-POP") == "€ 13,50"
+    assert fetch.stager_price_from_link('<a href="https://app.stager.co/shop/x">x</a>', None, None) is None
 
 
 if __name__ == "__main__":
