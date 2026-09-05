@@ -227,7 +227,7 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
             return datetime(y, mo, d, hh, mm)
         except ValueError:
             return None
-    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s+)?(\d{1,2})[./](\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?", low)
+    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s*)?(\d{1,2})\s?[./]\s?(\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?", low)   # "Sun18.10", "Sun 18 . 10" (Cinetol)
     if m and 1 <= int(m.group(2)) <= 12:
         d, mo = int(m.group(1)), int(m.group(2))
         hh, mm = (int(m.group(3)), int(m.group(4))) if m.group(3) else (0, 0)
@@ -250,6 +250,10 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
         if not m.group(3) and dt.date() < TODAY - timedelta(days=30):
             dt = dt.replace(year=dt.year + 1)
         return dt
+    # laatste redmiddel (dateutil, fuzzy) alleen als er echt een maand of volledige datum in staat: bij "Sun18.10" vulde
+    # dateutil de ontbrekende maand met de huidige maand aan (Cinetol: alle events een maand te vroeg)
+    if not (re.search(r"\b(" + "|".join(NL_MONTHS) + r")\b", low) or re.search(r"\d{1,2}[-./]\d{1,2}[-./]\d{2,4}|\d{4}-\d{2}-\d{2}", low)):
+        return None
     try:
         return dtparser.parse(s, dayfirst=True, fuzzy=True)
     except (ValueError, OverflowError):
@@ -1591,7 +1595,7 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
         if d is not None:
             if d.has_attr("datetime") and not v.get("date_text_only"):
                 dt = parse_dt(d.get("datetime"))
-            dt = dt or parse_dt(clean(d.get_text()))
+            dt = dt or parse_dt(clean(d.get_text(" ")))   # spaties tussen elementen: "Sun 18 . 10" i.p.v. "Sun18.10"
             if dt is None:
                 dt = extract_from_text(d.get_text(" "))[0]
         if not dt and v.get("date_from_url"):

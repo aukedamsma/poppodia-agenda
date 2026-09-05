@@ -463,6 +463,13 @@ def test_base_blocked_falls_back_to_extra_sources():
     assert not fetch._looks_blocked(FakeResp(text="<html>" + "x" * 30000 + " captcha</html>"))
 
 
+def test_parse_dt_no_month_guess():
+    """Cinetol: "Sun18.10" werd 18 september (dateutil vulde de huidige maand in). Nu 18 oktober; losse getallen geven None."""
+    assert fetch.parse_dt("Sun18.10").month == 10 and fetch.parse_dt("Sun 18 . 10").day == 18
+    assert fetch.parse_dt("12") is None and fetch.parse_dt("banaan 12") is None
+    assert fetch.parse_dt("Do.10.Sep").month == 9 and fetch.parse_dt("za 3 okt. - 20:30").hour == 20
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
