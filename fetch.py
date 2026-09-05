@@ -1106,7 +1106,7 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
         time.sleep(0.3)
     out = []
     for it in items:
-        start = parse_dt(it.get("startsOn"))
+        start = _stager_local(it.get("startsOn"))
         if not start or not it.get("eventId"):
             continue
         url = f"{root}/shop/default/events/{it['eventId']}"
@@ -1172,7 +1172,7 @@ def stager_price_from_link(html: str, start: str | None, title: str | None) -> s
             rr.raise_for_status()
             items = [it for it in (rr.json() or []) if isinstance(it, dict) and it.get("eventId")]
             day = (start or "")[:10]
-            same_day = [it for it in items if (parse_dt(it.get("startsOn")) or datetime.min).date().isoformat() == day] if day else []
+            same_day = [it for it in items if (_stager_local(it.get("startsOn")) or datetime.min).date().isoformat() == day] if day else []
             pick = None
             if title:
                 tk = _title_key(title)
@@ -1188,6 +1188,14 @@ def stager_price_from_link(html: str, start: str | None, title: str | None) -> s
         return _stager_price(tv.json().get("ticketGroups") or [])
     except (requests.RequestException, ValueError, KeyError, TypeError):
         return None
+
+
+def _stager_local(value) -> datetime | None:
+    """Stager-API 'startsOn' eindigt op Z maar is Nederlandse tijd (Simplon: site 21:45, shop "21:45:00Z"; met omrekening
+    stonden alle shop-events 2 uur te laat en werden ze niet meer als dubbel herkend). Dus: als lokale tijd lezen."""
+    if not isinstance(value, str):
+        return parse_dt(value)
+    return parse_dt(re.sub(r"(Z|[+-]00:?00)$", "", value.strip()))
 
 
 def _fee_cents(g: dict) -> int:
@@ -1723,6 +1731,9 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
         if not re.search(r"<url>", xml):  # sitemap zonder <url>-blokken: alleen <loc>
             urls += [m.group(1) for m in re.finditer(r"<loc>(.*?)</loc>", xml)]
     lp = re.compile(v["link_pattern"]) if v.get("link_pattern") else None
+    if v.get("url_replace"):   # Q-factory: sitemap noemt alleen /en/events/…, de Nederlandse pagina staat op /nl/events/…
+        a, b = v["url_replace"]
+        urls = [u.replace(a, b) for u in urls]
     urls = [u for u in dict.fromkeys(urls) if not lp or lp.search(u)]
     urls = urls[-int(v.get("max_detail", 600)):]
     if not urls and files:

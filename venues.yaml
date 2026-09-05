@@ -370,8 +370,9 @@
   type: sitemap_detail
   sitemap: https://q-factory.com/sitemap.xml
   link_pattern: "q-factory\\.com/nl/events/"
+  url_replace: ["/en/events/", "/nl/events/"]
   max_detail: 300
-  notes: "Next.js; homepage toont 12 events + 'meer laden' (JS), geen agenda-URL; sitemap.xml (gewone urlset) heeft alle 71 events (nl + en). Eventpagina: 'Datum Do.10.Sep Aanvang 20:30 Deuren 19:30 … Tickets € 23,00'"
+  notes: "Next.js; homepage toont 12 events + 'meer laden' (JS), geen agenda-URL; sitemap.xml (gewone urlset) noemt sinds sept 2026 alleen de /en/events/-pagina's (72) -> herschreven naar /nl/events/. Eventpagina: 'Datum Do.10.Sep Aanvang 20:30 Deuren 19:30 … Tickets € 23,00'"
 - name: Cinetol
   city: Amsterdam
   capacity: 210
@@ -469,8 +470,8 @@
 - name: Willem Twee
   city: Den Bosch
   capacity: 1630
-  url: https://www.willem-twee.nl/agenda?locatie=poppodium
-  list_pages_template: "https://www.willem-twee.nl/agenda?locatie=poppodium&page={n}"
+  url: https://www.willem-twee.nl/alle-activiteiten?locatie=poppodium
+  list_pages_template: "https://www.willem-twee.nl/alle-activiteiten?locatie=poppodium&page={n}"
   notes: "agenda is gepagineerd (20 per pagina, ?page=n) en mengt alle locaties (Toonzaal, Verkadefabriek, Grote Kerk…); ?locatie=poppodium geeft alleen het poppodium. Datum 'za 3 okt. - 20:30' in de kaart; Stager-shop willem-twee.stager.co"
   type: html
   item: ".article-wrapper"
@@ -499,7 +500,7 @@
   notes: "WP REST 'event' (Stager-koppeling, 121 producties); datum staat in de slug (…-2026-09-18), tijd/prijs via eventpagina (enrich). Homepage-JSON-LD gaf maar 1 event."
 - name: Nieuwe Nor
   city: Heerlen
-  url: https://www.nieuwenor.nl/agenda
+  url: https://nieuwenor.nl/programma
   capacity: 1100
   type: jsonld_detail
   link_pattern: "nieuwenor\\.nl/programma/\\d{4}/\\d{2}/\\d{2}/[^/?#]+"
@@ -629,7 +630,7 @@
       "activity_itix_genres:80": Stoner rock
       "activity_itix_genres:85": Thrash metal
       "activity_itix_genres:1": Tribute
-- {name: De Spot, city: Middelburg, url: "https://www.despotmiddelburg.nl/agenda", capacity: 400}
+- {name: De Spot, city: Middelburg, url: "https://despotmiddelburg.nl/programma", capacity: 400}
 - {name: De Bosuil, city: Weert, url: "https://www.debosuil.nl/programma/", capacity: 800}
 - name: Het Podium
   city: Hoogeveen
@@ -793,6 +794,6 @@
 - {name: Caprera, city: Bloemendaal, url: "https://caprera.nu/", section: overig, capacity: 1100}
 - {name: PHIL, city: Haarlem, url: "https://www.philhaarlem.nl/", section: overig, capacity: 660}
 - {name: Little Devil, city: Tilburg, url: "https://www.littledevil.nl/", section: overig, capacity: 175}
-- {name: Aa-Theater, city: Groningen, url: "https://www.deraatheater.nl/", section: overig, capacity: 200}
+- {name: Aa-Theater, city: Groningen, url: "https://a-theater.nl/", section: overig, capacity: 200}
 - {name: De Vereeniging, city: Nijmegen, url: "https://www.stadsschouwburgendevereeniging.nl/", section: overig}
 - {name: Toekomstmuziek, city: Amsterdam, url: "https://www.toekomstmuziek.com/", section: overig}

@@ -440,7 +440,7 @@ def test_stager_api_strategy():
     evs, strat, note, audit = fetch.fetch_venue(v, {})
     assert strat == "stager" and len(evs) == 2, (strat, note)
     a, b = evs
-    assert a.start == FUT + "T21:45" and a.price == "€ 20" and a.url.endswith("/events/1") and a.status is None
+    assert a.start == FUT + "T19:45" and a.price == "€ 20" and a.url.endswith("/events/1") and a.status is None   # startsOn is lokale tijd
     assert b.price == "gratis" and b.status == "uitverkocht"
 
 
