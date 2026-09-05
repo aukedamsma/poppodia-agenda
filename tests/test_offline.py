@@ -470,6 +470,39 @@ def test_parse_dt_no_month_guess():
     assert fetch.parse_dt("Do.10.Sep").month == 9 and fetch.parse_dt("za 3 okt. - 20:30").hour == 20
 
 
+def test_service_fee_included():
+    """Prijs = wat je online betaalt (incl. servicekosten); gratis blijft gratis."""
+    ex = fetch.extract_from_text
+    assert ex("Ticketprijs € 24,00 Inclusief €2 servicekosten")[3] == "€ 24"
+    assert ex("Tickets € 22,00 excl. € 2,50 servicekosten")[3] == "€ 24,50"
+    assert ex("€ 22 + € 1,50 servicekosten")[3] == "€ 23,50"
+    assert ex("Prijs € 20,00 excl. servicekosten")[3] == "€ 20"           # geen bedrag: niets optellen (niet schatten)
+    assert ex("Gratis · incl. € 1,75 servicekosten")[3] == "gratis"
+    assert fetch._stager_price([{"name": "Regulier", "priceInCents": 1800, "feeInCents": 150}]) == "€ 19,5"
+    assert fetch._stager_price([{"name": "Regulier", "priceInCents": 0, "feeInCents": 150}]) == "gratis"
+    assert fetch._stager_acf({"stager_tickets": [{"stager_ticket_price": 20, "stager_ticket_online_fee": 1.5, "stager_ticket_type": "REGULAR"}]})["price"] == "€ 21,5"
+
+
+def test_strip_country():
+    from taxonomy import strip_country as s, extract_artists
+    assert s("mary in the junkyardUK") == "mary in the junkyard"
+    assert s("Mary in the Junkyard (UK)") == "Mary in the Junkyard"
+    assert s("SIGH (JAPAN) + DEVIL MASTER (USA)") == "SIGH + DEVIL MASTER"
+    assert s("Kaiser Chiefs - UK") == "Kaiser Chiefs" and s("Big Thief USA") == "Big Thief"
+    for keep in ("UK Subs", "US Girls", "Made in USA", "Band (Live)", "Kraftwerk (de)"):
+        assert s(keep) == keep
+    assert extract_artists("KILLER KIN (USA) + JC Thomaz & the Missing Slippers") == ["KILLER KIN", "JC Thomaz & the Missing Slippers"]
+
+
+def test_genre_labels_single_word_and_afrobeats():
+    import taxonomy
+    groups, _ = taxonomy._taxonomy()
+    assert all("/" not in g.get("label", "") for g in groups.values())
+    assert "comedy" not in groups and "afrobeats" in groups
+    assert taxonomy.normalize_genres(["amapiano"])[0] == ["afrobeats"]
+    assert taxonomy.normalize_genres(["cabaret"])[0] == ["spokenword"]
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

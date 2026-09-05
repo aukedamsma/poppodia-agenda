@@ -38,7 +38,7 @@ TODAY = date.today().isoformat()
 
 # hoofdgenres die hernoemd zijn (sept. 2026: Bandcamp-indeling); oude stemmen in de kennisbank worden bij laden omgezet
 GROUP_RENAMES = {"indie": "alternative", "dance": "electronic", "bass": "electronic", "klassiek": "classical",
-                 "experimenteel": "experimental", "roots": "country", "talk": "spokenword"}
+                 "experimenteel": "experimental", "roots": "country", "talk": "spokenword", "comedy": "spokenword"}
 
 
 def migrate_groups(counts: dict) -> dict:

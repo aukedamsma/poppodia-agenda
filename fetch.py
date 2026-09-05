@@ -35,7 +35,7 @@ from dateutil import parser as dtparser
 import artists as artistdb
 import series as seriesdb
 from taxonomy import _HINT_NOISE
-from taxonomy import (normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
+from taxonomy import (strip_country, normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
 ROOT = Path(__file__).parent
@@ -666,7 +666,9 @@ def _stager_acf(acf: dict) -> dict:
                 continue
             p = t.get("stager_ticket_price")
             if isinstance(p, (int, float)) and p > 0 and str(t.get("stager_ticket_type", "REGULAR")).upper() in ("REGULAR", "EARLYBIRD", "EARLY_BIRD", "PRESALE", "DOOR"):
-                prices.append((0 if str(t.get("stager_ticket_type")).upper() == "REGULAR" else 1, float(p)))
+                # inclusief servicekosten (stager_ticket_online_fee / *_fee): dat is wat je online betaalt
+                fee = sum(float(fv) for fk, fv in t.items() if "fee" in fk and isinstance(fv, (int, float)))
+                prices.append((0 if str(t.get("stager_ticket_type")).upper() == "REGULAR" else 1, float(p) + fee))
         if prices:
             out["price"] = fmt_price(min(prices)[1])
     sub = acf.get("stager_production_subtitle")
@@ -956,14 +958,28 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
     return out
 
 
+def _fee_cents(g: dict) -> int:
+    """Servicekosten (in centen) uit een Stager-ticketgroep: velden als feeInCents / serviceFeeInCents / fee.priceInCents."""
+    total = 0
+    for k, v in g.items():
+        if not re.search(r"fee", k, re.I) or re.search(r"free|refund", k, re.I):
+            continue
+        if isinstance(v, (int, float)) and re.search(r"cents", k, re.I):
+            total += int(v)
+        elif isinstance(v, dict) and isinstance(v.get("priceInCents"), (int, float)):
+            total += int(v["priceInCents"])
+    return total
+
+
 def _stager_price(groups: list[dict]) -> str | None:
-    """Reguliere online prijs uit Stager-ticketgroepen: kortingsgroepen (leden, studenten, early bird, deur) vallen af als
-    er andere zijn; daarna 'voorverkoop/regulier' vóór de rest; alles 0 = gratis."""
+    """Reguliere online prijs (inclusief servicekosten: wat je betaalt) uit Stager-ticketgroepen: kortingsgroepen (leden,
+    studenten, early bird, deur) vallen af als er andere zijn; daarna 'voorverkoop/regulier' vóór de rest; alles 0 = gratis."""
     cands = []
     for g in groups:
         if not isinstance(g, dict) or g.get("priceInCents") is None:
             continue
-        cands.append((int(g.get("weight") or 0), g.get("name") or "", int(g["priceInCents"])))
+        cents = int(g["priceInCents"]) + (_fee_cents(g) if int(g["priceInCents"]) > 0 else 0)
+        cands.append((int(g.get("weight") or 0), g.get("name") or "", cents))
     if not cands:
         return None
     cands.sort()
@@ -1021,7 +1037,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
-CACHE_VERSION = 6  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 7  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 _PUBLISH_CLASS = re.compile(r"publish|updated|entry-date|post-date|author-date|posted|meta-date|byline", re.I)
@@ -1251,17 +1267,42 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
             later = [(int(h), int(m)) for h, m in re.findall(r"(\d{1,2})[:.](\d{2})", after) if (int(h), int(m)) > doors and int(h) < 24 and int(m) < 60]
             if later:
                 start = min(later)
-    # servicekosten zijn geen ticketprijs: "Gratis · incl. € 1,75 servicekosten" (FLUOR) moet gratis blijven
-    plow = re.sub(r"(?:incl\.?|inclusief|excl\.?|exclusief|\+)?\s*€?\s?\d{1,3}(?:[.,]\d{2})?\s*(?:aan\s+)?(?:servicekosten|service ?fee|service ?kosten|administratiekosten|transactiekosten|fee)\b", " ", low)
-    plow = re.sub(r"(?:servicekosten|service ?fee|service ?kosten|administratiekosten)\W{0,12}€?\s?\d{1,3}(?:[.,]\d{2})?", " ", plow)
-    low = plow
+    low, fee = _strip_service_fee(low)
     pm = _pick_price(low)
     price = None
     if re.search(r"\bgratis\b|\bfree\b(?! ?(wifi|parking))", low) and not pm:
-        price = "gratis"
+        price = "gratis"   # gratis blijft gratis, ook met "incl. € 1,75 servicekosten" (FLUOR)
     elif pm:
-        price = fmt_price(pm)
+        price = fmt_price(_add_fee(pm, fee))
     return dt, start, doors, price
+
+
+_FEE_WORDS = r"(?:servicekosten|service ?fee|service ?kosten|servicetoeslag|administratiekosten|transactiekosten|reserveringskosten|booking fee|fee)"
+_AMT = r"(\d{1,3}(?:[.,]\d{2})?)"
+
+
+def _strip_service_fee(low: str) -> tuple[str, float]:
+    """De prijs is wat je online betaalt, dus inclusief servicekosten. "€ 24,00 inclusief € 2 servicekosten" -> 24;
+    "€ 22 excl. € 2,50 servicekosten" / "€ 22 + € 2,50 servicekosten" -> 24,50. Het servicekostenbedrag zelf wordt uit de
+    tekst gehaald zodat het nooit als ticketprijs wordt gelezen. Alleen expliciet exclusieve bedragen worden opgeteld;
+    "excl. servicekosten" zonder bedrag telt niets op (niet schatten). Geeft (tekst zonder fee-fragmenten, op te tellen fee)."""
+    fee = 0.0
+    def _val(v: str) -> float:
+        return float(v.replace(",", "."))
+    for m in re.finditer(r"(?:excl\.?|exclusief|exclusive of|\+|plus)\s*€?\s?" + _AMT + r"\s*(?:aan\s+)?" + _FEE_WORDS + r"\b", low):
+        fee = max(fee, _val(m.group(1)))
+    for m in re.finditer(r"(?:excl\.?|exclusief|\+|plus)\s*" + _FEE_WORDS + r"\W{0,6}(?:van\s+)?€?\s?" + _AMT, low):
+        fee = max(fee, _val(m.group(1)))
+    low = re.sub(r"(?:incl\.?|inclusief|inclusive of|excl\.?|exclusief|exclusive of|\+|plus)?\s*€?\s?\d{1,3}(?:[.,]\d{2})?\s*(?:aan\s+)?" + _FEE_WORDS + r"\b", " ", low)
+    low = re.sub(_FEE_WORDS + r"\W{0,12}€?\s?\d{1,3}(?:[.,]\d{2})?", " ", low)
+    return low, fee
+
+
+def _add_fee(amount: str, fee: float) -> str:
+    if not fee:
+        return amount
+    val = float(amount.replace(",", ".")) + fee
+    return f"{val:.2f}"
 
 
 _DISCOUNT_CTX = re.compile(r"leden|members?|lid\b|cjp|student|scholier|jeugd|jongeren|kinderen|kids|t/m \d+ jaar|tot en met \d+|65\+|vrienden|donateur|korting|reduced|early\b|deurprijs|dagkassa|avondkassa|deurverkoop|aan de deur|at the door|door ?sale|\bdoor\s*:|deur\s*:|late\b", re.I)
@@ -2066,7 +2107,9 @@ def _same_event(a: Event, b: Event) -> bool:
             return True
         wa, wb = set(ta.split()), set(tb.split())
         common = wa & wb
-        if len(common) >= 2 and len(common) >= min(len(wa), len(wb)) * 0.6:
+        # gedeelde woorden moeten het grootste deel van BEIDE titels zijn: "Bnnyhunna • Haarlem Vinyl Fest" en
+        # "Chef'Special • Haarlem Vinyl Fest" (Patronaat) zijn twee events, "Lily Fitts" en "Lily Fitts + Family Stereo" één
+        if len(common) >= 2 and len(common) >= max(len(wa), len(wb)) * 0.75:
             return True
     sa, sb = a.start[11:16], b.start[11:16]
     if sa and sb and sa not in ("", "00:00") and sb not in ("", "00:00"):
@@ -2161,6 +2204,7 @@ def main(only: list[str] | None = None) -> int:
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.price = normalize_price(e.price)
+        e.title = strip_country(e.title)   # "mary in the junkyardUK" / "Band (USA)": land is geen deel van de naam
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
             known = {artist_key(a) for a in e.artists}

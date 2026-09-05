@@ -22,8 +22,8 @@ met de reden in `data/report.json`.
 
 ## Genres en artiesten
 
-- `genres.yaml` bevat de taxonomie: ~23 hoofdgenres (naar RateYourMusic/Discogs/Bandcamp, toegesneden op de Nederlandse
-  poppodia) plus regels die ruwe podiumtags op een hoofdgenre afbeelden. Ruwe tags blijven bewaard als subgenre.
+- `genres.yaml` bevat de taxonomie: ~27 hoofdgenres met één-woordslabels (naar Bandcamp Discover, toegesneden op de Nederlandse
+  poppodia; Afrobeats staat los van Wereldmuziek; comedy/cabaret is geen muziekgenre en valt onder Spoken word met type 'talk') plus regels die ruwe podiumtags op een hoofdgenre afbeelden. Ruwe tags blijven bewaard als subgenre.
   Onbekende tags staan na elke run in `data/report.json` onder `unknown_genres`; voeg ze toe aan de regels.
 - `taxonomy.py` herkent artiesten in titels/ondertitels, bepaalt het eventtype (concert / club / festival / talk / other;
   regels in `genres.yaml` onder `kinds`, aanvangstijd telt mee: vanaf 23:00 is het een feest) en de prijs als getal.
@@ -59,6 +59,8 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Prijs/tijd alleen in ingebedde JSON (Melkweg `"price":"€ 24,05"`, Vorstin URL-gecodeerde `program_start`/`door_open`) | `price_from_embedded_json` en `times_from_embedded_json` lezen JSON-blobs in de HTML (ook URL-gecodeerd) als de zichtbare tekst niets oplevert; het 'primary' ticket wint. |
 | Tijd vóór het label ("19:30 Zaal Open", 013) en tijdschema's zonder 'aanvang' (Nobel "19:00 - Deuren open 19:30 - Band") | Beide woordvolgordes worden herkend; de vroegste tijd is de deurtijd, de eerste tijd erna de start. |
 | Meerdere bedragen op een pagina (Willemeen "Door €16 / Early €12 / Regular €14,50", So What! "Leden €5 / Regulier €10 / Voorverkoop €8") | De prijs is die van nú online een gewoon ticket bestellen: het label direct vóór elk bedrag bepaalt de context; leden/CJP/jeugd/early bird/deur/dagkassa vallen af, voorverkoop/online wint van 'regulier', dat van de rest (`_pick_price`). |
+| Servicekosten (De Pul "€ 24,00 inclusief € 2 servicekosten", FLUOR "Gratis · incl. € 1,75 servicekosten", Stager-shops met aparte fee) | De prijs is wat je online betaalt, dus inclusief servicekosten: een 'inclusief'-bedrag blijft staan, een expliciet 'excl./+ € Y servicekosten' wordt opgeteld, een fee zonder bedrag telt niets op (niet schatten). In Stager-shops wordt de fee bij de ticketprijs geteld. Gratis blijft gratis, hoe hoog de servicekosten ook zijn (`_strip_service_fee`, `_fee_cents`). |
+| Landaanduiding achter een naam (Vera "mary in the junkyardUK", Tivoli "KATE CLOVER (USA)", "SIGH (Japan)") | Land als toevoeging wordt uit titel en artiestnaam gehaald zodat dezelfde band overal onder één naam staat; alleen als suffix (tussen haakjes, vastgeplakt in hoofdletters, of los aan het eind), nooit als deel van de naam ("UK Subs", "US Girls", "Made in USA") (`strip_country`). |
 | Datum zonder herkenbare maand (Cinetol "Sun18.10" → 18 september i.p.v. oktober) | De fuzzy datumparser vult nooit meer een ontbrekende maand aan met de huidige maand: zonder maandnaam of volledige datum is er geen datum. Gevonden door onze data naast pop-agenda.nl te leggen — die vergelijking is een vaste controlestap. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 

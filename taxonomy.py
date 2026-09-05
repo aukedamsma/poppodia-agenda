@@ -80,7 +80,7 @@ def normalize_genres(raw: list[str], title: str = "", subtitle: str = "") -> tup
         # laatste redmiddel: woorden in titel/ondertitel die duidelijk een genre of type aanduiden
         txt = _fold(f"{title} {subtitle}")
         for m, g in _taxonomy()[1]:
-            if g in ("kids", "comedy", "spokenword", "party", "electronic", "metal", "punk", "hiphop", "jazz", "classical") and len(m) >= 4 \
+            if g in ("kids", "spokenword", "party", "electronic", "metal", "punk", "hiphop", "jazz", "classical") and len(m) >= 4 \
                     and re.search(rf"(?<![a-z0-9]){re.escape(m)}(?![a-z0-9])", txt):
                 out.append(g)
                 break
@@ -108,7 +108,7 @@ def genre_hints(text: str, limit: int = 3) -> list[str]:
         return []
     out: list[str] = []
     for m, g in _taxonomy()[1]:
-        if g in ("overig", "party", "comedy", "spokenword", "kids") or len(m) < 4 or m in _HINT_SKIP:
+        if g in ("overig", "party", "spokenword", "kids") or len(m) < 4 or m in _HINT_SKIP:
             continue
         if re.search(rf"(?<![a-z0-9]){re.escape(m)}(?![a-z0-9])", f) and m not in out:
             out.append(m)
@@ -168,7 +168,7 @@ def classify_kind_ex(title: str, subtitle: str | None, raw_tags: list[str], genr
             return kind, True
         if weak_rx and time and time >= weak_from and weak_rx.search(ft):
             return kind, True
-    if "comedy" in genre_norm or "spokenword" in genre_norm:
+    if "spokenword" in genre_norm:
         return "talk", True
     if "kids" in genre_norm:
         return "other", True
@@ -198,7 +198,7 @@ def learn_kinds(learned: dict, raw_tags: list[str], kind: str) -> None:
             v[kind] = v.get(kind, 0) + 1
 
 
-NON_MUSIC_GROUPS = {"overig", "party", "kids", "comedy", "spokenword"}
+NON_MUSIC_GROUPS = {"overig", "party", "kids", "spokenword"}
 # woorden die een eventtype aanduiden; alleen tags met zo'n woord mogen een niet-concerttype leren als ze ook een
 # muziekgenre zijn ("clubnacht", "dance nights", "rave" wel; "postpunk", "latin", "emo", "disco", "elektronisch" niet)
 KIND_WORDS = re.compile(r"club|nacht|night|dans|dance|party|feest|festival|rave|\bdj|film|docu|quiz|bingo|comedy|cabaret|lezing|talk|podcast|kids|jeugd|familie|theater|toneel|expo|workshop|jam|sessie|markt", re.I)
@@ -261,7 +261,32 @@ SUPPORT_WORDS = re.compile(r"^(support|voorprogramma|special guest|guests?|tba|t
 GENERIC_TITLE = re.compile(r"\b(festival|fest|clubnacht|club night|night|nacht|party|feest|quiz|bingo|karaoke|jam|open mic|sessie|session|markt|comedy|cabaret|lezing|talk|film|expo|dansen|disco|bandavond|showcase|releaseparty|kelderbar|cafe|café)\b", re.I)
 
 
+# landaanduidingen als toevoeging achter een naam: "Mary in the Junkyard (UK)", "mary in the junkyardUK", "Band - USA".
+# Alleen als suffix; nooit als het deel van de naam is ("UK Subs", "US Girls"). IS/NO/IT/DE/ES als los woord niet
+# (kunnen woorden zijn), wel tussen haakjes.
+_CN = r"(?:JAPAN|GERMANY|DUITSLAND|FRANCE|FRANKRIJK|BELGIUM|BELGIË|BELGIE|SPAIN|SPANJE|ITALY|ITALIË|SWEDEN|ZWEDEN|NORWAY|NOORWEGEN|DENMARK|DENEMARKEN|FINLAND|ICELAND|IJSLAND|IRELAND|IERLAND|CANADA|AUSTRALIA|AUSTRALIË|BRAZIL|BRAZILIË|PORTUGAL|POLAND|POLEN|AUSTRIA|OOSTENRIJK|SWITZERLAND|ZWITSERLAND|SCOTLAND|SCHOTLAND|ENGLAND|ENGELAND|WALES|MEXICO|ARGENTINA|CHILE|COLOMBIA|NIGERIA|GHANA|SOUTH AFRICA|ZUID-AFRIKA|KOREA|CHINA|INDIA|ISRAEL|TURKEY|TURKIJE|GREECE|GRIEKENLAND|NEW ZEALAND)"
+_CC = r"(?:UK|GB|USA|US|BE|NL|DE|GER|FR|IT|ITA|ES|ESP|PT|PL|AT|AUT|CH|SE|SWE|NO|NOR|DK|DNK|FI|FIN|IS|ISL|IE|IRL|CA|CAN|AU|AUS|NZ|JP|JPN|BR|BRA|AR|MX|ZA|RSA|GR|TR|CZ|HU|RO|UA|UKR|KR|CN|IN|IL|EU)"
+COUNTRY_PAREN = re.compile(r"\s*[\(\[]\s*" + _CC + r"(?:\s*[/,+&]\s*" + _CC + r")*\s*[\)\]]")
+COUNTRY_NAME_PAREN = re.compile(r"\s*[\(\[]\s*" + _CN + r"(?:\s*[/,+&]\s*" + _CN + r")*\s*[\)\]]", re.I)
+COUNTRY_GLUED = re.compile(r"(?<=[a-z])" + _CC.replace("|NO|", "|").replace("|IS|", "|").replace("|IT|", "|").replace("|DE|", "|").replace("|ES|", "|").replace("|IN|", "|").replace("|CA|", "|") + r"$")
+COUNTRY_TAIL = re.compile(r"\s+[-–—|,]?\s*" + _CC.replace("|NO|", "|").replace("|IS|", "|").replace("|IT|", "|").replace("|DE|", "|").replace("|ES|", "|").replace("|IN|", "|").replace("|CA|", "|").replace("|EU|", "|") + r"$")
+
+
+def strip_country(name: str) -> str:
+    """Haalt een land-toevoeging achter een naam weg (zie COUNTRY_*). "UK Subs" en "US Girls" blijven staan."""
+    if not name:
+        return name
+    n = COUNTRY_NAME_PAREN.sub("", COUNTRY_PAREN.sub("", name))
+    n = COUNTRY_GLUED.sub("", n)
+    m = COUNTRY_TAIL.search(n)
+    if m and re.search(r"[a-z]", n[: m.start()]) and not re.search(r"\b(in|from|of|the|to|van|uit|made|live|tour|vs|for|and|&|x)$", n[: m.start()], re.I):
+        n = n[: m.start()]
+    n = re.sub(r"\s+", " ", n).strip(" -–—|,")
+    return n or name
+
+
 def _clean_name(n: str) -> str | None:
+    n = strip_country(n)
     n = NOISE_PAREN.sub("", n)
     n = re.sub(r"\s+", " ", n).strip(" -–—:|,.!")
     n = re.sub(r"^(the\s+)?(band|dj)\s*$", "", n, flags=re.I)

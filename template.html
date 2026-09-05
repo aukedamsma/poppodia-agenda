@@ -96,14 +96,14 @@ input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;margin:0}
 .chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 
-.pnav{width:312px;flex:0 0 312px}
-.pnav .plabel{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;background:linear-gradient(var(--line),var(--line)) 0 center/1px 17px no-repeat;padding-left:13px}
+.pnav{width:auto;flex:0 0 auto}
+.pnav .plabel{flex:0 0 auto;white-space:nowrap;cursor:pointer;background:linear-gradient(var(--line),var(--line)) 0 center/1px 17px no-repeat;padding-left:13px}
 .pnav .daynav{background:linear-gradient(var(--line),var(--line)) 0 center/1px 17px no-repeat;padding-left:13px}
 .pnav .plabel:hover,.daynav .dow:hover{color:var(--accent)}
 .daynav .dow{cursor:pointer}
 input.ghost{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 #pnavpick{padding:0;width:0}
-.daynav .dow{font-size:13px;font-weight:500;color:var(--ink-2);padding:0 12px 0 0;white-space:nowrap}
+.daynav .dow{font-size:13px;font-weight:500;color:var(--ink-2);padding:0 10px 0 0;white-space:nowrap}
 .pnav button:disabled{opacity:.35}
 .pnav .plabel{position:relative;padding:0 12px;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pnav .plabel small{font-size:13px;font-weight:500;color:var(--ink-3);margin-left:6px}
