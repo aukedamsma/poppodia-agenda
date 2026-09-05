@@ -77,6 +77,8 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Grote zalen zonder server-side agenda (Ziggo Dome: Next.js, 0 events; AFAS Live: 15 van ~118) | Ziggo Dome via de eigen JSON-API (`/api/agenda/aankomend`, `time_utc: true` want showDate is UTC, genres als JSON-string); AFAS Live via de HTML-agenda (alle maanden in één pagina). Gevonden via pop-agenda.nl (79 resp. 44 events). |
 | Botmuur keurt de TLS-handdruk af, niet de headers (GIGANT, Het Podium: 403 ook met browser-headers; Q-factory: 202-challenge) | Derde trap in `http_get`: na eigen user-agent en browser-headers volgt een GET met de TLS-vingerafdruk van Chrome (`curl_cffi`, `impersonate="chrome"`); per host onthouden. Alleen voor sites waarvan robots.txt crawlen toestaat. |
 | Tijd uit ingebedde JSON in UTC (Melkweg `"startTime":"…T17:30:00Z"` = 19:30; alle Melkweg-tijden liepen 2 uur voor omdat deze waarde de correcte lijsttijd overschreef) | Tijdzone in JSON-tijdvelden wordt omgerekend naar Nederlandse tijd; bij een tijdschema ("19:30 Doors 19:45 support 20:30 headliner") is de eerste tijd ná de deuren de aanvang. Per podium `cache_version` om alleen díe eventpagina's opnieuw te lezen. |
+| Botmuur blokkeert op IP-niveau, ook met Chrome-TLS (Het Podium; zusterorganisatie De Tamboer onderscheidt de zalen niet) | `fallback_sources`: bronnen die alleen meedoen als de eigen site niets oplevert. Voor Het Podium is dat de open WP REST van pop-agenda.nl, gefilterd op venue (`filter`); de kaart linkt dan naar pop-agenda. Laatste redmiddel, geen standaardbron. |
+| Sitemap-antwoord is een botmuur (Q-factory: 202-challenge, geen `<urlset>`) | `_looks_blocked` herkent een .xml zonder `<urlset>`/`<sitemapindex>` en een 202-status als blokkade, zodat de escalatie (browser-headers, Chrome-TLS) ook voor sitemaps loopt. |
 | Datum zonder herkenbare maand (Cinetol "Sun18.10" → 18 september i.p.v. oktober) | De fuzzy datumparser vult nooit meer een ontbrekende maand aan met de huidige maand: zonder maandnaam of volledige datum is er geen datum. Gevonden door onze data naast pop-agenda.nl te leggen — die vergelijking is een vaste controlestap. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
@@ -102,7 +104,8 @@ te zien waar de data dun is of waar we minder ver vooruit kijken dan het podium 
 | De Cacaofabriek | prijs | alleen in de Ticketlab-shop (JavaScript + cookiemuur) | geen |
 | Metropool | prijs deels | Ticketmaster; de lijst heeft `data-event-price` voor de meeste events | — |
 | Baroeg | tijd | "Het tijdschema wordt in de week van het evenement bekendgemaakt" | de Stager-shop levert de tijd zodra bekend |
-| Het Podium, GIGANT, Q-factory | alles, zolang de botmuur ook de browser-TLS-handdruk (curl_cffi) weigert | botblokkade op GitHub-IP's | So What! komt al via de Stager-shop; Het Podium staat op pop-agenda.nl (14 events) als laatste redmiddel |
+| Q-factory | alles, als de Vercel-botmuur ook de Chrome-TLS-handdruk weigert (GIGANT kwam er in run #24 wél mee door) | botblokkade op GitHub-IP's | Ticketmaster (geen server-side data); pop-agenda.nl heeft Q-factory niet |
+| Het Podium | tijden (pop-agenda heeft ze meestal niet) | eigen site blokkeert op IP-niveau; terugvalbron pop-agenda.nl | — |
 | Hall of Fame | prijs | eigen site is een lege Nuxt-app; de Stager-shop-API levert wel prijzen | — |
 | Skatecafe | alles | site onbereikbaar (DNS) | — |
 

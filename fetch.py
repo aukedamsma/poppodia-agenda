@@ -127,6 +127,11 @@ def _looks_blocked(r) -> bool:
         return True
     if "/wp-json/" in str(getattr(r, "url", "")) and "json" not in ct and head.lstrip()[:1] in ("<", ""):
         return True
+    # een sitemap zonder <urlset>/<sitemapindex> is geen sitemap maar een botmuur- of foutpagina (Q-factory: 202-challenge)
+    if str(getattr(r, "url", "")).lower().endswith(".xml") and "<urlset" not in head and "<sitemapindex" not in head:
+        return True
+    if getattr(r, "status_code", 200) == 202:
+        return True
     return False
 
 
@@ -230,7 +235,7 @@ def fmt_price(p) -> str | None:
     if p in (None, "", 0, "0", "0.00", "0,00"):
         return None
     if isinstance(p, (int, float)):
-        return f"€ {p:g}".replace(".", ",")
+        return f"€ {p:.2f}".replace(".", ",").removesuffix(",00")   # 24.5 -> € 24,50 (niet € 24,5)
     p = clean(str(p)) or ""
     if re.fullmatch(r"\d+([.,]\d{1,2})?", p):
         return "€ " + p.replace(".", ",").removesuffix(",00")
@@ -966,7 +971,11 @@ def strat_json_api(v: dict, base: str, detail_cache: dict) -> list[Event]:
                 if m:
                     dt = dt.replace(hour=int(m.group(1)), minute=int(m.group(2)))
             link = urljoin(base, str(link))
+            if v.get("filter") and any(str(_path(it, k) or "").strip().lower() != str(want).strip().lower() for k, want in v["filter"].items()):
+                continue   # alleen items met deze veldwaarden (pop-agenda: acf.venue == "Het Podium")
             genres = _fill(f["genres"], it) if f.get("genres") else None
+            if isinstance(genres, str) and "," in genres and not genres.strip().startswith("["):
+                genres = [g.strip() for g in genres.split(",")]   # "Jazz, House, Pop"
             if isinstance(genres, str) and genres.strip().startswith("["):
                 try:
                     genres = json.loads(genres)   # Ziggo Dome: '[{"name": "Pop"}, …]' als string
@@ -2042,7 +2051,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
             html = get(base, delay=float(v.get("crawl_delay", 0))).text
         except requests.RequestException as ex:
             # site weigert ons (Het Podium, So What!: Cloudflare 403 ook met browser-headers) -> toch de extra bronnen (ticketshop) proberen
-            if not v.get("extra_sources"):
+            if not v.get("extra_sources") and not v.get("fallback_sources"):
                 raise
             notes.append(f"agendapagina mislukt: {type(ex).__name__} {str(ex)[:100]} -> alleen extra bronnen")
             t = "none"
@@ -2148,6 +2157,11 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                 notes.append(f"ticketshop herkend: {slug}.stager.co")
     # extra bronnen voor hetzelfde podium (eigen site toont maar 3 weken, de Stager-ticketshop 50 events; of een tweede
     # agendapagina): elk met eigen type/instellingen; dubbele events (zelfde dag + titel) worden later samengevoegd
+    # laatste redmiddel: bronnen die alleen meedoen als de eigen site niets oplevert (Het Podium: botmuur blokkeert ook de
+    # browser-TLS-handdruk; pop-agenda.nl heeft de events wel)
+    if not evs and v.get("fallback_sources"):
+        v = {**v, "extra_sources": as_list(v.get("extra_sources") or []) + as_list(v["fallback_sources"])}
+        notes.append("eigen site leverde niets -> terugvalbron(nen)")
     for src in as_list(v.get("extra_sources") or []):
         sub = {**v, **src, "extra_sources": None, "category_pages": None, "name": v["name"], "city": v["city"], "_is_extra": True}
         try:

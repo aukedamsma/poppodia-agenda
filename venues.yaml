@@ -629,7 +629,22 @@
       "activity_itix_genres:1": Tribute
 - {name: De Spot, city: Middelburg, url: "https://www.despotmiddelburg.nl/agenda", capacity: 400}
 - {name: De Bosuil, city: Weert, url: "https://www.debosuil.nl/programma/", capacity: 800}
-- {name: Het Podium, city: Hoogeveen, url: "https://www.hetpodium.nl/agenda", capacity: 375}
+- name: Het Podium
+  city: Hoogeveen
+  url: https://www.hetpodium.nl/agenda
+  capacity: 375
+  fallback_sources:
+    # botmuur blokkeert GitHub op IP-niveau (403, ook met browser-headers en Chrome-TLS). Zusterorganisatie De Tamboer
+    # (detamboer.nl, zelfde platform) onderscheidt de zalen niet. Laatste redmiddel: pop-agenda.nl (open WP REST),
+    # alleen items met venue "Het Podium"; kaart linkt naar pop-agenda.
+    - url: "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=Het%20Podium%20Hoogeveen&per_page=100&orderby=date&order=desc"
+      type: json_api
+      api: "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=Het%20Podium%20Hoogeveen&per_page=100&orderby=date&order=desc&_fields=title,link,acf.eventdate,acf.venue,acf.eventtime,acf.ticketprice,acf.genres,acf.soldout,acf.canceled,acf.freeentrance"
+      items: ""
+      filter: {acf.venue: "Het Podium"}
+      fields: {title: title.rendered, date: acf.eventdate, time: acf.eventtime, url: link, price: acf.ticketprice, genres: acf.genres, status: acf.soldout}
+      enrich: false
+  notes: "eigen site (hetpodium.nl, platform van De Tamboer) geeft 403 vanaf GitHub, ook met browser-headers en Chrome-TLS-handdruk -> terugvalbron pop-agenda.nl (14 events, meestal zonder tijd)"
 - {name: De Pit, city: Terneuzen, url: "https://www.poppodiumdepit.nl/programma/", capacity: 350}
 - {name: Porgy en Bess, city: Terneuzen, url: "https://www.porgyenbess.nl/programma/", capacity: 250}
 - name: ECI Cultuurfabriek

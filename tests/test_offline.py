@@ -89,7 +89,7 @@ def test_embedded_angular_hedon_shape():
          "url_template": "https://www.hedon-zwolle.nl/voorstelling/{id}"}
     out, strat, _, _ = fetch.fetch_venue(v, {})
     assert len(out) == 10 and out[0].url == "https://www.hedon-zwolle.nl/voorstelling/33000"
-    assert out[0].genres == ["Nederlands", "Pop"] and out[0].price == "€ 23,5" and out[0].subtitle == "TOUR"
+    assert out[0].genres == ["Nederlands", "Pop"] and out[0].price == "€ 23,50" and out[0].subtitle == "TOUR"
 
 
 def test_embedded_effenaar_shape():
@@ -396,7 +396,7 @@ def test_stager_acf_fields():
                               {"stager_ticket_valid": True, "stager_ticket_type": "EARLYBIRD", "stager_ticket_price": 30}]}
     st = fetch._stager_acf(acf)
     assert st["start"].isoformat(timespec="minutes") == FUT + "T23:00" and st["doors"].hour == 22
-    assert st["price"] == "€ 37,5" and st["status"] == "uitverkocht" and st["subtitle"] == "W/ Lovefoundation"
+    assert st["price"] == "€ 37,50" and st["status"] == "uitverkocht" and st["subtitle"] == "W/ Lovefoundation"
     assert fetch._stager_acf({"stager_production_free": True})["price"] == "gratis"
     assert fetch._acf_date(acf).hour == 23
 
@@ -478,9 +478,9 @@ def test_service_fee_included():
     assert ex("€ 22 + € 1,50 servicekosten")[3] == "€ 23,50"
     assert ex("Prijs € 20,00 excl. servicekosten")[3] == "€ 20"           # geen bedrag: niets optellen (niet schatten)
     assert ex("Gratis · incl. € 1,75 servicekosten")[3] == "gratis"
-    assert fetch._stager_price([{"name": "Regulier", "priceInCents": 1800, "feeInCents": 150}]) == "€ 19,5"
+    assert fetch._stager_price([{"name": "Regulier", "priceInCents": 1800, "feeInCents": 150}]) == "€ 19,50"
     assert fetch._stager_price([{"name": "Regulier", "priceInCents": 0, "feeInCents": 150}]) == "gratis"
-    assert fetch._stager_acf({"stager_tickets": [{"stager_ticket_price": 20, "stager_ticket_online_fee": 1.5, "stager_ticket_type": "REGULAR"}]})["price"] == "€ 21,5"
+    assert fetch._stager_acf({"stager_tickets": [{"stager_ticket_price": 20, "stager_ticket_online_fee": 1.5, "stager_ticket_type": "REGULAR"}]})["price"] == "€ 21,50"
 
 
 def test_strip_country():
@@ -629,6 +629,29 @@ def test_embedded_json_times_with_timezone():
     assert fetch.times_from_embedded_json('{"program_start":"202609111915"}')[0] == (19, 15)
     assert fetch.extract_from_text("WITCHZ DI 08 SEP 19:30 Tickets 19:30 Doors 19:45 THE OTHER 20:30 WITCHZ")[1:3] == ((19, 45), (19, 30))
     assert fetch._cache_version({"cache_version": 99}) == 99 and fetch._cache_version({}) == fetch.CACHE_VERSION
+
+
+def test_fallback_source_when_site_blocked():
+    """Het Podium: eigen site 403 -> terugvalbron (pop-agenda REST, alleen items met venue 'Het Podium', genres met komma's)."""
+    data = [{"title": {"rendered": "Hans Dulfer"}, "link": "https://pop-agenda.nl/events/x/", "acf": {"eventdate": "20261030", "venue": "Het Podium", "eventtime": None, "ticketprice": 24.5, "genres": "Jazz, Pop", "soldout": "None"}},
+            {"title": {"rendered": "Elders"}, "link": "https://pop-agenda.nl/events/y/", "acf": {"eventdate": "20261030", "venue": "De Tamboer", "eventtime": "20:00", "ticketprice": 10, "genres": "", "soldout": "None"}}]
+    class Blocked(FakeResp):
+        def __init__(self): super().__init__(text="Forbidden"); self.status_code = 403; self.ok = False
+        def raise_for_status(self): raise fetch.requests.HTTPError("403")
+    class S:
+        headers = {}
+        def get(self, url, **kw):
+            if "hetpodium" in url: return Blocked()
+            if "pop-agenda" in url: return FakeResp(json_=data, text=json.dumps(data))
+            raise fetch.requests.ConnectionError(url)
+    fetch.SESSION = S()
+    v = {"name": "Het Podium", "city": "Hoogeveen", "url": "https://www.hetpodium.nl/agenda", "min_events": 1,
+         "fallback_sources": [{"url": "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=x", "type": "json_api", "api": "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=x",
+                               "filter": {"acf.venue": "Het Podium"}, "enrich": False,
+                               "fields": {"title": "title.rendered", "date": "acf.eventdate", "time": "acf.eventtime", "url": "link", "price": "acf.ticketprice", "genres": "acf.genres", "status": "acf.soldout"}}]}
+    evs, strat, note, _ = fetch.fetch_venue(v, {})
+    assert len(evs) == 1 and evs[0].title == "Hans Dulfer" and evs[0].price == "€ 24,50" and evs[0].genres == ["Jazz", "Pop"], (strat, note)
+    assert fetch.fmt_price(19.5) == "€ 19,50"
 
 
 if __name__ == "__main__":
