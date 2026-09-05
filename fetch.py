@@ -249,6 +249,7 @@ def canonical_price(p: str | None) -> str | None:
     if not p:
         return None
     p = re.sub(r"\$\s?(?=\d)", "€ ", p)   # FLUOR (Tribe met verkeerd valutasymbool): "$18,50" is € 18,50
+    p = re.sub(r"^(€ ?\d+,\d)$", r"\g<1>0", p.strip())   # "€ 19,5" (oude cache) -> "€ 19,50"
     if re.fullmatch(r"€ ?\d+(?:[.,]\d{1,2})?|gratis|uitverkocht|~.*", p.strip()):
         return p
     low, fee = _strip_service_fee(p.lower())
@@ -1627,6 +1628,12 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
     lp = re.compile(v["link_pattern"]) if v.get("link_pattern") else None
     urls = [u for u in dict.fromkeys(urls) if not lp or lp.search(u)]
     urls = urls[-int(v.get("max_detail", 600)):]
+    if not urls and files:
+        try:
+            r0 = http_get(files[-1])
+            log(f"    sitemap {files[-1]}: status {getattr(r0, 'status_code', '?')}, url {getattr(r0, 'url', '?')}, begin: {(r0.text or '')[:160]!r}")
+        except Exception as ex:  # noqa: BLE001
+            log(f"    sitemap {files[-1]}: {type(ex).__name__} {str(ex)[:120]}")
     log(f"    {len(urls)} eventlinks uit sitemap, detailpagina's ophalen (gecached)…")
     out = []
     for u in urls:
