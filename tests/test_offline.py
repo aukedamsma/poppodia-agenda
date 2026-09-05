@@ -623,6 +623,14 @@ def test_category_location_tag_relabels():
     assert fetch.relabel_by_location(kept, venues) == 1 and e.venue == "Merleyn"
 
 
+def test_embedded_json_times_with_timezone():
+    """Melkweg: "startTime":"…T17:30:00.000000Z" is 19:30 Nederlandse tijd; en de programmastart is de eerste tijd na de deuren."""
+    assert fetch.times_from_embedded_json('{"startTime":"2026-09-08T17:30:00.000000Z"}')[0] == (19, 30)
+    assert fetch.times_from_embedded_json('{"program_start":"202609111915"}')[0] == (19, 15)
+    assert fetch.extract_from_text("WITCHZ DI 08 SEP 19:30 Tickets 19:30 Doors 19:45 THE OTHER 20:30 WITCHZ")[1:3] == ((19, 45), (19, 30))
+    assert fetch._cache_version({"cache_version": 99}) == 99 and fetch._cache_version({}) == fetch.CACHE_VERSION
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

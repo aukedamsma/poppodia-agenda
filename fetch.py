@@ -1138,6 +1138,12 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
+def _cache_version(v: dict) -> int:
+    """Per podium hoger te zetten (venues.yaml `cache_version: 9`) om alleen díe eventpagina's opnieuw te lezen na een
+    parserfix, zonder alle ~13.000 gecachte pagina's opnieuw op te halen."""
+    return max(CACHE_VERSION, int(v.get("cache_version") or 0))
+
+
 CACHE_VERSION = 8  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
@@ -1166,10 +1172,10 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     """Leest een eventpagina; cache op URL zodat dit maar zelden opnieuw hoeft."""
     c = cache.get(url)
     if c and c.get("fetched") and c.get("event") and c["event"].get("start", "9999") >= TODAY.isoformat():
-        stale = c.get("v", 1) < CACHE_VERSION or (c["event"].get("source") == "flight_json" and c.get("fv", 1) < FLIGHT_VERSION)
+        stale = c.get("v", 1) < _cache_version(v) or (c["event"].get("source") == "flight_json" and c.get("fv", 1) < FLIGHT_VERSION)
         if stale:
             c = None  # verouderd cache-item van een oudere parser (bv. zonder prijs/line-up, of met gelekte startMain): opnieuw ophalen
-    if c and c.get("fetched") and not c.get("event") and c.get("v", 1) < CACHE_VERSION:
+    if c and c.get("fetched") and not c.get("event") and c.get("v", 1) < _cache_version(v):
         c = None  # mislukking van een oudere parser: na een fix direct opnieuw proberen (Gelderlandfabriek, Q-factory)
     if c and c.get("fetched"):
         # geslaagde resultaten 10 dagen bewaren; mislukkingen maar 1 dag, zodat een fix snel doorwerkt
@@ -1243,7 +1249,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             a, b = price_number(ev.price), price_number(tprice)
             if a and b and 0 < b - a <= 6:
                 ev.price = tprice
-    cache[url] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "fv": FLIGHT_VERSION, "event": asdict(ev) if ev else None}
+    cache[url] = {"fetched": TODAY.isoformat(), "v": _cache_version(v), "fv": FLIGHT_VERSION, "event": asdict(ev) if ev else None}
     return ev
 
 
@@ -1281,14 +1287,20 @@ def _decoded(html: str) -> str:
     return out
 
 
-_JSON_TIME_START = re.compile(r'"(?:program_start|programme_start|start_time|starttime|startTime|aanvang|showtime|show_time)"\s*:\s*"?(\d{12}|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?|\d{1,2}:\d{2})"?', re.I)
-_JSON_TIME_DOORS = re.compile(r'"(?:door_open|doors_open|doorsOpen|doorTime|door_time|deuren|doors)"\s*:\s*"?(\d{12}|\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?|\d{1,2}:\d{2})"?', re.I)
+_ISO_TAIL = r"(?:\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)"
+_JSON_TIME_START = re.compile(r'"(?:program_start|programme_start|start_time|starttime|startTime|aanvang|showtime|show_time)"\s*:\s*"?(\d{12}|' + _ISO_TAIL + r'|\d{1,2}:\d{2})"?', re.I)
+_JSON_TIME_DOORS = re.compile(r'"(?:door_open|doors_open|doorsOpen|doorTime|door_time|deuren|doors)"\s*:\s*"?(\d{12}|' + _ISO_TAIL + r'|\d{1,2}:\d{2})"?', re.I)
 
 
 def _hm_from_json(val: str) -> tuple[int, int] | None:
     m = re.fullmatch(r"\d{12}", val)
     if m:
         return int(val[8:10]), int(val[10:12])
+    if re.search(r"Z$|[+-]\d{2}:?\d{2}$", val):
+        # tijdzone in de waarde (Melkweg "startTime":"2026-09-08T17:30:00.000000Z" = 19:30 Nederlandse tijd): omrekenen,
+        # anders overschreef deze tekst-JSON-tijd de al correcte lijsttijd met de UTC-uren (Melkweg liep 2 uur voor)
+        dt = parse_dt(val)
+        return (dt.hour, dt.minute) if dt else None
     m = re.search(r"(\d{1,2}):(\d{2})$|T(\d{2}):(\d{2})", val)
     if m:
         g = [x for x in m.groups() if x is not None]
@@ -1388,7 +1400,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
     if start and doors and start[0] < 6 and doors[0] >= 17:
         start = None   # "aanvang" vóór 06:00 terwijl de deuren 's avonds opengaan: dat was een eindtijd
-    if not start and doors:
+    if doors and (not start or start == doors):
         # tijdschema zonder het woord 'aanvang' (Nobel: "19:00 - Deuren open 19:30 - Hakselaer 20:45 - …"):
         # de eerste tijd ná de deurtijd is de start van het programma
         dm = re.search(r"(?:deur|deuren|doors|zaal open|open)", low)
@@ -1685,7 +1697,7 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
     """Gestructureerde + tekstuele gegevens van een eventpagina (gecached onder "x|url"); None als niet opgehaald."""
     key = "x|" + url
     c = cache.get(key)
-    if c and c.get("v", 1) >= CACHE_VERSION and date.fromisoformat(c["fetched"]) >= TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
+    if c and c.get("v", 1) >= _cache_version(v) and date.fromisoformat(c["fetched"]) >= TODAY - timedelta(days=int(v.get("detail_ttl_days", 10))):
         return c.get("extra") or {}
     try:
         html = get(url, delay=float(v.get("crawl_delay", 0.6))).text
@@ -1710,7 +1722,7 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
     if not extra.get("ld_genres"):
         hints = genre_hints(txt[:1500], limit=4)
         extra["hint_genres"] = hints if len(hints) <= 2 else []
-    cache[key] = {"fetched": TODAY.isoformat(), "v": CACHE_VERSION, "extra": extra}
+    cache[key] = {"fetched": TODAY.isoformat(), "v": _cache_version(v), "extra": extra}
     return extra
 
 
