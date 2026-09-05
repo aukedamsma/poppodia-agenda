@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-05T10:28:57",
+ "generated": "2026-09-05T11:21:30",
  "venues": [
   {
    "name": "TivoliVredenburg",
@@ -1541,13 +1541,18 @@
    "name": "Het Podium",
    "city": "Hoogeveen",
    "url": "https://www.hetpodium.nl/agenda",
-   "strategy": "error",
-   "events": 0,
-   "note": "HTTPError: 403 Client Error: Forbidden for url: https://www.hetpodium.nl/agenda",
-   "ok": false,
+   "strategy": "none",
+   "events": 14,
+   "note": "agendapagina mislukt: HTTPError 403 Client Error: Forbidden for url: https://www.hetpodium.nl/agenda -> alleen extra bronnen; eigen site leverde niets -> terugvalbron(nen); extra bron https://www.pop-agenda.nl/wp-json/wp/v2/events?search=Het%20Podium%20Hoogeveen&per_page=100&orderby=date&order=desc: 14 events via json_api, 14 nieuw",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "coverage": {
+     "time": 0.0,
+     "price": 1.0,
+     "genre": 0.93
+    },
+    "weekend": 8,
+    "horizon": "2026-12-12"
    },
    "section": "poppodium",
    "capacity": 375
@@ -1815,8 +1820,8 @@
    "city": "Zaandam",
    "url": "https://www.podiumdeflux.nl/agenda/",
    "strategy": "jsonld_detail",
-   "events": 16,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 16 events",
+   "events": 15,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 15 events",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1830,8 +1835,8 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.69,
-     "genre": 0.38
+     "price": 0.73,
+     "genre": 0.4
     },
     "weekend": 5,
     "horizon": "2026-12-12"
@@ -2161,9 +2166,9 @@
    "name": "Skatecafe",
    "city": "Amsterdam",
    "url": "https://www.skatecafe.nl/",
-   "strategy": "none",
+   "strategy": "error",
    "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.skatecafe.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: 0 events; jsonld_detail: 0 events",
+   "note": "ConnectionError: HTTPSConnectionPool(host='www.skatecafe.nl', port=443): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPSConnection(host='www.skatecafe.nl', port=443): Failed to establish a new co",
    "ok": false,
    "audit": {
     "weekend": 0,
@@ -3220,6 +3225,14 @@
    },
    "70's 80's disco": {
     "kind": "club",
+    "obs": 5
+   },
+   "stonerrock": {
+    "kind": "other",
+    "obs": 5
+   },
+   "horecaspecials": {
+    "kind": "other",
     "obs": 5
    },
    "presentatie": {
@@ -4373,6 +4386,16 @@
     "group": "electronic",
     "label": "eigen special (dance)",
     "obs": 5
+   },
+   "alt folk": {
+    "group": "folk",
+    "label": "alt folk",
+    "obs": 6
+   },
+   "thema": {
+    "group": "electronic",
+    "label": "thema",
+    "obs": 6
    }
   }
  },
@@ -4522,6 +4545,7 @@
   "baile funk": "Baile funk",
   "duister": "duister",
   "tiktok sensatie": "tiktok sensatie",
+  "alt folk": "alt folk",
   "genre bending": "genre bending",
   "fanfare": "fanfare",
   "neo-soul": "Neo-soul",
@@ -4667,11 +4691,14 @@
   "nederlandstalige pop": "nederlandstalige pop",
   "pop & rock": "pop & rock",
   "r&b en pop": "r&b en pop",
+  "symphonische rock": "symphonische rock",
   "80's tot nu": "80's tot nu",
   "nostalgie": "nostalgie",
   "bingo": "bingo",
   "gooise pride maand": "gooise pride maand",
+  "70's 80's": "70's 80's",
   "nederlandstalige hip hop": "nederlandstalige hip hop",
+  "60s rock": "60s rock",
   "k-pop": "K-pop",
   "schorem": "schorem",
   "garage punk rock 'n roll": "garage punk rock 'n roll",
@@ -4689,6 +4716,7 @@
   "afgelast": "afgelast",
   "early club": "early club",
   "nieuwe datum!": "nieuwe datum!",
+  "uitverkocht!": "uitverkocht!",
   "elektronische dansmuziek": "elektronische dansmuziek",
   "hard house": "hard house",
   "rental": "rental",
@@ -4705,13 +4733,10 @@
   "wereld": "wereld",
   "theaterconcert": "theaterconcert",
   "eigen special (dance)": "eigen special (dance)",
+  "thema": "thema",
   "calypso": "calypso",
   "street art": "street art",
-  "spoken word": "Spoken word",
-  "symphonische rock": "symphonische rock",
-  "70's 80's": "70's 80's",
-  "60s rock": "60s rock",
-  "uitverkocht!": "uitverkocht!"
+  "spoken word": "Spoken word"
  },
  "subgenre_groups": {
   "post-punk": "punk",
@@ -4859,6 +4884,7 @@
   "baile funk": "world",
   "duister": "pop",
   "tiktok sensatie": "pop",
+  "alt folk": "folk",
   "genre bending": "funk",
   "fanfare": "reggae",
   "neo-soul": "soul",
@@ -5004,11 +5030,14 @@
   "nederlandstalige pop": "nederlandstalig",
   "pop & rock": "rock",
   "r&b en pop": "soul",
+  "symphonische rock": "party",
   "80's tot nu": "party",
   "nostalgie": "party",
   "bingo": "party",
   "gooise pride maand": "party",
+  "70's 80's": "party",
   "nederlandstalige hip hop": "nederlandstalig",
+  "60s rock": "party",
   "k-pop": "pop",
   "schorem": "electronic",
   "garage punk rock 'n roll": "punk",
@@ -5026,6 +5055,7 @@
   "afgelast": "metal",
   "early club": "electronic",
   "nieuwe datum!": "party",
+  "uitverkocht!": "electronic",
   "elektronische dansmuziek": "electronic",
   "hard house": "electronic",
   "rental": "funk",
@@ -5042,15 +5072,12 @@
   "wereld": "jazz",
   "theaterconcert": "spokenword",
   "eigen special (dance)": "electronic",
+  "thema": "electronic",
   "calypso": "latin",
   "street art": "electronic",
-  "spoken word": "spokenword",
-  "symphonische rock": "party",
-  "70's 80's": "party",
-  "60s rock": "party",
-  "uitverkocht!": "electronic"
+  "spoken word": "spokenword"
  },
- "series": 7548,
+ "series": 7562,
  "estimated": {
   "price": 0,
   "time": 5,
@@ -5208,7 +5235,7 @@
   "Muziekbingo": 1,
   "Talent": 1
  },
- "artists": 6396,
+ "artists": 6400,
  "genre_groups": {
   "electronic": "Elektronisch",
   "rock": "Rock",
@@ -5239,12 +5266,12 @@
   "overig": "Overig"
  },
  "kinds": {
-  "concert": 6224,
-  "club": 776,
+  "concert": 6227,
+  "club": 777,
   "festival": 208,
   "talk": 213,
-  "other": 347
+  "other": 356
  },
- "archive": 8986,
- "total_events": 7768
+ "archive": 9000,
+ "total_events": 7781
 }
