@@ -35,7 +35,7 @@ from dateutil import parser as dtparser
 import artists as artistdb
 import series as seriesdb
 from taxonomy import _HINT_NOISE
-from taxonomy import (strip_country, normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
+from taxonomy import (strip_country, strip_city, normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
 ROOT = Path(__file__).parent
@@ -392,6 +392,19 @@ def _ld_location(n: dict, v: dict) -> str | None:
     if not name or _fold(name) == _fold(v["name"]) or _fold(v["name"]) in _fold(name) or _fold(name) in _fold(v["name"]):
         return None
     return name
+
+
+_LOC_TEXT = re.compile(r"(?i:vindt plaats (?:in|bij|op)|takes place (?:in|at)|locatie\s*[:\-]?|location\s*[:\-]?|\|\s*(?:in|@|at)|(?:^|\s)@)\s*((?:de |het |'t |the )?[A-Z0-9][\w'’&.\-]*(?: [A-Z0-9][\w'’&.\-]*){0,3})", re.M)
+
+
+def location_from_text(txt: str, v: dict) -> str | None:
+    """Andere locatie uit de paginatekst: Tivoli "Dit concert vindt plaats in De Helling, Helling 7 in Utrecht" /
+    ondertitel "… | in De Helling". Alleen namen die in venues.yaml staan tellen (relabel_by_location); de rest is ruis."""
+    for m in _LOC_TEXT.finditer(txt[:6000]):
+        cand = m.group(1).strip(" ,.")
+        if cand and _fold(cand) != _fold(v["name"]) and _fold(cand) not in _fold(v["name"]):
+            return cand
+    return None
 
 
 # ----------------------------------------------------------------------------
@@ -1123,6 +1136,11 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     if ev is not None:
         if v.get("lineup") and not ev.lineup:
             ev.lineup = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])], ev.title)
+        if v.get("subtitle") and not ev.subtitle:   # ondertitel/tagline op de eventpagina (Tivoli p.event__subtitle)
+            el = soup_of(html).select_one(v["subtitle"])
+            ev.subtitle = clean(el.get_text(" ")) if el is not None else None
+        if not ev.location:
+            ev.location = location_from_text(txt, v)
         if not ev.genres:
             hints = genre_hints(txt[:1500], limit=4)
             ev.genres = hints if len(hints) <= 2 else []  # >2 treffers = waarschijnlijk een genremenu op de pagina (Tivoli), geen beschrijving
@@ -1241,6 +1259,17 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
             dt = parse_dt(" ".join(groups[-3:] if len(groups) >= 3 and groups[-1].isdigit() and len(groups[-1]) == 4 else groups[-2:]))
             if dt:
                 break
+    # eindtijden zijn geen aanvang: Tivoli zet de waarde vóór het label ("21:00 Deuren open 21:00 Aanvang 02:00 Verwachte
+    # eindtijd") waardoor "Aanvang 02:00" anders als start wordt gelezen; ook "einde 23:00" / "tot 03:00" vallen weg
+    def _drop_end(mm):  # "23:00 Einde" na "Aanvang" is wél de aanvang (label ervoor): laten staan
+        if re.match(r"\W{0,6}\d{1,2}[:.u]\d{2}", low[mm.end(): mm.end() + 9]):
+            return mm.group(0)   # label-vóór-waarde-layout ("Aanvang 23:00 Einde 04:00"): het label hoort bij de tijd erna
+        before = low[max(0, mm.start() - 22): mm.start()]
+        if re.search(r"\d[:.u]\d{2}\W{0,6}(?:aanvang|start|begin|deuren|doors|open)\W{0,6}$", before):
+            return " "   # waarde-vóór-label-layout ("21:00 Aanvang 02:00 Verwachte eindtijd"): 02:00 is de eindtijd
+        return mm.group(0) if re.search(r"(?:aanvang|start|begin|deuren|doors|open)\W{0,6}$", before) else " "
+    low = re.sub(r"\b(\d{1,2})[:.u](\d{2})\W{0,6}(?:verwachte\s+|geschatte\s+|verw\.\s*)?(?:eindtijd|einde|eind|end ?time|ends)\b", _drop_end, low)
+    low = re.sub(r"\b(?:verwachte\s+|geschatte\s+)?(?:eindtijd|einde|end ?time|ends|tot|until|till|t/m)\W{0,6}(\d{1,2})[:.u](\d{2})\b", " ", low)
     def hm(pat):
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
@@ -1258,6 +1287,8 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
     d1 = hm(r"(?:deur|deuren|doors|zaal open|open)\W{0,14}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})")
     d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
+    if start and doors and start[0] < 6 and doors[0] >= 17:
+        start = None   # "aanvang" vóór 06:00 terwijl de deuren 's avonds opengaan: dat was een eindtijd
     if not start and doors:
         # tijdschema zonder het woord 'aanvang' (Nobel: "19:00 - Deuren open 19:30 - Hakselaer 20:45 - …"):
         # de eerste tijd ná de deurtijd is de start van het programma
@@ -2035,13 +2066,20 @@ def relabel_by_location(events: list[Event], venues: list[dict]) -> int:
             by_name[_fold(a)] = v
     n = 0
     for e in events:
-        if not e.location:
+        if not e.location and not e.subtitle:
             continue
-        f = _fold(e.location)
-        target = by_name.get(f) or next((v for k, v in by_name.items() if len(k) > 4 and (f.startswith(k + " ") or f.startswith(k + " -"))), None)
+        f = _fold(e.location or "")
+        target = (by_name.get(f) or next((v for k, v in by_name.items() if len(k) > 4 and (f.startswith(k + " ") or f.startswith(k + " -"))), None)) if f else None
         if target and target["name"] != e.venue:
             e.venue, e.city = target["name"], target["city"]
             n += 1
+        elif not target and e.subtitle:
+            # "New Yorkse blackmetal cultband | in De Helling": podiumnaam in de ondertitel
+            for k, tv in by_name.items():
+                if len(k) > 4 and tv["name"] != e.venue and tv["city"] == e.city and re.search(r"\b(?:in|@|at|bij)\s+" + re.escape(k) + r"\b", _fold(e.subtitle)):
+                    e.venue, e.city = tv["name"], tv["city"]
+                    n += 1
+                    break
     return n
 
 
@@ -2204,7 +2242,7 @@ def main(only: list[str] | None = None) -> int:
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.price = normalize_price(e.price)
-        e.title = strip_country(e.title)   # "mary in the junkyardUK" / "Band (USA)": land is geen deel van de naam
+        e.title = strip_city(strip_country(e.title), e.city)   # "junkyardUK", "Band (USA)", "Popronde Alkmaar": geen deel van de naam
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
             known = {artist_key(a) for a in e.artists}

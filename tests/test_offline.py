@@ -503,6 +503,32 @@ def test_genre_labels_single_word_and_afrobeats():
     assert taxonomy.normalize_genres(["cabaret"])[0] == ["spokenword"]
 
 
+def test_end_time_is_not_start():
+    """Tivoli zet de waarde vóór het label: "21:00 Deuren open 21:00 Aanvang 02:00 Verwachte eindtijd" -> aanvang 21:00."""
+    ex = fetch.extract_from_text
+    assert ex("CLUBNIGHTS 21:00 Deuren open 21:00 Aanvang 02:00 Verwachte eindtijd Leeftijd 18+")[1:3] == ((21, 0), (21, 0))
+    assert ex("19:30 Deuren open 20:15 Start 22:30 Verwachte eindtijd")[1:3] == ((20, 15), (19, 30))
+    assert ex("Deuren open 22:00 Aanvang 23:00 Einde 04:00")[1:3] == ((23, 0), (22, 0))   # label-vóór-waarde blijft werken
+    assert ex("Zaal open 19:30 Aanvang 20:30 tot 22:30")[1] == (20, 30)
+
+
+def test_location_from_text_and_relabel():
+    v = {"name": "TivoliVredenburg", "city": "Utrecht"}
+    assert fetch.location_from_text("Dit concert vindt plaats in De Helling, Helling 7 in Utrecht.", v) == "De Helling"
+    assert fetch.location_from_text("New Yorkse blackmetal cultband | in De Helling", v) == "De Helling"
+    assert fetch.location_from_text("Deuren open 20:00 in Utrecht", v) is None
+    venues = [v, {"name": "De Helling", "city": "Utrecht"}]
+    e = fetch.Event(venue="TivoliVredenburg", city="Utrecht", title="Krallice", start="2026-10-15T20:15", url="https://x/1", subtitle="cultband | in De Helling")
+    assert fetch.relabel_by_location([e], venues) == 1 and e.venue == "De Helling"
+
+
+def test_strip_city():
+    from taxonomy import strip_city as c, extract_artists
+    assert c("Popronde Alkmaar", "Alkmaar") == "Popronde" and c("Popronde Bergen op Zoom 2026", "Bergen op Zoom") == "Popronde"
+    assert c("Bintangs – Bye Bye Haarlem", "Haarlem") == "Bintangs – Bye Bye Haarlem" and c("Utrecht", "Utrecht") == "Utrecht"
+    assert extract_artists("Popronde 2026") == ["Popronde"]
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

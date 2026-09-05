@@ -285,9 +285,21 @@ def strip_country(name: str) -> str:
     return n or name
 
 
+def strip_city(title: str, city: str | None) -> str:
+    """Eigen stad als toevoeging achter de naam weg: "Popronde Alkmaar" (Victorie, Alkmaar) -> "Popronde". Alleen als er
+    een naam overblijft; "Utrecht" zelf of "Alkmaar Pop" blijven staan."""
+    if not title or not city:
+        return title
+    m = re.search(r"^(.*\S)\s*[-–—|:,]?\s+" + re.escape(city) + r"(\s+(?:19|20)\d{2})?\s*$", title, re.I)
+    if m and 1 <= len(m.group(1).split()) <= 3 and not re.search(r"[–—•|:]|\b(in|te|from|of|van|uit|to|naar|bye)$", m.group(1), re.I):
+        return m.group(1).strip(" -–—|:,")
+    return title
+
+
 def _clean_name(n: str) -> str | None:
     n = strip_country(n)
     n = NOISE_PAREN.sub("", n)
+    n = re.sub(r"\s+(?:19|20)\d{2}\s*$", "", n)   # "Popronde 2026" -> "Popronde": jaartal is geen deel van de naam
     n = re.sub(r"\s+", " ", n).strip(" -–—:|,.!")
     n = re.sub(r"^(the\s+)?(band|dj)\s*$", "", n, flags=re.I)
     if not n or len(n) < 2 or len(n) > 60 or SUPPORT_WORDS.match(n) or n.isdigit():
