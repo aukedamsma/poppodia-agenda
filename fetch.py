@@ -35,7 +35,7 @@ from dateutil import parser as dtparser
 
 import artists as artistdb
 import series as seriesdb
-from taxonomy import _HINT_NOISE
+from taxonomy import _HINT_NOISE, GENERIC_TITLE
 from taxonomy import (strip_country, strip_city, normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
@@ -649,7 +649,13 @@ def strat_embedded(v: dict, html: str) -> list[Event]:
             status = "afgelast"
         elif o.get("isSoldOut") is True or o.get("soldOut") is True or o.get("sold_out") is True:
             status = status or "uitverkocht"
-        if o.get("isPublished") is False or o.get("publish") is False:
+        # Melkweg zet isPublished:false op uitverkochte en afgelaste events (ze verdwijnen van de agendapagina, maar bestaan wel:
+        # 49 van 282). Uitverkocht hoort in onze agenda (met 'uitverkocht' als prijs), afgelast ook (doorgestreept);
+        # alleen echt ongepubliceerde events zonder status en besloten events slaan we over (isConfirmed is bij Melkweg
+        # altijd false en zegt niets)
+        if (o.get("isPublished") is False or o.get("publish") is False) and not status:
+            continue
+        if o.get("isPrivateEvent") is True:
             continue
         price = o.get("price") or o.get("ticket_price") or o.get("ticketPrice") or o.get("priceFrom")
         if price in (None, "", 0) and o.get("freeEvent") is True:
@@ -1089,7 +1095,7 @@ def event_links(v: dict, html: str, base: str) -> list[str]:
 
 
 FLIGHT_VERSION = 2  # idem, maar alleen voor pagina's die via event_from_flight_json (Paradiso) zijn gelezen
-CACHE_VERSION = 7  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 8  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 _PUBLISH_CLASS = re.compile(r"publish|updated|entry-date|post-date|author-date|posted|meta-date|byline", re.I)
@@ -1538,6 +1544,100 @@ def strat_sitemap_detail(v: dict, base: str, cache: dict) -> list[Event]:
     return out
 
 
+_GRAPHQL_CREDS: dict[str, tuple[str, str]] = {}
+
+
+def _graphql_endpoint(v: dict) -> tuple[str, str]:
+    """Endpoint + publieke client-token uit de JavaScript-bundels van de site (Paradiso: Next.js-chunks bevatten
+    "https://….execute-api….amazonaws.com" en "Bearer ".concat("…")). Elke run opnieuw gelezen, nooit opgeslagen."""
+    g = v["graphql"]
+    page = g.get("endpoint_from") or v["url"]
+    if page in _GRAPHQL_CREDS:
+        return _GRAPHQL_CREDS[page]
+    html = get(page, delay=0.3).text
+    scripts = [urljoin(page, m) for m in re.findall(r'<script[^>]+src="([^"]+\.js[^"]*)"', html)]
+    scripts += [urljoin(page, m) for m in re.findall(r'"(/_next/static/chunks/[^"]+\.js)"', html)]
+    ep_re, tok_re = re.compile(g["endpoint_pattern"]), re.compile(g["token_pattern"])
+    endpoint = token = None
+    for src in dict.fromkeys(scripts):
+        try:
+            js = get(src, delay=0.2).text
+        except requests.RequestException:
+            continue
+        m1, m2 = ep_re.search(js), tok_re.search(js)
+        if m1 and m2:
+            endpoint, token = m1.group(0), m2.group(1)
+            break
+        if len(_GRAPHQL_CREDS) > 60:
+            break
+    if not endpoint:
+        raise ValueError("graphql: endpoint/token niet gevonden in de scripts van " + page)
+    _GRAPHQL_CREDS[page] = (endpoint.rstrip("/") + g.get("endpoint_path", ""), token)
+    return _GRAPHQL_CREDS[page]
+
+
+def strat_graphql_detail(v: dict, base: str, cache: dict) -> list[Event]:
+    """Eventlijst uit de GraphQL-API die de site zelf gebruikt (Paradiso: programItemsQuery, 100 per pagina, cursor via
+    `searchAfter` = sort van het laatste item), daarna per event de eventpagina (gecached) voor prijs/aanvang/genres.
+      type: graphql_detail
+      graphql:
+        endpoint_from: https://www.paradiso.nl/        # pagina waarvan de JS-bundels endpoint en token bevatten
+        endpoint_pattern: 'https://[a-z0-9.-]+\\.execute-api\\.[a-z0-9.-]+\\.amazonaws\\.com'
+        endpoint_path: /graphql
+        token_pattern: '"Bearer "\\.concat\\("([^"]+)"\\)'
+        query: "query … { program(size: $size, searchAfter: $searchAfter) { events { id uri title startDateTime … sort location { title } } } }"
+        variables: {size: 100}
+        items: data.program.events
+        cursor: sort              # veld van het laatste item -> variables[cursor_var]
+        cursor_var: searchAfter
+        fields: {url: uri, title: title, start: startDateTime, location: location.0.title, soldout: soldOut, status: eventStatus, subtitle: subtitle}
+    Items zonder eventpagina-resultaat worden uit de lijst zelf opgebouwd."""
+    g = v["graphql"]
+    endpoint, token = _graphql_endpoint(v)
+    f = g.get("fields") or {}
+    variables = dict(g.get("variables") or {})
+    items: list[dict] = []
+    for _ in range(int(g.get("max_pages", 30))):
+        r = SESSION.post(endpoint, json={"query": g["query"], "variables": variables}, timeout=TIMEOUT,
+                         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"})
+        r.raise_for_status()
+        page = _path(r.json(), g.get("items", "data")) or []
+        if not isinstance(page, list) or not page:
+            break
+        items += page
+        cur = _path(page[-1], g["cursor"]) if g.get("cursor") else None
+        if cur is None:
+            break
+        variables[g.get("cursor_var", "searchAfter")] = cur
+        time.sleep(float(v.get("crawl_delay", 0.3)))
+    log(f"    {len(items)} events via graphql, eventpagina's ophalen (gecached)…")
+    out: list[Event] = []
+    for it in items:
+        uri = _path(it, f.get("url", "uri")) or ""
+        url = urljoin(base, str(uri)) if uri else None
+        ev = fetch_detail(v, url, cache, title=clean(str(_path(it, f.get("title", "title")) or ""))) if url else None
+        start = parse_dt(_path(it, f.get("start", "startDateTime")))
+        if ev is None:
+            title = clean(str(_path(it, f.get("title", "title")) or ""))
+            if not (title and start and url):
+                continue
+            ev = Event(venue=v["name"], city=v["city"], title=title, start=start.isoformat(timespec="minutes"), url=url,
+                       subtitle=clean(str(_path(it, f.get("subtitle", "subtitle")) or "")) or None, source="graphql")
+        loc = _path(it, f["location"]) if f.get("location") else None
+        if isinstance(loc, str) and loc and _fold(loc) != _fold(v["name"]) and not ev.location:
+            ev.location = clean(loc)
+        st = str(_path(it, f.get("status", "eventStatus")) or "").lower()
+        so = _path(it, f.get("soldout", "soldOut"))
+        if re.search(r"cancel|afgelast", st):
+            ev.status = "afgelast"
+        elif re.search(r"postpone|verplaatst|moved", st):
+            ev.status = ev.status or "verplaatst"
+        elif so is True or (isinstance(so, str) and so.lower().startswith("yes")):
+            ev.status = ev.status or "uitverkocht"
+        out.append(ev)
+    return out
+
+
 def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
     """Gestructureerde + tekstuele gegevens van een eventpagina (gecached onder "x|url"); None als niet opgehaald."""
     key = "x|" + url
@@ -1880,7 +1980,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
 
     html = ""
     notes = []
-    if t not in ("tribe", "sitemap_detail", "json_api", "stager") and not (t == "html" and v.get("api")):
+    if t not in ("tribe", "sitemap_detail", "graphql_detail", "json_api", "stager") and not (t == "html" and v.get("api")):
         try:
             html = get(base, delay=float(v.get("crawl_delay", 0))).text
         except requests.RequestException as ex:
@@ -1895,7 +1995,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         "microdata": ["microdata"],
         "jsonld": ["jsonld"], "embedded": ["embedded"], "nextdata": ["embedded"],
         "tribe": ["tribe"], "wp_event": ["wp_event"], "json_api": ["json_api"], "stager": ["stager"], "jsonld_detail": ["jsonld_detail"], "html": ["html"],
-        "sitemap_detail": ["sitemap_detail"],
+        "sitemap_detail": ["sitemap_detail"], "graphql_detail": ["graphql_detail"],
     }.get(t, [t] if t != "none" else [])
     best: tuple[list[Event], str] = ([], "none")
     for strat in order:
@@ -1951,6 +2051,8 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
                     strat = f"html:{preset_name}"
             elif strat == "sitemap_detail":
                 evs = strat_sitemap_detail(v, base, cache)
+            elif strat == "graphql_detail":
+                evs = strat_graphql_detail(v, base, cache)
             else:
                 notes.append(f"onbekend type {strat}")
                 continue
@@ -2000,7 +2102,7 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         except Exception as ex:  # noqa: BLE001
             notes.append(f"extra bron {src.get('url')}: {type(ex).__name__} {str(ex)[:80]}")
     if len(evs) >= int(v.get("min_events", 3)):
-        if v.get("enrich", True) and strat not in ("jsonld_detail", "sitemap_detail"):
+        if v.get("enrich", True) and strat not in ("jsonld_detail", "sitemap_detail", "graphql_detail"):
             try:
                 enrich_from_detail(v, evs, cache)
             except Exception as ex:  # noqa: BLE001
@@ -2208,7 +2310,8 @@ def merge_coproductions(events: list[Event]) -> list[Event]:
         st = datetime.fromisoformat(e.start)
         match = None
         for o in by_key.get(key, []):
-            if o.venue != e.venue and o.venue not in e.co_venues and abs((datetime.fromisoformat(o.start) - st).total_seconds()) <= 1800 and _same_event(o, e):
+            if o.venue != e.venue and o.venue not in e.co_venues and abs((datetime.fromisoformat(o.start) - st).total_seconds()) <= 1800 \
+                    and _same_event(o, e, strict=True) and not GENERIC_TITLE.search(_title_key(e.title)) and len(_title_key(e.title)) >= 5:
                 match = o
                 break
         if match is None:
@@ -2242,7 +2345,7 @@ def _title_key(t: str) -> str:
     return re.sub(r"\s+", " ", _fold(t)).strip()
 
 
-def _same_event(a: Event, b: Event) -> bool:
+def _same_event(a: Event, b: Event, strict: bool = False) -> bool:
     """Zelfde event op dezelfde dag bij hetzelfde podium? Titels gelijk, of de ene bevat de andere ("In The Flesh?" vs
     "In The Flesh - The Dutch Pink Floyd"), of ze delen het grootste deel van hun woorden, of — als de titels niets
     gemeen hebben (site: "Zeeuwse coverbands", ticketshop: "Band on the Run") — beide hebben dezelfde aanvangstijd."""
@@ -2256,6 +2359,8 @@ def _same_event(a: Event, b: Event) -> bool:
         # "Chef'Special • Haarlem Vinyl Fest" (Patronaat) zijn twee events, "Lily Fitts" en "Lily Fitts + Family Stereo" één
         if len(common) >= 2 and len(common) >= max(len(wa), len(wb)) * 0.75:
             return True
+    if strict:
+        return False   # over podia heen (coproducties) telt alleen de titel; zelfde tijd is geen bewijs
     sa, sb = a.start[11:16], b.start[11:16]
     if sa and sb and sa not in ("", "00:00") and sb not in ("", "00:00"):
         ha, ma = int(sa[:2]), int(sa[3:]); hb, mb = int(sb[:2]), int(sb[3:])

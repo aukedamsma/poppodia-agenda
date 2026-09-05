@@ -559,6 +559,61 @@ def test_html_item_own_link_wins():
     assert evs[0].url == "https://www.livepul.com/agenda/nxt-gen/"
 
 
+def test_graphql_detail_strategy():
+    """Paradiso: endpoint + publieke token uit de JS-bundel, GraphQL-lijst met cursor, eventpagina als verrijking."""
+    home = '<html><script src="/_next/static/chunks/3584-abc.js"></script></html>'
+    js = 'let l="".concat("https://knwxh8dmh1.execute-api.eu-central-1.amazonaws.com","/graphql"),s="Bearer ".concat("TOKEN123");'
+    items1 = [{"uri": "programma/cat-power/2741096", "title": "Cat Power", "startDateTime": FUT + "T20:30:00+02:00", "sort": ["1", "2741096"],
+               "eventStatus": "confirmed", "soldOut": "no", "location": [{"title": "Paradiso"}], "subtitle": "The Greatest"},
+              {"uri": "programma/planet-acid/2896790", "title": "Planet Acid!", "startDateTime": FUT2 + "T21:00:00+02:00", "sort": ["2", "2896790"],
+               "eventStatus": "confirmed", "soldOut": "yesWithWaitingList", "location": [{"title": "Tolhuistuin"}]}]
+    calls = []
+    class S:
+        headers = {}
+        def get(self, url, **kw):
+            if url == "https://www.paradiso.nl/": return FakeResp(text=home)
+            if url.endswith("3584-abc.js"): return FakeResp(text=js)
+            if "/programma/" in url: return FakeResp(text="<html><body>niets bruikbaars</body></html>")
+            raise fetch.requests.ConnectionError("no route " + url)
+        def post(self, url, json=None, headers=None, **kw):
+            assert url == "https://knwxh8dmh1.execute-api.eu-central-1.amazonaws.com/graphql" and headers["Authorization"] == "Bearer TOKEN123"
+            calls.append(json["variables"])
+            return FakeResp(json_={"data": {"program": {"events": items1 if "searchAfter" not in json["variables"] else []}}})
+    fetch.SESSION = S()
+    fetch._GRAPHQL_CREDS.clear()
+    v = {"name": "Paradiso", "city": "Amsterdam", "url": "https://www.paradiso.nl/", "type": "graphql_detail", "min_events": 1,
+         "graphql": {"endpoint_from": "https://www.paradiso.nl/", "endpoint_pattern": r"https://[a-z0-9.-]+\.execute-api\.[a-z0-9.-]+\.amazonaws\.com",
+                     "endpoint_path": "/graphql", "token_pattern": r'"Bearer "\.concat\("([^"]+)"\)', "query": "query { program { events { id } } }",
+                     "variables": {"size": 100}, "items": "data.program.events", "cursor": "sort", "cursor_var": "searchAfter",
+                     "fields": {"url": "uri", "title": "title", "start": "startDateTime", "location": "location.0.title", "soldout": "soldOut", "status": "eventStatus", "subtitle": "subtitle"}}}
+    evs, strat, note, _ = fetch.fetch_venue(v, {})
+    assert strat == "graphql_detail" and len(evs) == 2, (strat, note)
+    assert calls[1]["searchAfter"] == ["2", "2896790"]
+    a, b = evs
+    assert a.url == "https://www.paradiso.nl/programma/cat-power/2741096" and a.start.startswith(FUT + "T20:30") and a.location is None and a.subtitle == "The Greatest"
+    assert b.location == "Tolhuistuin" and b.status == "uitverkocht"
+
+
+def test_embedded_unpublished_but_soldout_kept():
+    """Melkweg: isPublished:false op uitverkochte/afgelaste events (49 van 282) — die horen wél in de agenda."""
+    objs = [{"name": "Khamari", "startDate": FUT + "T17:00:00.000000Z", "url": "/nl/agenda/khamari", "isPublished": False, "isSoldOut": True, "status": "Uitverkocht"},
+            {"name": "Geheim", "startDate": FUT + "T17:00:00.000000Z", "url": "/nl/agenda/geheim", "isPublished": False},
+            {"name": "Open", "startDate": FUT + "T19:00:00.000000Z", "url": "/nl/agenda/open", "isPublished": True}]
+    objs += [{"name": f"Band {i}", "startDate": FUT2 + "T19:00:00.000000Z", "url": f"/nl/agenda/band-{i}", "isPublished": True} for i in range(4)]
+    html = '<script id="__NEXT_DATA__" type="application/json">' + json.dumps({"props": {"pageProps": {"events": objs}}}) + "</script>"
+    v = {"name": "Melkweg", "city": "Amsterdam", "url": "https://www.melkweg.nl/nl/agenda", "type": "embedded"}
+    evs = fetch.strat_embedded(v, html)
+    titles = {e.title: e for e in evs}
+    assert "Khamari" in titles and titles["Khamari"].status == "uitverkocht" and "Geheim" not in titles and "Open" in titles
+
+
+def test_coproduction_needs_title_match():
+    """Zelfde tijd in dezelfde stad is geen coproductie: Paradiso 'Illie' en Melkweg 'Cheeky Monday' blijven twee events."""
+    a = fetch.Event(venue="Paradiso", city="Amsterdam", title="Illie", start=FUT + "T19:30", url="https://p/1", source="flight_json")
+    b = fetch.Event(venue="Melkweg", city="Amsterdam", title="Cheeky Monday: MURDOCK!", start=FUT + "T19:30", url="https://m/1", source="embedded")
+    assert len(fetch.dedupe([a, b])) == 2
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

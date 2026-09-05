@@ -143,16 +143,22 @@
   city: Amsterdam
   capacity: 1710
   url: https://www.paradiso.nl/
-  type: sitemap_detail
-  sitemap: https://www.paradiso.nl/sitemap.xml
-  sitemap_pattern: "/sitemap/event_\\d+\\.xml"
-  last_files: 70
-  sitemap_recent_days: 400
+  type: graphql_detail
+  graphql:
+    endpoint_from: https://www.paradiso.nl/
+    endpoint_pattern: 'https://[a-z0-9.-]+\.execute-api\.[a-z0-9.-]+\.amazonaws\.com'
+    endpoint_path: /graphql
+    token_pattern: '"Bearer "\.concat\("([^"]+)"\)'
+    query: "query programItemsQuery($size: Int = 25, $searchAfter: [String]) { program(size: $size, searchAfter: $searchAfter) { events { id uri title startDateTime date subtitle sort eventStatus soldOut location { id title } } } }"
+    variables: {size: 100}
+    items: data.program.events
+    cursor: sort
+    cursor_var: searchAfter
+    fields: {url: uri, title: title, start: startDateTime, location: location.0.title, soldout: soldOut, status: eventStatus, subtitle: subtitle}
   link_pattern: "paradiso\\.nl/programma/[^/]+/\\d+$"
-  max_detail: 900
   detail_ttl_days: 30
   crawl_delay: 0.7
-  notes: "geen JSON-LD; eventdata zit in de React Server Components-payload van elke eventpagina. Sitemap event_*.xml (364 bestanden à 30 URL's) is op id gesorteerd, NIET op datum; daarom de laatste 70 bestanden lezen en alleen URL's houden met een lastmod in de laatste 400 dagen (120 was te krap: The Patchwork Family, aangemaakt in het voorjaar, viel eruit). Verleden events worden na één keer nooit meer opgehaald."
+  notes: "geen JSON-LD; de site laadt het programma via een GraphQL-API (AWS API Gateway, publieke client-token in de Next.js-bundel; elke run opnieuw uit de JS gelezen, niet opgeslagen): ~470 komende events incl. locatie (Paradiso/Tolhuistuin/Bitterzoet/Zonnehuis/Parallel …), uitverkocht en status. De eventpagina (React Server Components-payload) geeft prijs en aanvang (startMain). Eerder via de sitemap: event_*.xml is op id gesorteerd met 100 URL's per bestand en dagelijks verse lastmods; de cap van 900 liet Cat Power, Fat Freddy's Drop en Panchiko weg."
 
 - name: Tolhuistuin
   city: Amsterdam
