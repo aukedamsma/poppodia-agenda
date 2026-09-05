@@ -654,6 +654,15 @@ def test_fallback_source_when_site_blocked():
     assert fetch.fmt_price(19.5) == "€ 19,50"
 
 
+def test_source_score_and_good_enough():
+    mk = lambda n, time=True, price=True: [fetch.Event(venue="V", city="C", title=f"E{i}", start=FUT + ("T20:00" if time else "T00:00"), url=f"https://v/{i}", price="€ 10" if price else None) for i in range(n)]
+    assert fetch._source_score(mk(50)) > fetch._source_score(mk(60, time=False, price=False))   # 50 met tijd/prijs > 60 zonder
+    assert fetch._good_enough({"capacity": 250}, mk(25)) is False        # horizon (30 dagen) korter dan 6 weken -> doorzoeken
+    far = mk(25); far[0].start = FUT2.replace(FUT2[:4], str(int(FUT2[:4]) + 1)) + "T20:00"
+    assert fetch._good_enough({"capacity": 250}, far) is True
+    assert fetch._good_enough({"capacity": 1000}, far) is False          # groot podium met 25 events: verdacht weinig
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

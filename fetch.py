@@ -2035,6 +2035,32 @@ def strat_html_preset(v: dict, html: str, base: str) -> tuple[list[Event], str |
 # per podium
 # ----------------------------------------------------------------------------
 
+def _source_score(evs: list[Event]) -> float:
+    """Kwaliteit van een bron: aantal events, gewogen met tijd- en prijsdekking. Een bron met 60 events zonder tijden
+    verliest van een bron met 50 events mét tijden (fase 2: vergelijken in plaats van 'de eerste treffer')."""
+    if not evs:
+        return 0.0
+    n = len(evs)
+    t = sum(1 for e in evs if e.start[11:16] not in ("", "00:00")) / n
+    p = sum(1 for e in evs if e.price) / n
+    return n * (0.6 + 0.25 * t + 0.15 * p)
+
+
+def _good_enough(v: dict, evs: list[Event]) -> bool:
+    """Stoppen met verdere strategieën? Niet alleen 'minstens 20 events': een groot podium (>= 400 plaatsen) met minder
+    dan 40 events of een horizon korter dan 6 weken is verdacht (JSON-LD van alleen de eerste pagina) — dan ook de
+    volgende strategie proberen en de beste kiezen."""
+    if len(evs) < int(v.get("good_enough", 20)):
+        return False
+    cap = int(v.get("capacity") or 0)
+    horizon = max((e.start[:10] for e in evs), default="")
+    if cap >= 400 and len(evs) < 40:
+        return False
+    if horizon and horizon < (TODAY + timedelta(weeks=6)).isoformat():
+        return False
+    return True
+
+
 def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
     """Geeft (events, gebruikte strategie, opmerking, audit)."""
     base = v["url"]
@@ -2140,9 +2166,9 @@ def fetch_venue(v: dict, cache: dict) -> tuple[list[Event], str, str, dict]:
         if v.get("only_genres"):
             want = {g.lower() for g in v["only_genres"]}
             evs = [e for e in evs if {g.lower() for g in e.genres} & want]
-        if len(evs) > len(best[0]):
+        if _source_score(evs) > _source_score(best[0]):
             best = (evs, strat)
-        if len(evs) >= int(v.get("good_enough", 20)):
+        if _good_enough(v, evs):
             break
         notes.append(f"{strat}: {len(evs)} events")
     evs, strat = best
