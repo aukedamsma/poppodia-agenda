@@ -246,7 +246,7 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
             return datetime(y, mo, d, hh, mm)
         except ValueError:
             return None
-    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s*)?(\d{1,2})\s?[./]\s?(\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?", low)   # "Sun18.10", "Sun 18 . 10" (Cinetol)
+    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s*)?(\d{1,2})\s?[./]\s?(\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?(?:\s*(?:just added|nieuw|new|uitverkocht|sold out)\s*)?", low)   # "Sun18.10", "Sun 18 . 10", "Sat05.09just added" (Cinetol)
     if m and 1 <= int(m.group(2)) <= 12:
         d, mo = int(m.group(1)), int(m.group(2))
         hh, mm = (int(m.group(3)), int(m.group(4))) if m.group(3) else (0, 0)
