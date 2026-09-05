@@ -34,6 +34,7 @@ from dateutil import parser as dtparser
 
 import artists as artistdb
 import series as seriesdb
+from taxonomy import _HINT_NOISE
 from taxonomy import (normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
@@ -2162,6 +2163,8 @@ def main(only: list[str] | None = None) -> int:
             e.artists += [a for a in e.lineup if artist_key(a) not in known and len(artist_key(a)) > 1][: 15 - len(e.artists)]
             if not e.subtitle and len(e.lineup) > 1:
                 e.subtitle = "met " + ", ".join(e.lineup[:8]) + (" e.a." if len(e.lineup) > 8 else "")
+        # tekst-hints uit eerdere runs (cache) die geen genre zijn maar een gewoon woord ("twee", "liedjes", "piano"): weg
+        e.genres = [g for g in e.genres if not (g == g.lower() and g in _HINT_NOISE)]
         e.genre_norm, unk = normalize_genres(e.genres, e.title, e.subtitle or "")
         for u in unk:
             unknown_genres[u] = unknown_genres.get(u, 0) + 1

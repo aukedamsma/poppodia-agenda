@@ -663,7 +663,18 @@
              chansonssinger-songwriter: [Chanson, Singer-songwriter], globalfolk: [Wereldmuziek, Folk], metalpunkheavy: [Metal, Punk],
              classicretro: Classics, soulfunkjazz: [Soul, Funk, Jazz], skareggae: [Ska, Reggae], indiealternative: [Indie, Alternative]}
 - {name: Corneel, city: Lelystad, url: "https://www.corneel.nl/agenda/", capacity: 400}
-- {name: Groene Engel, city: Oss, url: "https://www.groene-engel.nl/programma/", capacity: 650}
+- name: Groene Engel
+  city: Oss
+  url: https://www.groene-engel.nl/programma/
+  capacity: 650
+  type: html
+  item: "span.event-part"
+  title: ".part-title"
+  date: ".date-label"
+  link: ".part-title a"
+  subtitle: ".part-remark"
+  genre: ".category-label"
+  notes: "gemengd programma; de lijst (107 kaarten) heeft per kaart een categorielabel (Concert/Film/Theater/Kids/Specials) dat het type bepaalt — via jsonld_detail werden films als concert gelezen. 'gratis toegang' in part-remark; tijd/prijs via eventpagina"
 - name: De Cacaofabriek
   city: Helmond
   url: https://www.cacaofabriek.nl/agenda?type=concert

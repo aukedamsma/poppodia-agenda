@@ -88,7 +88,12 @@ def normalize_genres(raw: list[str], title: str = "", subtitle: str = "") -> tup
 
 
 # genre-woorden die in een beschrijving veilig genoeg zijn om als tag te gebruiken (geen 'pop', 'rock', 'club', 'house'…)
-_HINT_SKIP = {"pop", "rock", "club", "dance", "house", "live", "show", "muziek", "music", "concert", "wave", "bass", "roots", "world",
+# gewone (Nederlandse) woorden die toevallig ook een (sub)genre zijn: nooit uit een beschrijving afleiden, en als
+# kleine-letter-tag uit een eerdere run (cache) weer weggooien
+_HINT_NOISE = {"twee", "liedjes", "piano", "groove", "groovy", "soundscapes", "soundscape", "improvisatie", "improv", "ballad", "weird",
+               "fout", "foute", "oi", "crust", "doom", "harsh", "juke", "mali", "afro", "synth", "modular", "modulaire",
+               "sessie", "jam", "markt", "film", "expo", "dans", "dansen", "nights", "upcoming", "alles", "melodic", "cinematisch"}
+_HINT_SKIP = _HINT_NOISE | {"pop", "rock", "club", "dance", "house", "live", "show", "muziek", "music", "concert", "wave", "bass", "roots", "world",
               "global", "urban", "swing", "acid", "minimal", "breaks", "trap", "drill", "loud", "heavy", "psych", "prog", "garage",
               "glam", "surf", "western", "country", "singer", "songwriter", "folk", "soul", "funk", "jazz", "blues", "disco", "koor",
               "ensemble", "orkest", "opera", "kids", "familie", "family", "college", "talk", "feest", "party", "hits", "classics",
