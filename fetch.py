@@ -1889,7 +1889,10 @@ def apply_extra(e: Event, x: dict, needs_time: bool) -> None:
     st = datetime.fromisoformat(e.start)
     if x.get("start"):
         hh, mm = x["start"]
-        if needs_time or (hh, mm) != (st.hour, st.minute):
+        diff = abs((hh * 60 + mm) - (st.hour * 60 + st.minute))
+        # een lijsttijd mag door de paginatekst worden gecorrigeerd (deuren -> aanvang), maar niet met sprongen van
+        # meer dan 3 uur: dat is een leesfout in de tekst (dB's "Tijd: 8:00 pm" las als 08:00 -> 20:00 werd 08:00)
+        if needs_time or ((hh, mm) != (st.hour, st.minute) and diff <= 180):
             e.start, e.time_est = st.replace(hour=hh, minute=mm).isoformat(timespec="minutes"), False
     elif needs_time:
         if x.get("ld_start") and x["ld_start"][11:16] != "00:00":
@@ -2728,12 +2731,37 @@ def main(only: list[str] | None = None) -> int:
         log(f"== {v['name']} ({v['city']}): {len(evs)} events via {strat} ({time.time()-t0:.0f}s) {note}")
         return v, evs, strat, note, audit
 
+    # vorige uitkomst per podium: als een site vandaag onbereikbaar is (Astrant, Loburg: ConnectionError om de andere run),
+    # blijven de events van de vorige run staan in plaats van dat het podium leeg valt (max. 3 runs achter elkaar)
+    prev_path = DATA / "events.json"
+    prev_by_venue: dict[str, list[Event]] = {}
+    if prev_path.exists():
+        try:
+            for rec in json.loads(prev_path.read_text(encoding="utf-8")):
+                prev_by_venue.setdefault(rec["venue"], []).append(Event(**{k: val for k, val in rec.items() if k in Event.__dataclass_fields__}))
+        except (ValueError, TypeError, KeyError):
+            prev_by_venue = {}
+    hist_path0 = STATE / "history.json"
+    history0 = json.loads(hist_path0.read_text()) if hist_path0.exists() else {}
     todo = [v for v in venues if not only or v["name"] in only]
     # podia parallel (elk podium zelf netjes sequentieel met zijn eigen crawl_delay)
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8"))) as pool:
         results = list(pool.map(run_one, todo))
     for v, evs, strat, note, audit in results:
+        if not evs and strat in ("error", "none") and not v.get("passive"):
+            prev = [e for e in prev_by_venue.get(v["name"], []) if e.start[:10] >= TODAY.isoformat()]
+            trailing_stale = 0
+            for h in reversed(history0.get(v["name"], [])):
+                if h.get("stale"):
+                    trailing_stale += 1
+                else:
+                    break
+            if len(prev) >= 3 and trailing_stale < 3:
+                evs = prev
+                audit = dict(audit or {}, stale=True)
+                note = (note + "; " if note else "") + f"bron onbereikbaar: {len(prev)} events van de vorige run hergebruikt"
+                log(f"    {v['name']}: bron onbereikbaar, {len(prev)} events van de vorige run hergebruikt")
         # volledigheidsindicatoren: weekenddekking (vr/za met minstens één event in de komende 8 weken, van 16) en horizon
         # (verste datum). Een podium met 400+ plaatsen heeft normaal (bijna) elk weekend iets: minder dan 11/16 is verdacht dun.
         wk_days = {e.start[:10] for e in evs if TODAY <= date.fromisoformat(e.start[:10]) < TODAY + timedelta(weeks=8)
@@ -2774,7 +2802,7 @@ def main(only: list[str] | None = None) -> int:
             r["note"] = (r["note"] + "; " if r["note"] else "") + f"LET OP: {now} events, was {best} in de laatste 7 runs"
             regressions.append((name, best, now))
             log(f"LET OP regressie {name}: {now} events, was {best}")
-        history[name] = past + [{"date": TODAY.isoformat(), "events": now, "strategy": r["strategy"]}]
+        history[name] = past + [{"date": TODAY.isoformat(), "events": now, "strategy": r["strategy"], "stale": bool(r["audit"].get("stale"))}]
     report["regressions"] = [{"venue": n, "was": b, "now": c} for n, b, c in regressions]
     hist_path.write_text(json.dumps(history, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
