@@ -2416,7 +2416,13 @@ def dedupe(events: list[Event]) -> list[Event]:
     final = []
     for e in out:
         day_key = (e.venue, e.start[:10])
-        old = next((o for o in by_day.get(day_key, []) if _same_event(o, e)), None)
+        def _two_shows(o: Event) -> bool:
+            # twee voorstellingen op één dag (Ziggo Dome: Roxy Dekker 15:00 en 20:30, eigen URL per show): geen dubbele
+            sa, sb = o.start[11:16], e.start[11:16]
+            if sa in ("", "00:00") or sb in ("", "00:00") or (o.url or "").rstrip("/") == (e.url or "").rstrip("/"):
+                return False
+            return abs((int(sa[:2]) * 60 + int(sa[3:])) - (int(sb[:2]) * 60 + int(sb[3:]))) >= 120
+        old = next((o for o in by_day.get(day_key, []) if _same_event(o, e) and not _two_shows(o)), None)
         if old is not None:
             rich, poor = (e, old) if _richness(e) > _richness(old) else (old, e)
             # velden aanvullen uit de armere versie; de URL van de eigen site gaat vóór die van een ticketshop

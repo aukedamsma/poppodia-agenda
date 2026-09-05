@@ -677,6 +677,12 @@ def test_groundtruth_check(tmp_path=None):
     assert all(i["venue"] and i["title"] and i["date"] for i in real["items"])
 
 
+def test_two_shows_same_day_not_merged():
+    a = fetch.Event(venue="Ziggo Dome", city="A", title="Roxy Dekker", start=FUT + "T15:00", url="https://z/1")
+    b = fetch.Event(venue="Ziggo Dome", city="A", title="Roxy Dekker", start=FUT + "T20:30", url="https://z/2")
+    assert len(fetch.dedupe([a, b])) == 2
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
