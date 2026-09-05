@@ -545,6 +545,20 @@ def test_canonical_price():
     assert cp("gratis") == "gratis" and cp("uitverkocht") == "uitverkocht"
 
 
+def test_date_with_weekday_after_and_estrado_time():
+    assert fetch.parse_dt("05.09 zaterdag").month == 9 and fetch.parse_dt("05.09 zaterdag").day == 5   # Grenswerk
+    # Estrado: de datum staat twee keer op de pagina, alleen de tweede keer met tijd erachter
+    assert fetch.extract_from_text("The Wanderers vr 02 okt Podiumzaal vrijdag 2 oktober 2026 20:30 uur Rock n Roll Prijzen € 20,00")[1] == (20, 30)
+
+
+def test_html_item_own_link_wins():
+    """De Pul: de kaart is zelf een <a> naar de eventpagina, met daarin een ticketlink naar shop.tickets.cm.com."""
+    v = {"name": "De Pul", "city": "Uden", "url": "https://www.livepul.com/agenda", "item": "a.agenda-event", "title": ".agenda-event__title", "date": ".agenda-event__date"}
+    html = '<a href="/agenda/nxt-gen/" class="agenda-event"><span class="agenda-event__date">ZA 05 SEP</span><h3 class="agenda-event__title">NXT GEN</h3><object><a href="https://shop.tickets.cm.com/951b">Tickets</a></object></a>'
+    evs = fetch.strat_html(v, html, v["url"])
+    assert evs[0].url == "https://www.livepul.com/agenda/nxt-gen/"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

@@ -246,7 +246,8 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
             return datetime(y, mo, d, hh, mm)
         except ValueError:
             return None
-    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s*)?(\d{1,2})\s?[./]\s?(\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?(?:\s*(?:just added|nieuw|new|uitverkocht|sold out)\s*)?", low)   # "Sun18.10", "Sun 18 . 10", "Sat05.09just added" (Cinetol)
+    # "Sun18.10", "Sun 18 . 10", "Sat05.09just added" (Cinetol), "05.09 zaterdag" (Grenswerk): dag.maand met weekdag ervoor of erna
+    m = re.fullmatch(r"(?:[a-z]{2,9}\.?\s*)?(\d{1,2})\s?[./]\s?(\d{1,2})\.?(?:\s+(\d{1,2})[:.](\d{2}))?(?:\s*(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|monday|tuesday|wednesday|thursday|friday|saturday|sunday|ma|di|wo|do|vr|za|zo|mon|tue|wed|thu|fri|sat|sun)\.?)?(?:\s*(?:just added|nieuw|new|uitverkocht|sold out)\s*)?", low)
     if m and 1 <= int(m.group(2)) <= 12:
         d, mo = int(m.group(1)), int(m.group(2))
         hh, mm = (int(m.group(3)), int(m.group(4))) if m.group(3) else (0, 0)
@@ -1317,12 +1318,18 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
     start = hm(r"(?:aanvang|start|begin|show|showtime|concert|hoofdprogramma|programma|\btijd)\W{0,12}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
-    # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang
-    if not start and dt is not None and m:
-        after = low[m.end(): m.end() + 18]
-        mt = re.match(r"\W{0,4}(?:om\s+)?(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
-        if mt and int(mt.group(1)) < 24 and int(mt.group(2)) < 60:
-            start = (int(mt.group(1)), int(mt.group(2)))
+    # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang.
+    # Dezelfde datum kan vaker op de pagina staan ("vr 02 okt … vrijdag 2 oktober 2026 20:30 uur"): elke vermelding proberen
+    if not start and dt is not None:
+        for mm2 in re.finditer(rf"\b(?:{WEEKDAY_RE}\.?\s+)?(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+\d{{4}})?", low):
+            d2 = parse_dt(" ".join(g for g in mm2.groups() if g and not re.fullmatch(WEEKDAY_RE, g)))
+            if not d2 or d2.date() != dt.date():
+                continue
+            after = low[mm2.end(): mm2.end() + 18]
+            mt = re.match(r"\W{0,4}(?:om\s+)?(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
+            if mt and int(mt.group(1)) < 24 and int(mt.group(2)) < 60:
+                start = (int(mt.group(1)), int(mt.group(2)))
+                break
     # "20:30 (Doors: 19:30)" (Mezz, Stager-widgets): de tijd vóór het haakje is de aanvang, die erin de deurtijd
     mp = re.search(r"(\d{1,2})[:.u](\d{2})\s*\((?:doors?|deuren|zaal open)\W{0,4}(\d{1,2})[:.u](\d{2})\)", low)
     if mp and not start:
@@ -1710,7 +1717,13 @@ def strat_html(v: dict, html: str, base: str) -> list[Event]:
             holder = item if item.has_attr(v["link_attr"]) else item.find(attrs={v["link_attr"]: True})
             url = urljoin(base, holder[v["link_attr"]]) if holder else None
         if not url:
-            a = pick("link") or item.find("a", href=True) or (item if item.name == "a" else None)
+            # de kaart zelf als die een <a> is (De Pul: <a class="agenda-event" href="/agenda/…"> met daarin een ticketlink naar
+            # shop.tickets.cm.com), anders de eerste link op de eigen site, anders de eerste link
+            a = pick("link") or (item if item.name == "a" and item.has_attr("href") else None)
+            if a is None:
+                links = item.find_all("a", href=True)
+                host = urlparse(base).netloc.replace("www.", "")
+                a = next((x for x in links if urlparse(urljoin(base, x["href"])).netloc.replace("www.", "") == host), None) or (links[0] if links else None)
             url = urljoin(base, a["href"]) if a and a.has_attr("href") else base
         d = pick("date")
         dt = None
