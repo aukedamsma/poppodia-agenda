@@ -2536,7 +2536,9 @@ def check_groundtruth(events: list[Event], path: Path | None = None) -> dict:
         checked += 1
         cands = by_vd.get((_fold(it["venue"]), it["date"]), [])
         want = _fold(it.get("title", ""))
-        hit = next((e for e in cands if want and want in _fold(e.title)), None)
+        hits = [e for e in cands if want and want in _fold(e.title)]
+        # meerdere shows op één dag (Roxy Dekker 15:00 en 20:30): die met de verwachte tijd
+        hit = next((e for e in hits if it.get("time") and e.start[11:16] == it["time"]), hits[0] if hits else None)
         if hit is None:
             misses.append({**it, "problem": "ontbreekt"})
             continue
