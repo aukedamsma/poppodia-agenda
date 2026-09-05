@@ -663,6 +663,20 @@ def test_source_score_and_good_enough():
     assert fetch._good_enough({"capacity": 1000}, far) is False          # groot podium met 25 events: verdacht weinig
 
 
+def test_groundtruth_check(tmp_path=None):
+    import tempfile, pathlib
+    d = pathlib.Path(tempfile.mkdtemp())
+    gt = {"items": [{"venue": "V", "title": "Cat Power", "date": FUT, "time": "20:30", "price": 40},
+                    {"venue": "V", "title": "Ontbreekt", "date": FUT},
+                    {"venue": "V", "title": "Oud", "date": "2020-01-01"}]}
+    (d / "gt.json").write_text(json.dumps(gt))
+    evs = [fetch.Event(venue="V", city="C", title="Cat Power", start=FUT + "T20:30", url="https://v/1", price="€ 40,00")]
+    r = fetch.check_groundtruth(evs, d / "gt.json")
+    assert r["checked"] == 2 and r["ok"] == 1 and r["misses"][0]["title"] == "Ontbreekt"
+    real = json.loads((pathlib.Path(__file__).parent / "groundtruth.json").read_text())
+    assert all(i["venue"] and i["title"] and i["date"] for i in real["items"])
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

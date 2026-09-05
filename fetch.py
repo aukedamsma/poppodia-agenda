@@ -182,6 +182,35 @@ def http_get(url: str, **kw):
     return r
 
 
+def http_post(url: str, **kw):
+    """POST met dezelfde botmuur-escalatie als http_get: hosts die alleen met Chrome-TLS door de muur komen (of dat na een
+    403 blijken te doen) gaan via curl_cffi; anders de gewone sessie. Gebruikt voor Stager-sessies, FacetWP en GraphQL."""
+    host = urlparse(url).netloc
+    def _cffi():
+        try:
+            from curl_cffi import requests as creq  # type: ignore
+        except ImportError:
+            return None
+        try:
+            return creq.post(url, impersonate="chrome", timeout=TIMEOUT, params=kw.get("params"), json=kw.get("json"),
+                             data=kw.get("data"), headers={**BROWSER_HEADERS, **(kw.get("headers") or {})})
+        except Exception as ex:  # noqa: BLE001
+            log(f"    {host}: browser-TLS (POST) mislukt: {type(ex).__name__}")
+            return None
+    if host in _IMPERSONATE_HOSTS:
+        r = _cffi()
+        if r is not None:
+            return r
+    r = SESSION.post(url, timeout=TIMEOUT, **{k: v for k, v in kw.items() if k in ("params", "json", "data", "headers")})
+    if getattr(r, "status_code", 200) in (403, 406, 429, 503) or _looks_blocked(r):
+        r2 = _cffi()
+        if r2 is not None and r2.ok and not _looks_blocked(r2):
+            _IMPERSONATE_HOSTS.add(host)
+            log(f"    {host}: botmuur op POST ({r.status_code}) -> verder met browser-TLS-handdruk")
+            return r2
+    return r
+
+
 def get(url: str, delay: float = 0.0, **kw):
     if delay:
         time.sleep(delay)
@@ -1026,8 +1055,7 @@ def strat_stager(v: dict, base: str, cache: dict) -> list[Event]:
     import html as _html
     flags = json.loads(_html.unescape(m.group(1)))
     shop_id = flags.get("shopId")
-    r = SESSION.post(f"{root}/shop/v1/session/new", params={"shopId": shop_id, "locale": "NL", "hasOrderToken": "false"},
-                     json={}, timeout=TIMEOUT)
+    r = http_post(f"{root}/shop/v1/session/new", params={"shopId": shop_id, "locale": "NL", "hasOrderToken": "false"}, json={})
     r.raise_for_status()
     token = r.json()["accessToken"]["jwt"]
     hdr = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
@@ -1662,8 +1690,8 @@ def strat_graphql_detail(v: dict, base: str, cache: dict) -> list[Event]:
     variables = dict(g.get("variables") or {})
     items: list[dict] = []
     for _ in range(int(g.get("max_pages", 30))):
-        r = SESSION.post(endpoint, json={"query": g["query"], "variables": variables}, timeout=TIMEOUT,
-                         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"})
+        r = http_post(endpoint, json={"query": g["query"], "variables": variables},
+                      headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"})
         r.raise_for_status()
         page = _path(r.json(), g.get("items", "data")) or []
         if not isinstance(page, list) or not page:
@@ -1993,7 +2021,7 @@ def strat_facetwp(v: dict, base: str) -> list[Event]:
     while page <= total_pages:
         body = {"action": "facetwp_refresh", "data": {"facets": {}, "frozen_facets": {}, "http_params": {"get": [], "uri": path, "url_vars": []},
                                                       "template": "wp", "extras": {}, "soft_refresh": 1, "first_load": 0, "paged": page}}
-        r = SESSION.post(base, json=body, timeout=TIMEOUT, headers={**(BROWSER_HEADERS if urlparse(base).netloc in _BROWSER_UA_HOSTS else {}), "Accept": "application/json"})
+        r = http_post(base, json=body, headers={**(BROWSER_HEADERS if urlparse(base).netloc in _BROWSER_UA_HOSTS else {}), "Accept": "application/json"})
         time.sleep(float(v.get("crawl_delay", 0.6)))
         r.raise_for_status()
         try:
@@ -2487,6 +2515,48 @@ def _same_event(a: Event, b: Event, strict: bool = False) -> bool:
     return False
 
 
+def check_groundtruth(events: list[Event], path: Path | None = None) -> dict:
+    """Vaste regressietest: tests/groundtruth.json bevat events die met de browser op de podiumsite zijn geverifieerd
+    (fase 1). Per item: bestaat het (podium + dag + titel), en kloppen tijd en prijs als die zijn opgegeven? Verstreken
+    items tellen niet mee. Resultaat in report.json onder 'groundtruth'; missers ook als LET OP in de log."""
+    path = path or (ROOT / "tests" / "groundtruth.json")
+    if not path.exists():
+        return {}
+    try:
+        items = json.loads(path.read_text(encoding="utf-8")).get("items", [])
+    except (ValueError, OSError):
+        return {}
+    by_vd: dict[tuple, list[Event]] = {}
+    for e in events:
+        by_vd.setdefault((_fold(e.venue), e.start[:10]), []).append(e)
+    checked, ok, misses = 0, 0, []
+    for it in items:
+        if not it.get("date") or it["date"] < TODAY.isoformat():
+            continue
+        checked += 1
+        cands = by_vd.get((_fold(it["venue"]), it["date"]), [])
+        want = _fold(it.get("title", ""))
+        hit = next((e for e in cands if want and want in _fold(e.title)), None)
+        if hit is None:
+            misses.append({**it, "problem": "ontbreekt"})
+            continue
+        problems = []
+        if it.get("time") and hit.start[11:16] != it["time"]:
+            problems.append(f"tijd {hit.start[11:16]} i.p.v. {it['time']}")
+        if it.get("price") is not None:
+            got = price_number(hit.price or "")
+            if got is None or abs(got - float(it["price"])) > 0.01:
+                problems.append(f"prijs {hit.price} i.p.v. {it['price']}")
+        if problems:
+            misses.append({**it, "problem": "; ".join(problems)})
+        else:
+            ok += 1
+    for m in misses:
+        log(f"LET OP groundtruth {m['venue']} · {m['title']} {m['date']}: {m['problem']}")
+    log(f"Groundtruth: {ok}/{checked} steekproef-events kloppen")
+    return {"checked": checked, "ok": ok, "misses": misses}
+
+
 def main(only: list[str] | None = None) -> int:
     venues = yaml.safe_load((ROOT / "venues.yaml").read_text(encoding="utf-8"))
     seen_path, cache_path = STATE / "seen.json", STATE / "detail_cache.json"
@@ -2688,6 +2758,7 @@ def main(only: list[str] | None = None) -> int:
     report["archive"] = len(archive)
     log(f"Archief: {len(archive)} events bewaard (data/archive.json)")
 
+    report["groundtruth"] = check_groundtruth(all_events)
     all_events.sort(key=lambda e: (e.start, e.venue, e.title))
     (DATA / "events.json").write_text(json.dumps([asdict(e) for e in all_events], ensure_ascii=False, indent=1), encoding="utf-8")
     report["total_events"] = len(all_events)
