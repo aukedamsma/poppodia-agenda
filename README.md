@@ -20,6 +20,13 @@ zodat ik niet elke site apart hoef af te zoeken. Draait gratis op GitHub Actions
 Een falend podium blokkeert nooit de rest: het staat dan met een ✕ in de status-voettekst van de pagina,
 met de reden in `data/report.json`.
 
+De fetcher is opgedeeld in modules (`import fetch` blijft de ene ingang; fetch.py re-exporteert alles):
+`common.py` (paden, Event-datamodel, log), `net.py` (HTTP met drie-traps escalatie en blokkadedetectie),
+`extract.py` (datums, tijden en prijzen uit tekst/JSON, met herkomst), `sources.py` (de bronstrategieën en eventpagina's,
+detailcache), `merge.py` (dedupe, coproducties, herlabelen, categorie-tags), `quality.py` (audit, strategiescore,
+run-op-run verschil, groundtruth) en `fetch.py` (strategieketen per podium en de run zelf). Daarnaast `taxonomy.py`
+(genres, artiesten, naamopschoning), `artists.py`/`series.py` (kennisbanken) en `build.py` (de pagina).
+
 ## Genres en artiesten
 
 - `genres.yaml` bevat de taxonomie: ~27 hoofdgenres met één-woordslabels (naar Bandcamp Discover, toegesneden op de Nederlandse
@@ -103,6 +110,8 @@ Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in
 | Patronaat: 127 events € 1, € 2 of € 3 — de zaalnaam vóór de prijs ("Stage 3 € 15,50") werd als "3 €" gelezen | Het patroon "N €" telt niet als het €-teken zelf een bedrag inleidt. Plus plausibiliteitscontrole per podium: ≥ 30% prijzen onder € 5, of een podium van 400+ plaatsen dat voor ≥ 50% 'gratis' zou zijn → LET OP prijzen in log, rapport en podiumlijst (`cheap_prices`, `many_free`). |
 | Groundtruth was 23 items voor 105 podia | Twee lagen in `tests/groundtruth.json`: 28 met de browser gecontroleerde items (misser = LET OP) en 52 baseline-items (één per podium uit run #29, niet handmatig gecontroleerd; afwijking = 'veranderd', apart gerapporteerd onder `baseline_changed`). Bij die controle kwamen de Nieuwe Nor- en Patronaat-fouten hierboven boven water. |
 | Datum in de titel ("13-11-2026 : Roberto Jacketti", "CHURCH OF CASH \| ZATERDAG 14 NOVEMBER") en drieletterige landcodes ("Hippotraktor (BEL)") | `strip_title_date` haalt een datum vooraan/achteraan uit de titel; landcodes van drie letters tellen tussen haakjes ook als landaanduiding. |
+| Identiteit van een event hing aan de bron-url: een podium dat zijn urls herschrijft, of een event dat via een andere bron binnenkomt (shop i.p.v. agenda, /en/ i.p.v. /nl/), werd opnieuw 'nieuw' en kreeg een dubbel archiefrecord | `id` = podium\|dag\|titelsleutel (`event_key`), met een url-alias in `state/ids.json` zodat een event zijn id houdt als de titel verandert ("+ support") of de datum verschuift (verplaatst); twee shows op één dag krijgen de tijd erachter. Oude url-sleutels in `seen.json` en `archive.json` zijn automatisch gemigreerd (first_seen blijft). |
+| Een parserfix was pas na een run (en een `CACHE_VERSION`-bump met duizenden nieuwe requests) te beoordelen, en nooit tegen echte pagina's zonder netwerk | `tools/snapshot_fixtures.py` bewaart de eventpagina's van de groundtruth-items (gzip, ~60 podia); `tests/test_fixtures.py` draait `fetch_detail` daar offline op en vergelijkt dag/tijd/prijs. De HTML van álle gecachte pagina's bewaren is bewust niet gedaan: 8.000 pagina's × dagelijkse commits zou de repository laten exploderen. |
 | Datum zonder herkenbare maand (Cinetol "Sun18.10" → 18 september i.p.v. oktober) | De fuzzy datumparser vult nooit meer een ontbrekende maand aan met de huidige maand: zonder maandnaam of volledige datum is er geen datum. Gevonden door onze data naast pop-agenda.nl te leggen — die vergelijking is een vaste controlestap. |
 | Verouderde cache na een parserverbetering (013: prijs bleef leeg omdat de pagina al gecached was) | `CACHE_VERSION` in `fetch.py`: verhogen dwingt het opnieuw ophalen van alle aankomende events af; verleden events blijven gecached. |
 
@@ -185,8 +194,13 @@ python fetch.py            # alle podia
 python fetch.py Hedon EKKO # alleen deze
 python build.py
 open docs/index.html
-python tests/test_offline.py
+python tests/test_offline.py            # 56 offline tests (synthetische pagina's, geen netwerk)
+python tools/snapshot_fixtures.py       # eenmalig/af en toe: eventpagina's van groundtruth.json bewaren in tests/fixtures/
+python tests/test_fixtures.py           # parser tegen die echte pagina's, offline: dag/tijd/prijs per podium
 ```
+
+Een parserwijziging controleer je dus in drie lagen: de synthetische tests (regels), de fixtures (echte pagina's van ~60 podia,
+zonder ophalen) en na de run de groundtruth en het run-op-run verschil in `data/report.json`.
 
 ## Netheid
 

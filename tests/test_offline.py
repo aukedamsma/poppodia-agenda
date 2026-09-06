@@ -27,7 +27,7 @@ def fake_session(routes):
                 if k in url:
                     return v(url, kw) if callable(v) else v
             raise fetch.requests.ConnectionError("no route " + url)
-    fetch.SESSION = S()
+    fetch.net.SESSION = S()
 
 
 def ld(*nodes):
@@ -294,7 +294,7 @@ def test_category_pages_tags():
     class S:
         headers = {}
         def get(self, url, **kw): return fake_get(url)
-    old = fetch.SESSION; fetch.SESSION = S()
+    old = fetch.SESSION; fetch.net.SESSION = S()
     try:
         cache = {}
         cats, excl = fetch.category_tags(v, cache)
@@ -311,10 +311,10 @@ def test_category_pages_tags():
         evs.append(fetch.Event(venue="Tivoli", city="Utrecht", title="B", start=FUT + "T20:00:00", url="https://www.tivolivredenburg.nl/agenda/998/", genres=[]))
         assert n == 1 and evs[0].genres == ["Kennis & debat", "Pop", "Live"] and evs[1].genres == []
         # tweede aanroep komt uit de cache (geen netwerk)
-        fetch.SESSION = None
+        fetch.net.SESSION = None
         assert fetch.category_tags(v, cache)[0]["https://www.tivolivredenburg.nl/agenda/104"] == {"Soul", "Funk", "Jazz"}
     finally:
-        fetch.SESSION = old
+        fetch.net.SESSION = old
 
 
 def test_json_api_boerderij():
@@ -411,7 +411,7 @@ def test_facetwp_bibelot():
         headers = {}
         def get(self, url, **kw): return FakeResp(text='<div class="facetwp-template">' + pages[1] + "</div>")
         def post(self, url, json=None, **kw): return FakeResp(text="", json_={"template": pages.get(json["data"]["paged"], ""), "settings": {"pager": {"total_pages": 2}}})
-    fetch.SESSION = S()
+    fetch.net.SESSION = S()
     v = {"name": "Bibelot", "city": "Dordrecht", "url": "https://bibelot.net/programma/", "type": "html", "facetwp": True, "enrich": False,
          "item": "a.card-programma", "title": "h3", "date": "p.h6", "subtitle": "p.subtitle", "genre": ".categories .tag"}
     evs, strat, note, audit = fetch.fetch_venue(v, {})
@@ -435,7 +435,7 @@ def test_stager_api_strategy():
         def post(self, url, params=None, json=None, **kw):
             assert url.endswith("/shop/v1/session/new") and params["shopId"] == 301
             return FakeResp(json_={"accessToken": {"jwt": "abc"}})
-    fetch.SESSION = S()
+    fetch.net.SESSION = S()
     v = {"name": "Simplon", "city": "Groningen", "url": "https://simplon.stager.co/shop/default/events", "type": "stager", "enrich": False, "min_events": 1}
     evs, strat, note, audit = fetch.fetch_venue(v, {})
     assert strat == "stager" and len(evs) == 2, (strat, note)
@@ -580,7 +580,7 @@ def test_graphql_detail_strategy():
             assert url == "https://knwxh8dmh1.execute-api.eu-central-1.amazonaws.com/graphql" and headers["Authorization"] == "Bearer TOKEN123"
             calls.append(json["variables"])
             return FakeResp(json_={"data": {"program": {"events": items1 if "searchAfter" not in json["variables"] else []}}})
-    fetch.SESSION = S()
+    fetch.net.SESSION = S()
     fetch._GRAPHQL_CREDS.clear()
     v = {"name": "Paradiso", "city": "Amsterdam", "url": "https://www.paradiso.nl/", "type": "graphql_detail", "min_events": 1,
          "graphql": {"endpoint_from": "https://www.paradiso.nl/", "endpoint_pattern": r"https://[a-z0-9.-]+\.execute-api\.[a-z0-9.-]+\.amazonaws\.com",
@@ -645,7 +645,7 @@ def test_fallback_source_when_site_blocked():
             if "hetpodium" in url: return Blocked()
             if "pop-agenda" in url: return FakeResp(json_=data, text=json.dumps(data))
             raise fetch.requests.ConnectionError(url)
-    fetch.SESSION = S()
+    fetch.net.SESSION = S()
     v = {"name": "Het Podium", "city": "Hoogeveen", "url": "https://www.hetpodium.nl/agenda", "min_events": 1,
          "fallback_sources": [{"url": "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=x", "type": "json_api", "api": "https://www.pop-agenda.nl/wp-json/wp/v2/events?search=x",
                                "filter": {"acf.venue": "Het Podium"}, "enrich": False,
@@ -709,7 +709,7 @@ def test_stager_price_from_link():
             raise fetch.requests.ConnectionError(url)
         def post(self, url, params=None, json=None, **kw):
             return FakeResp(json_={"accessToken": {"jwt": "t"}})
-    fetch.SESSION = S(); fetch._STAGER_SESSIONS.clear()
+    fetch.net.SESSION = S(); fetch._STAGER_SESSIONS.clear()
     assert fetch.stager_price_from_link(page, FUT + "T23:30", "Strictly K-POP") == "€ 13,50"
     assert fetch.stager_price_from_link('<a href="https://app.stager.co/shop/x">x</a>', None, None) is None
 
@@ -785,6 +785,27 @@ def test_fixed_offset_is_local_time():
     assert strip_country("Hippotraktor (BEL) + support") == "Hippotraktor + support" and strip_country("UK Subs") == "UK Subs"
     assert strip_title_date("13-11-2026 : Roberto Jacketti & The Scooters") == "Roberto Jacketti & The Scooters"
     assert strip_title_date("CHURCH OF CASH | ZATERDAG 14 NOVEMBER") == "CHURCH OF CASH" and strip_title_date("3 Doors Down") == "3 Doors Down"
+
+
+def test_assign_ids():
+    mk = lambda title, url, start=FUT + "T20:00", **kw: fetch.Event(**{"venue": "Vera", "city": "G", "title": title, "start": start, "url": url, **kw})
+    vmeta = {"Vera": {"url": "https://vera.nl/agenda/"}}
+    seen = {"Vera|https://vera.nl/agenda/xanadu/": "2026-08-01"}     # oude url-sleutel uit een eerdere run
+    ids = {}
+    evs = [mk("Xanadu", "https://vera.nl/agenda/xanadu/"), mk("Roxy Dekker", "https://v/1", FUT + "T15:00"), mk("Roxy Dekker", "https://v/2", FUT + "T20:30"),
+           mk("Zonder pagina A", "https://vera.nl/agenda/"), mk("Zonder pagina B", "https://vera.nl/agenda/")]
+    info = fetch.assign_ids(evs, seen, ids, vmeta)
+    assert evs[0].id == f"Vera|{FUT}|xanadu" and seen[evs[0].id] == "2026-08-01" and info["migrated"] == 1
+    assert evs[1].id == f"Vera|{FUT}|roxy dekker" and evs[2].id == f"Vera|{FUT}|roxy dekker|20:30"
+    assert evs[3].id != evs[4].id and "Vera|https://vera.nl/agenda/" not in ids["url"]   # agendapagina is geen alias
+    # volgende run: titel met support en verschoven datum, zelfde url -> zelfde id via de alias
+    e2 = mk("Xanadu + support", "https://vera.nl/agenda/xanadu/", FUT2 + "T20:00")
+    fetch.assign_ids([e2], seen, ids, vmeta)
+    assert e2.id == f"Vera|{FUT}|xanadu"
+    # andere url (shop i.p.v. agenda), zelfde inhoud -> zelfde id via de inhoudelijke sleutel
+    e3 = mk("Xanadu", "https://vera.stager.co/shop/default/events/9")
+    fetch.assign_ids([e3], seen, ids, vmeta)
+    assert e3.id == f"Vera|{FUT}|xanadu"
 
 
 def test_run_diff():
