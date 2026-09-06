@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 import os
+import socket
 import re
 from functools import lru_cache
 import sys
@@ -2745,11 +2746,35 @@ def main(only: list[str] | None = None) -> int:
     history0 = json.loads(hist_path0.read_text()) if hist_path0.exists() else {}
     todo = [v for v in venues if not only or v["name"] in only]
     # podia parallel (elk podium zelf netjes sequentieel met zijn eigen crawl_delay)
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8"))) as pool:
-        results = list(pool.map(run_one, todo))
+    # Waakhond: één hangend podium mag de run niet blokkeren (run #28 liep 6 uur en werd door GitHub afgebroken; niets
+    # geschreven). Per podium max VENUE_MINUTES (25), voor alle podia samen RUN_MINUTES (150); wat dan nog loopt wordt
+    # als 'timeout' gerapporteerd en de vorige events van dat podium blijven staan (hergebruik hieronder).
+    from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+    venue_budget = float(os.environ.get("VENUE_MINUTES", "25")) * 60
+    run_budget = float(os.environ.get("RUN_MINUTES", "150")) * 60
+    t_run = time.time()
+    results = []
+    pool = ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "8")))
+    futures = {pool.submit(run_one, v): (v, time.time()) for v in todo}
+    pending = set(futures)
+    while pending:
+        remaining = run_budget - (time.time() - t_run)
+        done, pending = wait(pending, timeout=max(5.0, min(30.0, remaining)) if remaining > 0 else 5.0, return_when=FIRST_COMPLETED)
+        for f in done:
+            results.append(f.result())
+        now = time.time()
+        for f in list(pending):
+            v, t0 = futures[f]
+            if now - t0 > venue_budget or now - t_run > run_budget:
+                pending.discard(f)
+                results.append((v, [], "timeout", f"afgebroken na {int((now - t0) / 60)} min (waakhond)", {}))
+                log(f"== {v['name']} ({v['city']}): TIMEOUT na {int((now - t0) / 60)} min, run gaat door zonder dit podium")
+        if not pending:
+            break
+    pool.shutdown(wait=False, cancel_futures=True)
+    _STRAGGLERS = any(not f.done() for f in futures)
     for v, evs, strat, note, audit in results:
-        if not evs and strat in ("error", "none") and not v.get("passive"):
+        if not evs and strat in ("error", "none", "timeout") and not v.get("passive"):
             prev = [e for e in prev_by_venue.get(v["name"], []) if e.start[:10] >= TODAY.isoformat()]
             trailing_stale = 0
             for h in reversed(history0.get(v["name"], [])):
@@ -2948,8 +2973,14 @@ def main(only: list[str] | None = None) -> int:
 
     ok = sum(1 for r in report["venues"] if r["ok"])
     log(f"\nKlaar: {len(all_events)} events uit {ok}/{len(report['venues'])} podia")
+    (DATA / "run.log").write_text("\n".join(_LOG)[-400000:], encoding="utf-8")
+    if _STRAGGLERS:
+        # een hangende podium-thread zou het proces open houden tot GitHub het na 6 uur afbreekt: alles is geschreven, dus hard stoppen
+        sys.stdout.flush()
+        os._exit(0)
     return 0
 
 
 if __name__ == "__main__":
+    socket.setdefaulttimeout(60)   # vangnet voor netwerkcalls zonder eigen timeout
     sys.exit(main(sys.argv[1:] or None))
