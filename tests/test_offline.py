@@ -714,6 +714,14 @@ def test_stager_price_from_link():
     assert fetch.stager_price_from_link('<a href="https://app.stager.co/shop/x">x</a>', None, None) is None
 
 
+def test_card_url_is_agenda_not_ticketshop():
+    a = fetch.Event(venue="Vera", city="G", title="Xanadu", start=FUT + "T20:30", url="https://vera.stager.co/shop/default/events/1", price="€ 12", source="stager")
+    b = fetch.Event(venue="Vera", city="G", title="Xanadu", start=FUT + "T20:30", url="https://vera.nl/agenda/xanadu/", source="html")
+    r = fetch.dedupe([a, b])
+    assert len(r) == 1 and r[0].url == "https://vera.nl/agenda/xanadu/" and r[0].ticket_url == "https://vera.stager.co/shop/default/events/1" and r[0].price == "€ 12"
+    assert fetch.is_ticket_url("https://shop.tickets.cm.com/x") and fetch.is_ticket_url("https://www.ticketmaster.nl/event/1") and not fetch.is_ticket_url("https://www.melkweg.nl/nl/agenda/x")
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

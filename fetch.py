@@ -88,6 +88,8 @@ class Event:
     lineup: list[str] = field(default_factory=list)       # line-up van de eventpagina (JSON-LD performer of `lineup`-selector)
     location: str | None = None    # locatie zoals het podium die noemt, als die afwijkt van het podium zelf (Paradiso in Tolhuistuin)
     co_venues: list[str] = field(default_factory=list)    # medeorganiserende podia (BIRD + Rotown: Zwangere Guy in Maassilo)
+    ticket_url: str | None = None  # ticketshop-link als die bekend is; `url` is altijd de agendapagina van het podium, nooit de shop
+    id: str = ""                   # stabiele identiteit "podium|bron-url" (voor 'nieuw', archief en het lijstje in de UI)
     subgenres: list[str] = field(default_factory=list)    # canonieke subgenres (genres.yaml -> subgenres, + zelfgeleerd)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
@@ -2540,6 +2542,13 @@ def relabel_by_location(events: list[Event], venues: list[dict]) -> int:
     return n
 
 
+_TICKET_URL = re.compile(r"stager\.co|tickets?\.|shop\.|eventix|paylogic|ticketmaster|weeztix|tixly|yourticketprovider|cm\.com|ticketswap|eventbrite|pop-agenda", re.I)
+
+
+def is_ticket_url(u: str | None) -> bool:
+    return bool(u and _TICKET_URL.search(u))
+
+
 def _richness(e: Event) -> int:
     return len(e.genres) * 2 + (3 if e.price else 0) + (3 if e.start[11:16] not in ("", "00:00") else 0) + len(e.lineup) + (1 if e.subtitle else 0)
 
@@ -2580,8 +2589,10 @@ def dedupe(events: list[Event]) -> list[Event]:
                 rich.genres = poor.genres
             if not rich.subtitle and poor.subtitle:
                 rich.subtitle = poor.subtitle
-            if re.search(r"stager\.co|tickets?\.|shop\.|eventix|paylogic|ticketmaster|weeztix|tixly", rich.url or "") and poor.url and not re.search(r"stager\.co|tickets?\.|shop\.|eventix|paylogic|ticketmaster|weeztix|tixly", poor.url):
-                rich.url = poor.url
+            if is_ticket_url(rich.url) and poor.url and not is_ticket_url(poor.url):
+                rich.ticket_url, rich.url = rich.url, poor.url
+            elif is_ticket_url(poor.url) and not rich.ticket_url:
+                rich.ticket_url = poor.url
             if rich is e:
                 final[final.index(old)] = e
                 by_day[day_key][by_day[day_key].index(old)] = e
@@ -2835,7 +2846,7 @@ def main(only: list[str] | None = None) -> int:
     known_venues = {k.split("|", 1)[0] for k in seen}
     backdate = (TODAY - timedelta(days=30)).isoformat()
     for e in all_events:
-        key = f"{e.venue}|{e.url}"
+        key = e.id or f"{e.venue}|{e.url}"
         if key not in seen:
             seen[key] = TODAY.isoformat() if (e.venue in known_venues or not seen) else backdate
         e.first_seen = seen[key]
@@ -2866,6 +2877,11 @@ def main(only: list[str] | None = None) -> int:
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.price = display_price(normalize_price(canonical_price(e.price)))
+        e.id = e.id or f"{e.venue}|{e.url}"   # identiteit op de bron-url, vóór de shop-url wordt vervangen
+        if is_ticket_url(e.url):
+            # de kaart linkt altijd naar de agenda van het podium, nooit naar een ticketshop; de shoplink blijft apart bewaard
+            e.ticket_url = e.ticket_url or e.url
+            e.url = vmeta.get(e.venue, {}).get("url") or e.url
         e.title = strip_city(strip_country(e.title), e.city)   # "junkyardUK", "Band (USA)", "Popronde Alkmaar": geen deel van de naam
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
@@ -2950,7 +2966,7 @@ def main(only: list[str] | None = None) -> int:
     arch_path = DATA / "archive.json"
     archive = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else {}
     for e in all_events:
-        k = f"{e.venue}|{e.url}"
+        k = e.id or f"{e.venue}|{e.url}"
         rec = archive.get(k, {"first_seen": e.first_seen or TODAY.isoformat()})
         rec.update({"venue": e.venue, "city": e.city, "title": e.title, "start": e.start, "url": e.url, "subtitle": e.subtitle,
                     "genres": e.genres, "genre_norm": e.genre_norm, "subgenres": e.subgenres, "kind": e.kind, "price": e.price,
