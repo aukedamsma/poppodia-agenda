@@ -722,6 +722,31 @@ def test_card_url_is_agenda_not_ticketshop():
     assert fetch.is_ticket_url("https://shop.tickets.cm.com/x") and fetch.is_ticket_url("https://www.ticketmaster.nl/event/1") and not fetch.is_ticket_url("https://www.melkweg.nl/nl/agenda/x")
 
 
+def test_time_provenance():
+    ex = fetch.extract_from_text_ex
+    assert ex("Aanvang 20:30 Deuren 19:30")[4] == "label"
+    assert ex("vrijdag 2 oktober 2026 20:30 uur")[4] == "after_date"
+    assert ex("19:30 Doors 19:45 X 20:30 Y")[4] == "schedule"
+    assert ex("Geen tijd hier")[4] is None
+    mk = lambda hhmm: fetch.Event(venue="V", city="C", title="T", start=FUT + "T" + hhmm, url="https://v/1")
+    # expliciete aanvang op de pagina corrigeert een lijsttijd (deuren -> aanvang), binnen 3 uur
+    e = mk("19:30"); fetch.apply_extra(e, {"start": (20, 30), "doors": (19, 30), "start_kind": "label"}, False)
+    assert e.start[11:] == "20:30" and e.time_src == "label"
+    e = mk("08:00"); fetch.apply_extra(e, {"start": (20, 0), "start_kind": "label"}, False)
+    assert e.start[11:] == "08:00"   # >3 uur: niet overnemen (dB's am/pm-les)
+    # tijd zonder label mag een bestaande lijsttijd NIET zomaar vervangen...
+    e = mk("20:00"); fetch.apply_extra(e, {"start": (21, 0), "start_kind": "after_date"}, False)
+    assert e.start[11:] == "20:00" and e.time_src is None
+    # ...behalve als de lijsttijd de deurtijd van de pagina blijkt te zijn, of de lijst geen tijd had
+    e = mk("19:30"); fetch.apply_extra(e, {"start": (20, 30), "doors": (19, 30), "start_kind": "schedule"}, False)
+    assert e.start[11:] == "20:30" and e.time_src == "schedule"
+    e = mk("00:00"); fetch.apply_extra(e, {"start": (20, 30), "start_kind": "paren"}, True)
+    assert e.start[11:] == "20:30"
+    # oude cache-items zonder herkomst gedragen zich als 'label'
+    e = mk("19:30"); fetch.apply_extra(e, {"start": (20, 30)}, False)
+    assert e.start[11:] == "20:30"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

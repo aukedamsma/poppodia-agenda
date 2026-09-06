@@ -93,6 +93,7 @@ class Event:
     subgenres: list[str] = field(default_factory=list)    # canonieke subgenres (genres.yaml -> subgenres, + zelfgeleerd)
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
+    time_src: str | None = None    # herkomst als de eventpagina de lijsttijd verving: label | after_date | paren | schedule | embedded
     section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
 
 
@@ -1342,11 +1343,12 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     if ev is None:
         ev = event_from_flight_json(html, url, v)
     txt = page_text(html)
-    tdt, tstart, tdoors, tprice = extract_from_text(txt)
+    tdt, tstart, tdoors, tprice, tkind = extract_from_text_ex(txt)
     if not tprice:
         tprice = price_from_embedded_json(html)
     if not tstart and not tdoors:
         tstart, tdoors = times_from_embedded_json(html)
+        tkind = "embedded" if tstart else None
     if ev is None:
         s = soup_of(html)
         t = _event_time_tag(s)
@@ -1387,6 +1389,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         st = datetime.fromisoformat(ev.start)
         if tstart and (((st.hour, st.minute) == (0, 0)) or (tdoors and (st.hour, st.minute) == tdoors and tstart != tdoors)):
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
+            ev.time_src = tkind
         if not ev.price and tprice:
             ev.price = tprice
         if not ev.price and v.get("ticketshops", True):
@@ -1495,8 +1498,18 @@ def page_text(html: str) -> str:
 
 
 def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None]:
-    """(datum, aanvangstijd, deurtijd, prijs) uit vrije tekst van een eventpagina.
-    Datum: liefst met weekdag of 'datum:' ervoor, anders de eerste dag+maand(+jaar)."""
+    """(datum, aanvangstijd, deurtijd, prijs) uit vrije tekst van een eventpagina (zie extract_from_text_ex)."""
+    return extract_from_text_ex(txt)[:4]
+
+
+def extract_from_text_ex(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None, str | None]:
+    """(datum, aanvangstijd, deurtijd, prijs, herkomst-van-de-aanvang) uit vrije tekst van een eventpagina.
+    Datum: liefst met weekdag of 'datum:' ervoor, anders de eerste dag+maand(+jaar).
+    Herkomst (tijdprovenance, bepaalt of de tekst een gestructureerde tijd mag corrigeren):
+      "label"      expliciet gelabeld ("Aanvang 20:30", "20:30 start")            -> mag een lijsttijd corrigeren (binnen 3 uur)
+      "after_date" tijd direct achter de datum ("vrijdag 2 oktober 2026 20:30")   -> alleen als er nog geen tijd is
+      "paren"      "20:30 (Doors 19:30)"                                          -> idem
+      "schedule"   eerste tijd na de deuren in een tijdschema                     -> idem, of als de lijsttijd de deurtijd is"""
     low = _ampm_to_24h(txt.lower())
     dt = None
     for pat in (rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
@@ -1526,6 +1539,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
         mm = re.search(pat, low)
         return (int(mm.group(1)), int(mm.group(2))) if mm else None
     start = hm(r"(?:aanvang|start|begin|show|showtime|concert|hoofdprogramma|programma|\btijd)\W{0,12}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})") or hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:aanvang|start|begin|showtime)\b")
+    kind = "label" if start else None
     # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang.
     # Dezelfde datum kan vaker op de pagina staan ("vr 02 okt … vrijdag 2 oktober 2026 20:30 uur"): elke vermelding proberen
     if not start and dt is not None:
@@ -1536,17 +1550,17 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
             after = low[mm2.end(): mm2.end() + 18]
             mt = re.match(r"\W{0,4}(?:om\s+)?(\d{1,2})[:.u](\d{2})\b(?!\s*-\s*\d)", after)
             if mt and int(mt.group(1)) < 24 and int(mt.group(2)) < 60:
-                start = (int(mt.group(1)), int(mt.group(2)))
+                start, kind = (int(mt.group(1)), int(mt.group(2))), "after_date"
                 break
     # "20:30 (Doors: 19:30)" (Mezz, Stager-widgets): de tijd vóór het haakje is de aanvang, die erin de deurtijd
     mp = re.search(r"(\d{1,2})[:.u](\d{2})\s*\((?:doors?|deuren|zaal open)\W{0,4}(\d{1,2})[:.u](\d{2})\)", low)
     if mp and not start:
-        start = (int(mp.group(1)), int(mp.group(2)))
+        start, kind = (int(mp.group(1)), int(mp.group(2))), "paren"
     d1 = hm(r"(?:deuren (?:openen|gaan open)|deur|deuren|doors|zaal open|open)\W{0,14}(?:om\W{0,3})?(\d{1,2})[:.u](\d{2})")
     d2 = hm(r"(\d{1,2})[:.u](\d{2})\W{0,6}(?:zaal open|deuren open|deuren|doors)\b")
     doors = min(d1, d2) if d1 and d2 else (d1 or d2)   # "19:30 Zaal Open 20:00 Support": de vroegste is de deurtijd
     if start and doors and start[0] < 6 and doors[0] >= 17:
-        start = None   # "aanvang" vóór 06:00 terwijl de deuren 's avonds opengaan: dat was een eindtijd
+        start, kind = None, None   # "aanvang" vóór 06:00 terwijl de deuren 's avonds opengaan: dat was een eindtijd
     if doors and (not start or start == doors):
         # tijdschema zonder het woord 'aanvang' (Nobel: "19:00 - Deuren open 19:30 - Hakselaer 20:45 - …"):
         # de eerste tijd ná de deurtijd is de start van het programma
@@ -1555,7 +1569,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
             after = low[dm.end():dm.end() + 160]
             later = [(int(h), int(m)) for h, m in re.findall(r"(\d{1,2})[:.](\d{2})", after) if (int(h), int(m)) > doors and int(h) < 24 and int(m) < 60]
             if later:
-                start = min(later)
+                start, kind = min(later), "schedule"
     low, fee = _strip_service_fee(low)
     pm = _pick_price(low)
     price = None
@@ -1565,7 +1579,7 @@ def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None
         price = "gratis"   # Tivoli "€ 0,-": een bedrag van nul is gratis, geen ontbrekende prijs
     elif pm:
         price = fmt_price(_add_fee(pm, fee))
-    return dt, start, doors, price
+    return dt, start, doors, price, kind if start else None
 
 
 _FEE_WORDS = r"(?:servicekosten|service ?fee|service ?kosten|servicetoeslag|administratiekosten|transactiekosten|reserveringskosten|booking fee|fee)"
@@ -1869,14 +1883,15 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
             extra.update({"ld_start": ld.start, "ld_price": ld.price, "ld_genres": ld.genres, "lineup": ld.lineup})
             break
     txt = page_text(html)
-    tdt, tstart, tdoors, tprice = extract_from_text(txt)
+    tdt, tstart, tdoors, tprice, tkind = extract_from_text_ex(txt)
     if not tprice:
         tprice = price_from_embedded_json(html)
     if not tstart and not tdoors:
         tstart, tdoors = times_from_embedded_json(html)
+        tkind = "embedded" if tstart else None
     if not tprice and not extra.get("ld_price") and v.get("ticketshops", True):
         tprice = stager_price_from_link(html, extra.get("ld_start"), None)
-    extra.update({"start": tstart, "doors": tdoors, "price": tprice})
+    extra.update({"start": tstart, "doors": tdoors, "price": tprice, "start_kind": tkind})
     if v.get("lineup") and not extra.get("lineup"):
         extra["lineup"] = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])])
     if not extra.get("ld_genres"):
@@ -1888,15 +1903,22 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
 
 def apply_extra(e: Event, x: dict, needs_time: bool) -> None:
     """Regels voor het samenvoegen van eventpaginagegevens met een event uit een overzichtslijst.
-    Aanvang ('aanvang/start') op de pagina wint altijd van de lijst; deuren alleen als er niets beters is."""
+    Herkomst (x['start_kind']) bepaalt hoeveel gewicht een paginatijd krijgt:
+    - 'label' (expliciet 'aanvang/start 20:30'): mag een bestaande lijsttijd corrigeren (deuren -> aanvang), maar
+      nooit met sprongen van meer dan 3 uur (dat is een leesfout: dB's "Tijd: 8:00 pm" las ooit als 08:00);
+    - 'after_date', 'paren', 'schedule', 'embedded' (tijd zonder label, uit een schema of uit JSON): alleen gebruikt
+      als de lijst geen tijd had of de lijsttijd gelijk is aan de deurtijd van de pagina;
+    - deuren en JSON-LD alleen als er niets beters is."""
     st = datetime.fromisoformat(e.start)
     if x.get("start"):
         hh, mm = x["start"]
         diff = abs((hh * 60 + mm) - (st.hour * 60 + st.minute))
-        # een lijsttijd mag door de paginatekst worden gecorrigeerd (deuren -> aanvang), maar niet met sprongen van
-        # meer dan 3 uur: dat is een leesfout in de tekst (dB's "Tijd: 8:00 pm" las als 08:00 -> 20:00 werd 08:00)
-        if needs_time or ((hh, mm) != (st.hour, st.minute) and diff <= 180):
+        kind = x.get("start_kind") or "label"  # oude cache-items zonder herkomst: gedrag van voorheen
+        same = (hh, mm) == (st.hour, st.minute)
+        at_doors = bool(x.get("doors")) and tuple(x["doors"]) == (st.hour, st.minute)
+        if needs_time or (not same and diff <= 180 and (kind == "label" or at_doors)):
             e.start, e.time_est = st.replace(hour=hh, minute=mm).isoformat(timespec="minutes"), False
+            e.time_src = kind
     elif needs_time:
         if x.get("ld_start") and x["ld_start"][11:16] != "00:00":
             e.start = st.replace(hour=int(x["ld_start"][11:13]), minute=int(x["ld_start"][14:16])).isoformat(timespec="minutes")
