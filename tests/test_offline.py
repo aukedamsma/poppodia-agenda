@@ -747,6 +747,28 @@ def test_time_provenance():
     assert e.start[11:] == "20:30"
 
 
+def test_price_provenance():
+    ex = fetch.extract_from_text_ex
+    assert ex("Voorverkoop € 18,50 Deur € 22")[5] == "labeled"
+    assert ex("Er is een vrijwillige bijdrage van € 5 mogelijk")[5] == "text"
+    assert ex("Toegang gratis")[5] == "labeled" and ex("Toegang gratis")[3] == "gratis"
+    assert ex("€ 22 + € 2,50 servicekosten")[3:6][0] == "€ 24,50" and ex("€ 22 + € 2,50 servicekosten")[5] == "labeled"
+    mk = lambda **kw: fetch.Event(**{"venue": "V", "city": "C", "title": "T", "start": FUT + "T20:00", "url": "https://v/1", **kw})
+    # los tekstbedrag verliest van JSON-LD; gelabeld tekstbedrag wint van JSON-LD
+    e = mk(); fetch.apply_extra(e, {"price": "€ 5", "price_kind": "text", "ld_price": "€ 20"}, False)
+    assert (e.price, e.price_src) == ("€ 20", "jsonld")
+    e = mk(); fetch.apply_extra(e, {"price": "€ 22,50", "price_kind": "labeled", "ld_price": "€ 20"}, False)
+    assert (e.price, e.price_src) == ("€ 22,50", "labeled")
+    e = mk(); fetch.apply_extra(e, {"price": "€ 5", "price_kind": "text"}, False)
+    assert (e.price, e.price_src) == ("€ 5", "text")
+    # dedupe: de sterkste herkomst wint, ook als die bij de 'armere' versie zit; 'uitverkocht' blijft
+    a = mk(price="€ 5", price_src="text", genres=["Rock"], subtitle="x")
+    b = mk(price="€ 12,50", price_src="shop", url="https://v.stager.co/shop/default/events/1")
+    fetch._take_better_price(a, b); assert (a.price, a.price_src) == ("€ 12,50", "shop")
+    a = mk(price="uitverkocht"); fetch._take_better_price(a, b); assert a.price == "uitverkocht"
+    a = mk(price="€ 20", price_src="list"); fetch._take_better_price(a, mk(price="€ 5", price_src="text")); assert a.price == "€ 20"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

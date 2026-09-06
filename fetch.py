@@ -24,6 +24,7 @@ import sys
 import time
 import traceback
 from dataclasses import dataclass, asdict, field
+from typing import NamedTuple
 from datetime import datetime, date, timedelta, timezone
 from html import unescape
 from pathlib import Path
@@ -94,6 +95,7 @@ class Event:
     price_est: bool = False        # prijs geschat uit eerdere edities van dezelfde reeks (state/series.json)
     time_est: bool = False         # aanvangstijd idem
     time_src: str | None = None    # herkomst als de eventpagina de lijsttijd verving: label | after_date | paren | schedule | embedded
+    price_src: str | None = None   # herkomst van de prijs: shop | list | jsonld | labeled | embedded | text (zie PRICE_RANK)
     section: str = "poppodium"     # poppodium | overig (uit venues.yaml)
 
 
@@ -1343,9 +1345,10 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     if ev is None:
         ev = event_from_flight_json(html, url, v)
     txt = page_text(html)
-    tdt, tstart, tdoors, tprice, tkind = extract_from_text_ex(txt)
+    tdt, tstart, tdoors, tprice, tkind, tpkind = extract_from_text_ex(txt)
     if not tprice:
         tprice = price_from_embedded_json(html)
+        tpkind = "embedded" if tprice else None
     if not tstart and not tdoors:
         tstart, tdoors = times_from_embedded_json(html)
         tkind = "embedded" if tstart else None
@@ -1373,8 +1376,10 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             dt = dt.replace(hour=(tstart or tdoors)[0], minute=(tstart or tdoors)[1])
         if dt and title:
             ev = Event(venue=v["name"], city=v["city"], title=title, start=dt.isoformat(timespec="minutes"), url=url,
-                       price=tprice, source="detail_text")
+                       price=tprice, price_src=tpkind, source="detail_text")
     if ev is not None:
+        if ev.price and not ev.price_src:
+            ev.price_src = "jsonld" if ev.source in ("jsonld_detail", "x") else "list"
         if v.get("lineup") and not ev.lineup:
             ev.lineup = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])], ev.title)
         if v.get("subtitle") and not ev.subtitle:   # ondertitel/tagline op de eventpagina (Tivoli p.event__subtitle)
@@ -1391,14 +1396,15 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
             ev.time_src = tkind
         if not ev.price and tprice:
-            ev.price = tprice
+            ev.price, ev.price_src = tprice, tpkind
         if not ev.price and v.get("ticketshops", True):
             ev.price = stager_price_from_link(html, ev.start, ev.title)   # prijs via de Stager-link op de pagina (WORM, dB's)
-        elif tprice and ev.price and _fee_inclusive(txt):
+            ev.price_src = "shop" if ev.price else None
+        elif tprice and ev.price and ev.price_src != "shop" and _fee_inclusive(txt):
             # LantarenVenster: JSON-LD offers 19 (excl.), pagina "€ 22 incl. € 3,00 servicekosten": de prijs is wat je betaalt
             a, b = price_number(ev.price), price_number(tprice)
             if a and b and 0 < b - a <= 6:
-                ev.price = tprice
+                ev.price, ev.price_src = tprice, "labeled"
     cache[url] = {"fetched": TODAY.isoformat(), "v": _cache_version(v), "fv": FLIGHT_VERSION, "event": asdict(ev) if ev else None}
     return ev
 
@@ -1497,19 +1503,39 @@ def page_text(html: str) -> str:
     return re.sub(r"\s+", " ", body.get_text(" "))
 
 
+class Extracted(NamedTuple):
+    dt: datetime | None
+    start: tuple[int, int] | None
+    doors: tuple[int, int] | None
+    price: str | None
+    kind: str | None         # herkomst van de aanvang (zie extract_from_text_ex)
+    price_kind: str | None   # herkomst van de prijs: "labeled" (context voorverkoop/tickets/entree/gratis) of "text" (los bedrag)
+
+
+# rangorde van prijsherkomst: wat je nú online betaalt (ticketshop-API) gaat vóór gestructureerde brondata (lijst/JSON-LD),
+# dat vóór een gelabelde tekstprijs, dat vóór een los bedrag in de tekst
+PRICE_RANK = {"shop": 5, "list": 4, "jsonld": 4, "labeled": 3, "embedded": 2, "text": 1}
+
+
+def _price_rank(src: str | None) -> int:
+    return PRICE_RANK.get(src or "list", 4)
+
+
 def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None]:
     """(datum, aanvangstijd, deurtijd, prijs) uit vrije tekst van een eventpagina (zie extract_from_text_ex)."""
-    return extract_from_text_ex(txt)[:4]
+    return tuple(extract_from_text_ex(txt)[:4])
 
 
-def extract_from_text_ex(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None, str | None]:
-    """(datum, aanvangstijd, deurtijd, prijs, herkomst-van-de-aanvang) uit vrije tekst van een eventpagina.
+def extract_from_text_ex(txt: str) -> Extracted:
+    """(datum, aanvangstijd, deurtijd, prijs, herkomst-van-de-aanvang, herkomst-van-de-prijs) uit vrije tekst van een eventpagina.
     Datum: liefst met weekdag of 'datum:' ervoor, anders de eerste dag+maand(+jaar).
     Herkomst (tijdprovenance, bepaalt of de tekst een gestructureerde tijd mag corrigeren):
       "label"      expliciet gelabeld ("Aanvang 20:30", "20:30 start")            -> mag een lijsttijd corrigeren (binnen 3 uur)
       "after_date" tijd direct achter de datum ("vrijdag 2 oktober 2026 20:30")   -> alleen als er nog geen tijd is
       "paren"      "20:30 (Doors 19:30)"                                          -> idem
-      "schedule"   eerste tijd na de deuren in een tijdschema                     -> idem, of als de lijsttijd de deurtijd is"""
+      "schedule"   eerste tijd na de deuren in een tijdschema                     -> idem, of als de lijsttijd de deurtijd is
+    Prijsherkomst: "labeled" (bedrag met context voorverkoop/tickets/entree/regulier, of 'gratis') gaat vóór JSON-LD-offers;
+    "text" (los bedrag zonder context) alleen als er niets beters is."""
     low = _ampm_to_24h(txt.lower())
     dt = None
     for pat in (rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
@@ -1571,15 +1597,17 @@ def extract_from_text_ex(txt: str) -> tuple[datetime | None, tuple[int, int] | N
             if later:
                 start, kind = min(later), "schedule"
     low, fee = _strip_service_fee(low)
-    pm = _pick_price(low)
+    pm, pkind = _pick_price_ex(low)
     price = None
     if re.search(r"\bgratis\b|\bfree\b(?! ?(wifi|parking))", low) and not pm:
-        price = "gratis"   # gratis blijft gratis, ook met "incl. € 1,75 servicekosten" (FLUOR)
+        price, pkind = "gratis", "labeled"   # gratis blijft gratis, ook met "incl. € 1,75 servicekosten" (FLUOR)
     elif pm and float(pm.replace(",", ".")) == 0:
-        price = "gratis"   # Tivoli "€ 0,-": een bedrag van nul is gratis, geen ontbrekende prijs
+        price, pkind = "gratis", "labeled"   # Tivoli "€ 0,-": een bedrag van nul is gratis, geen ontbrekende prijs
     elif pm:
         price = fmt_price(_add_fee(pm, fee))
-    return dt, start, doors, price, kind if start else None
+        if fee:
+            pkind = "labeled"   # "€ 22 + € 2,50 servicekosten": de context maakt het onmiskenbaar een ticketprijs
+    return Extracted(dt, start, doors, price, kind if start else None, pkind if price else None)
 
 
 _FEE_WORDS = r"(?:servicekosten|service ?fee|service ?kosten|servicetoeslag|administratiekosten|transactiekosten|reserveringskosten|booking fee|fee)"
@@ -1620,17 +1648,23 @@ _PREFERRED_CTX = re.compile(r"regulier|regular|normaal|standaard|voorverkoop|vvk
 
 
 def _pick_price(low: str) -> str | None:
-    """De reguliere voorverkoopprijs uit tekst met meerdere bedragen. So What!: "Leden: € 5,00 Regulier: € 10,00
-    Voorverkoop Regulier: € 8,00" -> € 8,00 (niet de ledenprijs); De Piek: "Presale € 23,00 | Tickets € 25,00" -> € 23,00.
+    return _pick_price_ex(low)[0]
+
+
+def _pick_price_ex(low: str) -> tuple[str | None, str | None]:
+    """De reguliere voorverkoopprijs uit tekst met meerdere bedragen, plus herkomst ("labeled" als het gekozen bedrag een
+    ticketcontext had, anders "text"). So What!: "Leden: € 5,00 Regulier: € 10,00 Voorverkoop Regulier: € 8,00" -> € 8,00
+    (niet de ledenprijs); De Piek: "Presale € 23,00 | Tickets € 25,00" -> € 23,00.
     Bedragen met een kortings- of deurprijscontext (leden, CJP, jeugd, dagkassa) vallen af zolang er andere zijn;
     daarna wint het eerste bedrag met een 'gewone' context, anders het eerste bedrag."""
     raw = []
     for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)",
                 r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b"):
         for m in re.finditer(pat, low):
-            raw.append((m.start(), m.end(), m.group(1)))
+            # positie van het bedrag zelf, niet van het patroon: bij "voorverkoop € 18,50" hoort 'voorverkoop' bij de context
+            raw.append((m.start(1), m.end(), m.group(1)))
     if not raw:
-        return None
+        return None, None
     raw.sort()
     cands = []
     prev_end = None
@@ -1647,7 +1681,9 @@ def _pick_price(low: str) -> str | None:
     # de prijs van nú online een gewoon ticket bestellen: voorverkoop/online gaat vóór 'regulier' (kan dagkassa zijn), dat vóór de rest
     online = [c for c in pool if re.search(r"voorverkoop|vvk|presale|pre-?sale|online", c[2], re.I)]
     preferred = online or [c for c in pool if _PREFERRED_CTX.search(c[2])]
-    return (preferred or pool)[0][1]
+    if preferred:
+        return preferred[0][1], "labeled"
+    return pool[0][1], "text"
 
 
 def event_from_flight_json(html: str, url: str, v: dict) -> Event | None:
@@ -1883,15 +1919,17 @@ def detail_extra(v: dict, url: str, cache: dict) -> dict | None:
             extra.update({"ld_start": ld.start, "ld_price": ld.price, "ld_genres": ld.genres, "lineup": ld.lineup})
             break
     txt = page_text(html)
-    tdt, tstart, tdoors, tprice, tkind = extract_from_text_ex(txt)
+    tdt, tstart, tdoors, tprice, tkind, tpkind = extract_from_text_ex(txt)
     if not tprice:
         tprice = price_from_embedded_json(html)
+        tpkind = "embedded" if tprice else None
     if not tstart and not tdoors:
         tstart, tdoors = times_from_embedded_json(html)
         tkind = "embedded" if tstart else None
     if not tprice and not extra.get("ld_price") and v.get("ticketshops", True):
         tprice = stager_price_from_link(html, extra.get("ld_start"), None)
-    extra.update({"start": tstart, "doors": tdoors, "price": tprice, "start_kind": tkind})
+        tpkind = "shop" if tprice else None
+    extra.update({"start": tstart, "doors": tdoors, "price": tprice, "start_kind": tkind, "price_kind": tpkind})
     if v.get("lineup") and not extra.get("lineup"):
         extra["lineup"] = clean_lineup([x.get_text() for x in soup_of(html).select(v["lineup"])])
     if not extra.get("ld_genres"):
@@ -1925,7 +1963,13 @@ def apply_extra(e: Event, x: dict, needs_time: bool) -> None:
         elif x.get("doors"):
             e.start = st.replace(hour=x["doors"][0], minute=x["doors"][1]).isoformat(timespec="minutes")
     if not e.price:
-        e.price = x.get("price") or x.get("ld_price")
+        # prijsherkomst: een gelabelde tekstprijs of shopprijs gaat vóór JSON-LD (dat is vaak excl. servicekosten of
+        # 'vanaf'); een los bedrag in de tekst ("text") pas als er geen JSON-LD-prijs is
+        pk = x.get("price_kind") or ("labeled" if x.get("price") else None)   # oude cache-items zonder herkomst
+        if x.get("price") and (pk in ("shop", "labeled") or not x.get("ld_price")):
+            e.price, e.price_src = x["price"], pk
+        elif x.get("ld_price"):
+            e.price, e.price_src = x["ld_price"], "jsonld"
     if not e.genres:
         e.genres = x.get("ld_genres") or x.get("hint_genres") or []
     if not e.lineup and x.get("lineup"):
@@ -2603,8 +2647,7 @@ def dedupe(events: list[Event]) -> list[Event]:
         if old is not None:
             rich, poor = (e, old) if _richness(e) > _richness(old) else (old, e)
             # velden aanvullen uit de armere versie; de URL van de eigen site gaat vóór die van een ticketshop
-            if not rich.price and poor.price:
-                rich.price = poor.price
+            _take_better_price(rich, poor)
             if rich.start[11:16] in ("", "00:00") and poor.start[11:16] not in ("", "00:00"):
                 rich.start = poor.start
             if not rich.genres and poor.genres:
@@ -2622,6 +2665,15 @@ def dedupe(events: list[Event]) -> list[Event]:
         by_day.setdefault(day_key, []).append(e)
         final.append(e)
     return merge_coproductions(final)
+
+
+def _take_better_price(rich: Event, poor: Event) -> None:
+    """Bij het samenvoegen van twee versies van een event wint de prijs met de sterkste herkomst (PRICE_RANK), niet
+    per se die van de rijkste versie: een Stager-shopprijs (incl. servicekosten) gaat vóór een los bedrag uit paginatekst."""
+    if rich.price == "uitverkocht":
+        return
+    if poor.price and (not rich.price or _price_rank(poor.price_src) > _price_rank(rich.price_src)):
+        rich.price, rich.price_src = poor.price, poor.price_src
 
 
 _LOC_IN_TITLE = re.compile(r"\s*[|@•]\s*(?:in\s+|@\s*)?([A-Z][\w'’&.\-]*(?: [A-Z][\w'’&.\-]*){0,3})\s*$")
@@ -2657,8 +2709,7 @@ def merge_coproductions(events: list[Event]) -> list[Event]:
                 rich.location = strip_city(m.group(1).strip(), rich.city)
         if rich.location:
             rich.title = _LOC_IN_TITLE.sub("", rich.title).strip() or rich.title
-        if not rich.price and poor.price:
-            rich.price = poor.price
+        _take_better_price(rich, poor)
         if not rich.genres and poor.genres:
             rich.genres = poor.genres
         if not rich.subtitle and poor.subtitle:
@@ -2899,6 +2950,10 @@ def main(only: list[str] | None = None) -> int:
     for e in all_events:
         e.section = vmeta.get(e.venue, {}).get("section", "poppodium")
         e.price = display_price(normalize_price(canonical_price(e.price)))
+        if e.price and not e.price_src:
+            e.price_src = "shop" if e.source == "stager" else "list"
+        elif not e.price:
+            e.price_src = None
         e.id = e.id or f"{e.venue}|{e.url}"   # identiteit op de bron-url, vóór de shop-url wordt vervangen
         if is_ticket_url(e.url):
             # de kaart linkt altijd naar de agenda van het podium, nooit naar een ticketshop; de shoplink blijft apart bewaard
@@ -2983,6 +3038,11 @@ def main(only: list[str] | None = None) -> int:
         rv["section"] = meta.get("section", "poppodium")
         rv["capacity"] = meta.get("capacity")
     report["kinds"] = {k: sum(1 for e in all_events if e.kind == k) for k in ("concert", "club", "festival", "talk", "other")}
+    # herkomst van prijzen en tijden: hoeveel komt van een shop/lijst en hoeveel uit zwakke tekstlezing (kwaliteitsmaat per run)
+    report["price_src"] = {k: sum(1 for e in all_events if e.price_src == k) for k in ("shop", "list", "jsonld", "labeled", "embedded", "text")}
+    report["price_src"]["none"] = sum(1 for e in all_events if not e.price)
+    report["time_src"] = {k: sum(1 for e in all_events if e.time_src == k) for k in ("label", "after_date", "paren", "schedule", "embedded")}
+    log("Prijsherkomst: " + ", ".join(f"{k} {n}" for k, n in report["price_src"].items()) + " · tijd uit pagina: " + ", ".join(f"{k} {n}" for k, n in report["time_src"].items() if n))
 
     # --- archief: elk event dat ooit is gezien blijft bewaard (onderzoeksdata: programmering, prijzen, genres per podium) ---
     arch_path = DATA / "archive.json"
