@@ -2751,6 +2751,43 @@ def _same_event(a: Event, b: Event, strict: bool = False) -> bool:
     return False
 
 
+def run_diff(prev: list[Event], cur: list[Event], skip_venues: set[str] | None = None, today: date | None = None) -> dict:
+    """Vergelijk de toekomstige events van de vorige run met die van nu (sleutel = id, podium|bron-url).
+    - gone: stond vorige run (niet afgelast), nu weg, terwijl het podium gewoon gelezen is (niet stale/error/timeout)
+    - day: zelfde event, andere dag; time: zelfde dag, tijd ≥ 60 min anders (beide bekend); price: > € 5 verschil
+    - vanished_venues: podia die ≥ 30% van ≥ 10 toekomstige events kwijt zijn — dat is zelden echte programmering"""
+    today = today or TODAY
+    skip_venues = skip_venues or set()
+    key = lambda e: e.id or f"{e.venue}|{e.url}"
+    now = {key(e): e for e in cur}
+    gone, day, tm, price = [], [], [], []
+    prev_future: Counter = Counter()
+    gone_by_venue: Counter = Counter()
+    for p in prev:
+        if p.start[:10] < today.isoformat() or p.venue in skip_venues:
+            continue
+        prev_future[p.venue] += 1
+        c = now.get(key(p))
+        rec = {"venue": p.venue, "title": p.title, "start": p.start, "url": p.url}
+        if c is None:
+            if p.status != "afgelast":
+                gone.append(rec)
+                gone_by_venue[p.venue] += 1
+            continue
+        if c.start[:10] != p.start[:10]:
+            day.append(dict(rec, now=c.start))
+        elif p.start[11:16] not in ("", "00:00") and c.start[11:16] not in ("", "00:00") and p.start[11:16] != c.start[11:16]:
+            a, b = p.start[11:16], c.start[11:16]
+            if abs((int(a[:2]) * 60 + int(a[3:])) - (int(b[:2]) * 60 + int(b[3:]))) >= 60:
+                tm.append(dict(rec, now=c.start))
+        pa, pb = price_number(p.price), price_number(c.price)
+        if pa and pb and abs(pa - pb) > 5:
+            price.append(dict(rec, price=p.price, now=c.price))
+    vanished = {v: n for v, n in gone_by_venue.items() if prev_future[v] >= 10 and n >= 0.3 * prev_future[v]}
+    return {"n_gone": len(gone), "n_day": len(day), "n_time": len(tm), "n_price": len(price),
+            "gone": gone[:200], "day": day[:100], "time": tm[:100], "price": price[:100], "vanished_venues": vanished}
+
+
 def check_groundtruth(events: list[Event], path: Path | None = None) -> dict:
     """Vaste regressietest: tests/groundtruth.json bevat events die met de browser op de podiumsite zijn geverifieerd
     (fase 1). Per item: bestaat het (podium + dag + titel), en kloppen tijd en prijs als die zijn opgegeven? Verstreken
@@ -2914,6 +2951,17 @@ def main(only: list[str] | None = None) -> int:
         history[name] = past + [{"date": TODAY.isoformat(), "events": now, "strategy": r["strategy"], "stale": bool(r["audit"].get("stale"))}]
     report["regressions"] = [{"venue": n, "was": b, "now": c} for n, b, c in regressions]
     hist_path.write_text(json.dumps(history, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    # run-op-run verschil: wélke toekomstige events verdwenen (zonder afgelast te zijn), van dag/tijd verschoven of fors
+    # van prijs veranderd — het snelste signaal voor een parserregressie die de aantallen niet raakt
+    skip = {r["name"] for r in report["venues"] if r["audit"].get("stale") or r["strategy"] in ("error", "none", "timeout")}
+    diff = run_diff([e for vs in prev_by_venue.values() for e in vs], all_events, skip)
+    report["diff"] = diff
+    for r in report["venues"]:
+        if r["name"] in diff["vanished_venues"]:
+            r["audit"]["vanished"] = diff["vanished_venues"][r["name"]]
+            r["note"] = (r["note"] + "; " if r["note"] else "") + f"LET OP: {diff['vanished_venues'][r['name']]} toekomstige events van de vorige run zijn weg"
+    log(f"Verschil met vorige run: {diff['n_gone']} events verdwenen, {diff['n_day']} van dag verschoven, {diff['n_time']} van tijd (≥1 uur), {diff['n_price']} van prijs (>€ 5)"
+        + (f"; podia met veel verdwenen events: {', '.join(diff['vanished_venues'])}" if diff["vanished_venues"] else ""))
 
     # 'nieuw' bepalen; een podium dat voor het eerst meedoet levert geen 'nieuwe' events op
     known_venues = {k.split("|", 1)[0] for k in seen}

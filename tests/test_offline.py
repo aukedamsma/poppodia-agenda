@@ -769,6 +769,21 @@ def test_price_provenance():
     a = mk(price="€ 20", price_src="list"); fetch._take_better_price(a, mk(price="€ 5", price_src="text")); assert a.price == "€ 20"
 
 
+def test_run_diff():
+    mk = lambda i, **kw: fetch.Event(**{"venue": "V", "city": "C", "title": f"T{i}", "start": FUT + "T20:00", "url": f"https://v/{i}", "id": f"V|https://v/{i}", **kw})
+    prev = [mk(1), mk(2), mk(3, status="afgelast"), mk(4, price="€ 20"), mk(5), mk(6, start="2020-01-01T20:00"), mk(7, venue="W")]
+    cur = [mk(1, start=FUT2 + "T20:00"), mk(4, price="€ 30"), mk(5, start=FUT + "T21:30")]
+    d = fetch.run_diff(prev, cur, skip_venues={"W"})
+    assert d["n_gone"] == 1 and d["gone"][0]["title"] == "T2"       # T3 afgelast, T6 verleden, T7 podium stale: tellen niet
+    assert d["n_day"] == 1 and d["day"][0]["title"] == "T1"
+    assert d["n_time"] == 1 and d["time"][0]["title"] == "T5"
+    assert d["n_price"] == 1 and d["price"][0]["now"] == "€ 30"
+    assert d["vanished_venues"] == {}
+    big_prev = [mk(i) for i in range(20)]
+    d = fetch.run_diff(big_prev, big_prev[:12])
+    assert d["vanished_venues"] == {"V": 8}
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0
