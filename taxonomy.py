@@ -266,7 +266,26 @@ GENERIC_TITLE = re.compile(r"\b(festival|fest|clubnacht|club night|night|nacht|p
 # (kunnen woorden zijn), wel tussen haakjes.
 _CN = r"(?:JAPAN|GERMANY|DUITSLAND|FRANCE|FRANKRIJK|BELGIUM|BELGIË|BELGIE|SPAIN|SPANJE|ITALY|ITALIË|SWEDEN|ZWEDEN|NORWAY|NOORWEGEN|DENMARK|DENEMARKEN|FINLAND|ICELAND|IJSLAND|IRELAND|IERLAND|CANADA|AUSTRALIA|AUSTRALIË|BRAZIL|BRAZILIË|PORTUGAL|POLAND|POLEN|AUSTRIA|OOSTENRIJK|SWITZERLAND|ZWITSERLAND|SCOTLAND|SCHOTLAND|ENGLAND|ENGELAND|WALES|MEXICO|ARGENTINA|CHILE|COLOMBIA|NIGERIA|GHANA|SOUTH AFRICA|ZUID-AFRIKA|KOREA|CHINA|INDIA|ISRAEL|TURKEY|TURKIJE|GREECE|GRIEKENLAND|NEW ZEALAND)"
 _CC = r"(?:UK|GB|USA|US|VS|BE|NL|DE|GER|FR|IT|ITA|ES|ESP|PT|PL|AT|AUT|CH|SE|SWE|NO|NOR|DK|DNK|FI|FIN|IS|ISL|IE|IRL|CA|CAN|AU|AUS|NZ|JP|JPN|BR|BRA|AR|MX|ZA|RSA|GR|TR|CZ|HU|RO|UA|UKR|KR|CN|IN|IL|EU)"
-COUNTRY_PAREN = re.compile(r"\s*[\(\[]\s*" + _CC + r"(?:\s*[/,+&]\s*" + _CC + r")*\s*[\)\]]")
+# drieletterige codes alleen tussen haakjes ("Hippotraktor (BEL) + support"); los achter een naam zijn ze te vaak een woord
+_CC3 = r"(?:BEL|NLD|DEU|FRA|GBR|SCO|ENG|WAL|NIR|PRT|POL|HUN|CZE|SVK|SVN|HRV|SRB|ROU|BGR|GRC|TUR|ISR|ZAF|NGA|GHA|GAM|GMB|SEN|MLI|JAM|CUB|COL|ARG|CHL|PER|VEN|MEX|NZL|KOR|CHN|IND|IDN|LTU|LVA|EST|RUS|BLR|LUX|MLT|CYP|AUS|USA|CAN|JPN|BRA|IRL|ISL|NOR|SWE|DNK|FIN|ITA|ESP|AUT|SUI|GER|UKR)"
+_CCP = r"(?:" + _CC[3:-1] + "|" + _CC3[3:-1] + ")"
+COUNTRY_PAREN = re.compile(r"\s*[\(\[]\s*" + _CCP + r"(?:\s*[/,+&]\s*" + _CCP + r")*\s*[\)\]]")
+# datum als aanhangsel in de titel: "13-11-2026 : Roberto Jacketti", "CHURCH OF CASH | ZATERDAG 14 NOVEMBER" — de datum staat al
+# in het event, in de naam is het ruis (en het breekt het herkennen van dezelfde band)
+_MONTHS = r"(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december|jan|feb|mrt|apr|jun|jul|aug|sep|sept|okt|nov|dec|january|february|march|may|june|july|august|october)"
+_WDAYS = r"(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|monday|tuesday|wednesday|thursday|friday|saturday|sunday|ma|di|wo|do|vr|za|zo)"
+TITLE_DATE_HEAD = re.compile(r"^\s*(?:" + _WDAYS + r"\.?\s+)?\d{1,2}[-/.]\d{1,2}(?:[-/.](?:19|20)?\d{2})?\s*[-–—|:]\s*", re.I)
+TITLE_DATE_TAIL = re.compile(r"\s*[-–—|:,(]\s*(?:" + _WDAYS + r"\.?\s+)?\d{1,2}(?:[-/.]\d{1,2}(?:[-/.](?:19|20)?\d{2})?|\s+" + _MONTHS + r"\.?(?:\s+(?:19|20)\d{2})?)\s*\)?\s*$", re.I)
+
+
+def strip_title_date(title: str) -> str:
+    """Datum vooraan of achteraan in de titel weg (alleen als er een naam overblijft)."""
+    if not title:
+        return title
+    n = TITLE_DATE_HEAD.sub("", title)
+    n = TITLE_DATE_TAIL.sub("", n)
+    n = n.strip(" -–—|:,")
+    return n if len(n) >= 3 and re.search(r"[A-Za-z]", n) else title
 COUNTRY_NAME_PAREN = re.compile(r"\s*[\(\[]\s*" + _CN + r"(?:\s*[/,+&]\s*" + _CN + r")*\s*[\)\]]", re.I)
 COUNTRY_GLUED = re.compile(r"(?<=[a-z])" + _CC.replace("|NO|", "|").replace("|IS|", "|").replace("|IT|", "|").replace("|DE|", "|").replace("|ES|", "|").replace("|IN|", "|").replace("|CA|", "|") + r"$")
 COUNTRY_TAIL = re.compile(r"\s+[-–—|,]?\s*" + _CC.replace("|NO|", "|").replace("|IS|", "|").replace("|IT|", "|").replace("|DE|", "|").replace("|ES|", "|").replace("|IN|", "|").replace("|CA|", "|").replace("|EU|", "|") + r"$")

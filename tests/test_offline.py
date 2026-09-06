@@ -750,7 +750,12 @@ def test_time_provenance():
 def test_price_provenance():
     ex = fetch.extract_from_text_ex
     assert ex("Voorverkoop € 18,50 Deur € 22")[5] == "labeled"
-    assert ex("Er is een vrijwillige bijdrage van € 5 mogelijk")[5] == "text"
+    assert ex("Een avond met Band X. € 5")[5] == "text"
+    # geen ticketprijs: locker/munt/vrijwillige bijdrage; 'gratis' niet uit een nieuwsbrief-actie of parkeren (Nieuwe Nor FAQ)
+    assert ex("De kosten voor gebruik van een locker zijn 3 euro voor de hele activiteit. Maak elke maand kans op gratis tickets")[3] is None
+    assert ex("Er is een vrijwillige bijdrage van € 5 mogelijk")[3] is None
+    assert ex("€ 3 per munt. Entree € 8")[3] == "€ 8" and ex("Gratis parkeren. Tickets € 10")[3] == "€ 10"
+    assert ex("Gratis toegang, gratis garderobe")[3] == "gratis" and ex("Entree € 15 incl. 1 consumptie")[3] == "€ 15"
     assert ex("Toegang gratis")[5] == "labeled" and ex("Toegang gratis")[3] == "gratis"
     assert ex("€ 22 + € 2,50 servicekosten")[3:6][0] == "€ 24,50" and ex("€ 22 + € 2,50 servicekosten")[5] == "labeled"
     mk = lambda **kw: fetch.Event(**{"venue": "V", "city": "C", "title": "T", "start": FUT + "T20:00", "url": "https://v/1", **kw})
@@ -767,6 +772,19 @@ def test_price_provenance():
     fetch._take_better_price(a, b); assert (a.price, a.price_src) == ("€ 12,50", "shop")
     a = mk(price="uitverkocht"); fetch._take_better_price(a, b); assert a.price == "uitverkocht"
     a = mk(price="€ 20", price_src="list"); fetch._take_better_price(a, mk(price="€ 5", price_src="text")); assert a.price == "€ 20"
+
+
+def test_fixed_offset_is_local_time():
+    # Nieuwe Nor: JSON-LD "2026-11-07T22:00+02:00" in november (dan is het +01:00); de pagina zegt 22:00 -> kloktijd is lokaal
+    from datetime import datetime as _dt
+    assert fetch.to_local(_dt.fromisoformat("2026-11-07T22:00+02:00")).isoformat() == "2026-11-07T22:00:00"
+    assert fetch.to_local(_dt.fromisoformat("2026-07-07T20:00+02:00")).isoformat() == "2026-07-07T20:00:00"
+    assert fetch.to_local(_dt.fromisoformat("2026-07-07T18:00+00:00")).isoformat() == "2026-07-07T20:00:00"   # echte UTC wel omrekenen
+    assert fetch.to_local(_dt.fromisoformat("2026-11-07T21:00+00:00")).isoformat() == "2026-11-07T22:00:00"
+    from taxonomy import strip_country, strip_title_date
+    assert strip_country("Hippotraktor (BEL) + support") == "Hippotraktor + support" and strip_country("UK Subs") == "UK Subs"
+    assert strip_title_date("13-11-2026 : Roberto Jacketti & The Scooters") == "Roberto Jacketti & The Scooters"
+    assert strip_title_date("CHURCH OF CASH | ZATERDAG 14 NOVEMBER") == "CHURCH OF CASH" and strip_title_date("3 Doors Down") == "3 Doors Down"
 
 
 def test_run_diff():

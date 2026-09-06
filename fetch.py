@@ -38,7 +38,7 @@ from dateutil import parser as dtparser
 import artists as artistdb
 import series as seriesdb
 from taxonomy import _HINT_NOISE, GENERIC_TITLE
-from taxonomy import (strip_country, strip_city, normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
+from taxonomy import (strip_country, strip_city, strip_title_date,normalize_tag, classify_kind_ex, extract_artists, normalize_genres, price_number, group_label, _taxonomy, genre_hints, artist_key,
                       normalize_subgenres, learn_subgenres, promote_subgenres, learn_kinds, promote_kinds, subgenre_label, subgenre_group, _fold, NOISE_PAREN)
 
 ROOT = Path(__file__).parent
@@ -389,7 +389,13 @@ def parse_dt(value, default_year: int | None = None) -> datetime | None:
 
 
 def to_local(dt: datetime) -> datetime:
-    """UTC/tz-aware -> naive Nederlandse tijd (CET/CEST)."""
+    """UTC/tz-aware -> naive Nederlandse tijd (CET/CEST).
+    Een offset van +01:00 of +02:00 is een Nederlandse kloktijd: die wordt letterlijk genomen, ook als de offset voor die
+    datum fout is. Sites zetten de offset vaak vast in het sjabloon (Nieuwe Nor: "2026-11-07T22:00+02:00" in november,
+    terwijl het dan +01:00 is; de pagina zegt 22:00) — omrekenen zou dan een uur ernaast zitten."""
+    off = dt.utcoffset()
+    if off is not None and off in (timedelta(hours=1), timedelta(hours=2)):
+        return dt.replace(tzinfo=None)
     utc = dt.astimezone(timezone.utc).replace(tzinfo=None)
     # zomertijd: laatste zondag maart 01:00 UTC t/m laatste zondag oktober 01:00 UTC
     y = utc.year
@@ -1292,7 +1298,7 @@ def _cache_version(v: dict) -> int:
     return max(CACHE_VERSION, int(v.get("cache_version") or 0))
 
 
-CACHE_VERSION = 8  # verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
+CACHE_VERSION = 10  # 10: vaste tijdzone-offset als kloktijd (Nieuwe Nor), locker/munt-bedragen en nieuwsbrief-'gratis' geen prijs. Verhogen als fetch_detail/extract_from_text meer of betere velden oplevert: oude cache-items worden dan opnieuw opgehaald
 
 
 _PUBLISH_CLASS = re.compile(r"publish|updated|entry-date|post-date|author-date|posted|meta-date|byline", re.I)
@@ -1599,7 +1605,7 @@ def extract_from_text_ex(txt: str) -> Extracted:
     low, fee = _strip_service_fee(low)
     pm, pkind = _pick_price_ex(low)
     price = None
-    if re.search(r"\bgratis\b|\bfree\b(?! ?(wifi|parking))", low) and not pm:
+    if _free_mentioned(low) and not pm:
         price, pkind = "gratis", "labeled"   # gratis blijft gratis, ook met "incl. € 1,75 servicekosten" (FLUOR)
     elif pm and float(pm.replace(",", ".")) == 0:
         price, pkind = "gratis", "labeled"   # Tivoli "€ 0,-": een bedrag van nul is gratis, geen ontbrekende prijs
@@ -1643,6 +1649,22 @@ def _add_fee(amount: str, fee: float) -> str:
     return f"{val:.2f}"
 
 
+# bedragen die geen ticketprijs zijn: lockers, garderobe, munten, parkeren, lidmaatschap, nieuwsbrief-acties (Nieuwe Nor:
+# "De kosten voor gebruik van een locker zijn 3 euro" in de FAQ onder elk event -> € 3 als prijs voor 30 events)
+_NON_TICKET_CTX = re.compile(r"locker|kluis|garderobe|munt|consumptie|drankje|bier|parkeer|parking|fiets|borg|lidmaatschap|ledenkaart|clubkaart|nieuwsbrief|donatie|bijdrage|vrijwillig|toeslag|verzend|bezorg|per uur|p/u|winnen|win ", re.I)
+_NON_TICKET_AFTER = re.compile(r"\d[\d,.]*\s?(?:€|euro)?\s?(?:,-)?\s*(?:voor|per|p\.p\.\s+voor)\s+(?:een\s+|de\s+|het\s+|1\s+)?(?:locker|kluis|garderobe|munt|consumptie|drankje|parkeer|parking|fiets|uur|nieuwsbrief)", re.I)
+_NOT_FREE_CTX = re.compile(r"kans op|winnen|win |verloting|parkeer|parking|wifi|garderobe|locker|kluis|water|nieuwsbrief|fietsenstalling|oordop|app\b|download|verzend", re.I)
+
+
+def _free_mentioned(low: str) -> bool:
+    """Staat er 'gratis'/'free' over de toegang — niet over gratis tickets winnen, gratis parkeren, gratis wifi enz."""
+    for m in re.finditer(r"\bgratis\b|\bfree\b", low):
+        ctx = low[max(0, m.start() - 20): m.end() + 12]
+        if not _NOT_FREE_CTX.search(ctx):
+            return True
+    return False
+
+
 _DISCOUNT_CTX = re.compile(r"leden|members?|lid\b|cjp|student|scholier|jeugd|jongeren|kinderen|kids|t/m \d+ jaar|tot en met \d+|65\+|vrienden|donateur|korting|reduced|early\b|deurprijs|dagkassa|avondkassa|deurverkoop|aan de deur|at the door|door ?sale|\bdoor\s*:|deur\s*:|late\b", re.I)
 _PREFERRED_CTX = re.compile(r"regulier|regular|normaal|standaard|voorverkoop|vvk|presale|pre-?sale|tickets?|entree|kaarten", re.I)
 
@@ -1658,7 +1680,8 @@ def _pick_price_ex(low: str) -> tuple[str | None, str | None]:
     Bedragen met een kortings- of deurprijscontext (leden, CJP, jeugd, dagkassa) vallen af zolang er andere zijn;
     daarna wint het eerste bedrag met een 'gewone' context, anders het eerste bedrag."""
     raw = []
-    for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)",
+    # "Stage 3 € 15,50" (Patronaat: zaalnaam vóór de prijs): "3 €" is geen bedrag als het €-teken zelf een bedrag inleidt
+    for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)(?!\s?\d)",
                 r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b"):
         for m in re.finditer(pat, low):
             # positie van het bedrag zelf, niet van het patroon: bij "voorverkoop € 18,50" hoort 'voorverkoop' bij de context
@@ -1676,6 +1699,10 @@ def _pick_price_ex(low: str) -> tuple[str | None, str | None]:
         cands.append((start, val, low[lo:start], end))
         prev_end = end
     cands = [(a, b, c) for a, b, c, _ in cands]
+    # geen ticketprijs: bedrag met locker/garderobe/munt/parkeer-context (ook ná het bedrag: "3 euro voor een locker")
+    cands = [c for c in cands if not (_NON_TICKET_CTX.search(re.split(r"[.!?|]", c[2])[-1][-24:]) or _NON_TICKET_AFTER.match(low[c[0]: c[0] + 60]))]
+    if not cands:
+        return None, None
     regular = [c for c in cands if not _DISCOUNT_CTX.search(c[2])]
     pool = regular or cands
     # de prijs van nú online een gewoon ticket bestellen: voorverkoop/online gaat vóór 'regulier' (kan dagkassa zijn), dat vóór de rest
@@ -2803,17 +2830,22 @@ def check_groundtruth(events: list[Event], path: Path | None = None) -> dict:
     for e in events:
         by_vd.setdefault((_fold(e.venue), e.start[:10]), []).append(e)
     checked, ok, misses = 0, 0, []
+    b_checked, b_ok, b_changed = 0, 0, []   # baseline-items: uit een eerdere run, niet met de hand gecontroleerd
     for it in items:
         if not it.get("date") or it["date"] < TODAY.isoformat():
             continue
-        checked += 1
+        baseline = bool(it.get("baseline"))
+        if baseline:
+            b_checked += 1
+        else:
+            checked += 1
         cands = by_vd.get((_fold(it["venue"]), it["date"]), [])
         want = _fold(it.get("title", ""))
         hits = [e for e in cands if want and want in _fold(e.title)]
         # meerdere shows op één dag (Roxy Dekker 15:00 en 20:30): die met de verwachte tijd
         hit = next((e for e in hits if it.get("time") and e.start[11:16] == it["time"]), hits[0] if hits else None)
         if hit is None:
-            misses.append({**it, "problem": "ontbreekt"})
+            (b_changed if baseline else misses).append({**it, "problem": "ontbreekt"})
             continue
         problems = []
         if it.get("time") and hit.start[11:16] != it["time"]:
@@ -2823,13 +2855,17 @@ def check_groundtruth(events: list[Event], path: Path | None = None) -> dict:
             if got is None or abs(got - float(it["price"])) > 0.01:
                 problems.append(f"prijs {hit.price} i.p.v. {it['price']}")
         if problems:
-            misses.append({**it, "problem": "; ".join(problems)})
+            (b_changed if baseline else misses).append({**it, "problem": "; ".join(problems)})
+        elif baseline:
+            b_ok += 1
         else:
             ok += 1
     for m in misses:
         log(f"LET OP groundtruth {m['venue']} · {m['title']} {m['date']}: {m['problem']}")
-    log(f"Groundtruth: {ok}/{checked} steekproef-events kloppen")
-    return {"checked": checked, "ok": ok, "misses": misses}
+    for m in b_changed:
+        log(f"    baseline {m.get('baseline')} afwijking {m['venue']} · {m['title']} {m['date']}: {m['problem']}")
+    log(f"Groundtruth: {ok}/{checked} gecontroleerde steekproef-events kloppen; baseline: {b_ok}/{b_checked} ongewijzigd")
+    return {"checked": checked, "ok": ok, "misses": misses, "baseline_checked": b_checked, "baseline_ok": b_ok, "baseline_changed": b_changed}
 
 
 def main(only: list[str] | None = None) -> int:
@@ -2950,6 +2986,23 @@ def main(only: list[str] | None = None) -> int:
             log(f"LET OP regressie {name}: {now} events, was {best}")
         history[name] = past + [{"date": TODAY.isoformat(), "events": now, "strategy": r["strategy"], "stale": bool(r["audit"].get("stale"))}]
     report["regressions"] = [{"venue": n, "was": b, "now": c} for n, b, c in regressions]
+    # plausibiliteit van prijzen per podium: veel bedragen onder € 5 (Patronaat: "Stage 3 € 15,50" gaf € 3 voor 127 events) of
+    # een podium van 400+ plaatsen dat overwegend 'gratis' zou zijn (Nieuwe Nor: 'kans op gratis tickets' in de footer)
+    for r in report["venues"]:
+        evs_v = [e for e in all_events if e.venue == r["name"]]
+        nums = [(price_number(e.price), e.price) for e in evs_v if e.price]
+        cheap = sum(1 for n, p in nums if n is not None and 0 < n < 5)
+        free = sum(1 for _, p in nums if p == "gratis")
+        flags = []
+        if len(nums) >= 10 and cheap >= 0.3 * len(nums):
+            r["audit"]["cheap_prices"] = cheap
+            flags.append(f"{cheap} van {len(nums)} prijzen onder € 5")
+        if len(nums) >= 10 and (vmeta_cap := (next((v.get("capacity") for v in venues if v["name"] == r["name"]), 0) or 0)) >= 400 and free >= 0.5 * len(nums):
+            r["audit"]["many_free"] = free
+            flags.append(f"{free} van {len(nums)} events 'gratis' (podium van {vmeta_cap} plaatsen)")
+        if flags:
+            r["note"] = (r["note"] + "; " if r["note"] else "") + "LET OP prijzen: " + ", ".join(flags)
+            log(f"LET OP prijzen {r['name']}: {', '.join(flags)}")
     hist_path.write_text(json.dumps(history, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     # run-op-run verschil: wélke toekomstige events verdwenen (zonder afgelast te zijn), van dag/tijd verschoven of fors
     # van prijs veranderd — het snelste signaal voor een parserregressie die de aantallen niet raakt
@@ -3007,7 +3060,8 @@ def main(only: list[str] | None = None) -> int:
             # de kaart linkt altijd naar de agenda van het podium, nooit naar een ticketshop; de shoplink blijft apart bewaard
             e.ticket_url = e.ticket_url or e.url
             e.url = vmeta.get(e.venue, {}).get("url") or e.url
-        e.title = strip_city(strip_country(e.title), e.city)   # "junkyardUK", "Band (USA)", "Popronde Alkmaar": geen deel van de naam
+        # "junkyardUK", "Band (USA)", "Popronde Alkmaar", "13-11-2026 : Roberto Jacketti", "X | ZATERDAG 14 NOVEMBER": geen deel van de naam
+        e.title = strip_title_date(strip_city(strip_country(e.title), e.city))
         e.artists = extract_artists(e.title, e.subtitle)
         if e.lineup:
             known = {artist_key(a) for a in e.artists}
