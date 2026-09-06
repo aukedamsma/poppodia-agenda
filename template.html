@@ -110,8 +110,6 @@ input.ghost{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none
 .daynav{display:inline-flex;align-items:center;position:relative;padding-left:10px}
 .daynav .dow{font-size:13px;font-weight:500;color:var(--ink-2);margin-right:6px}
 .daynav input{font:inherit;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink-2);background:transparent;border:0;padding:0 8px 0 0;height:31px;box-sizing:border-box;border-radius:6px}
-.tix{font-size:11px;color:var(--ink-3);background:transparent;border:1px solid var(--line);border-radius:5px;padding:0 6px;line-height:16px;margin-top:4px;cursor:pointer} .tix:hover{color:var(--accent);border-color:var(--accent)}
-.card.compact .tix{display:none}
 .save{position:absolute;right:8px;bottom:6px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);background:transparent}
 .save svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
 .save:hover{color:var(--accent);background:var(--accent-soft)}
@@ -504,7 +502,6 @@ button:focus-visible{outline:none}
     const pr = e.status==='uitverkocht'?`<span class="pr soldout">uitverkocht</span>`:e.price?`<span class="pr${e.price_est?' est':''}"${e.price_est?' title="prijs geschat op basis van eerdere edities"':''}>${e.price_est?'~ ':''}${esc(e.price)}</span>`:'';
     const sub = e.subtitle ? esc(e.subtitle) : (e.lineup&&e.lineup.length>1 ? 'met '+esc(e.lineup.slice(0,6).join(', ')) : '');
     const saveBtn = `<button class="save" data-key="${esc(keyOfEv(e))}" aria-pressed="${saved.has(keyOfEv(e))}" aria-label="Bewaar in mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>`;
-    const tix = e.ticket_url ? `<button class="tix" data-href="${esc(e.ticket_url)}" title="Naar de ticketshop">tickets</button>` : '';
     if (compact){
       // weekweergave, vier regels: titel · podium + stad · datum + tijd + prijs + bookmark · genre
       return `<a class="card compact${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
@@ -515,7 +512,7 @@ button:focus-visible{outline:none}
       </a>`;
     }
     return `<a class="card${e.status==='afgelast'?' cancelled':''}" href="${esc(e.url)}" target="_blank" rel="noopener">
-      <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.status==='uitverkocht'?' soldout':e.price_est?' est':''}">${e.status==='uitverkocht'?'uitverkocht':e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span>${tix}</span>
+      <span class="side"><span class="date">${fmtCard(e.start)}</span><span class="time${e.time_est?' est':''}">${time?(e.time_est?'~':'')+time:' '}</span><span class="pr${e.status==='uitverkocht'?' soldout':e.price_est?' est':''}">${e.status==='uitverkocht'?'uitverkocht':e.price?(e.price_est?'~ ':'')+esc(e.price):' '}</span></span>
       <div class="t" title="${esc(e.title)}">${badges}${esc(e.title)}</div>
       <div class="s">${sub}</div>
       <div class="w" title="${CAP[e.venue]?'capaciteit '+CAP[e.venue]:''}">${venueLabel(e)} · ${esc(e.city)}</div>
@@ -631,7 +628,6 @@ button:focus-visible{outline:none}
   document.addEventListener('keydown',ev=>{ if(['all','week','month'].includes(state.view) && !ev.target.matches('input,textarea')){ if(ev.key==='ArrowLeft') shiftPeriod(-1); if(ev.key==='ArrowRight') shiftPeriod(1); } });
   function isoWeek(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-dn); const y=new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t-y)/864e5+1)/7); }
   function wireSaves(){
-    document.querySelectorAll('.tix').forEach(b => b.addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); window.open(b.dataset.href, '_blank', 'noopener'); }));
     document.querySelectorAll('.save').forEach(b => b.addEventListener('click', ev => {
       ev.preventDefault(); ev.stopPropagation();
       const k=b.dataset.key; if (saved.has(k)) saved.delete(k); else saved.add(k);
