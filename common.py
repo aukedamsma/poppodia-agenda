@@ -105,7 +105,19 @@ def soup_of(html: str) -> BeautifulSoup:
 def page_text(html: str) -> str:
     """Zichtbare tekst van het hoofddeel van een pagina (zonder scripts/styles/nav zover herkenbaar)."""
     s = soup_of(html)
-    for t in s(["script", "style", "noscript", "nav", "footer", "header"]):
+    for t in s(["script", "style", "noscript", "nav", "footer"]):
         t.decompose()
-    body = s.find("main") or s.find("article") or s.body or s
-    return re.sub(r"\s+", " ", body.get_text(" "))
+    # site-kop weg (bevat menu), maar een <header> binnen het event (datum/tijd/prijs erin) blijft staan
+    for t in s("header"):
+        if t.find("nav") is not None or t.find("ul") is not None or (t.parent is not None and t.parent.name == "body"):
+            t.decompose()
+    whole = s.body or s
+    body = s.find("main") or s.find("article") or whole
+    txt = re.sub(r"\s+", " ", body.get_text(" "))
+    if body is not whole:
+        # <main> is soms maar een fragment (EKKO: alleen de beschrijving; datum, aanvang en prijs staan in een <section>
+        # ernaast): is het minder dan de helft van de pagina, neem dan de hele pagina
+        full = re.sub(r"\s+", " ", whole.get_text(" "))
+        if len(txt) < 0.5 * len(full):
+            txt = full
+    return txt

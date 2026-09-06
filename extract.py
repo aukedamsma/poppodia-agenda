@@ -344,6 +344,9 @@ def _price_rank(src: str | None) -> int:
     return PRICE_RANK.get(src or "list", 4)
 
 
+_SALE_CTX = re.compile(r"(?:kaartverkoop|voorverkoop|ticketverkoop|ticket ?sale|presale|pre-sale|on sale|in de verkoop|verkoop)\b.{0,40}?\b(?:start|begint|gaat|vanaf|opent|is|op)\W{0,12}(?:(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|ma|di|wo|do|vr|za|zo)\.?\W{0,3})?$", re.I | re.S)
+
+
 def extract_from_text(txt: str) -> tuple[datetime | None, tuple[int, int] | None, tuple[int, int] | None, str | None]:
     """(datum, aanvangstijd, deurtijd, prijs) uit vrije tekst van een eventpagina (zie extract_from_text_ex)."""
     return tuple(extract_from_text_ex(txt)[:4])
@@ -366,10 +369,20 @@ def extract_from_text_ex(txt: str) -> Extracted:
                 rf"\b{WEEKDAY_RE}\.?\s+(\d{{1,2}}[./]\d{{1,2}}(?:[./]\d{{2,4}})?)\b",
                 rf"\bdatum\W{{0,6}}(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+(\d{{4}}))?",
                 rf"\b(\d{{1,2}})\s+{MONTH_RE}\.?\s+(\d{{4}})\b",
+                rf"\b{MONTH_RE}\s+(\d{{1,2}}),\s+(\d{{4}})\b",   # "oktober 31, 2026" (Baroeg: WordPress-datumformaat "F j, Y")
                 rf"\b(\d{{1,2}})\s+{MONTH_RE}\b\.?"):
-        m = re.search(pat, low)
+        # de startdatum van de kaartverkoop is niet de eventdatum (Simplon: "de kaartverkoop van dit evenement start
+        # donderdag 25 juni om 11:00u" -> event op 25 juni 2027)
+        ms = [x for x in re.finditer(pat, low) if not _SALE_CTX.search(low[max(0, x.start() - 50): x.start()])]
+        m = ms[0] if ms else None
+        if m and pat.startswith(rf"\b{MONTH_RE}"):
+            # WordPress-postdatum "F j, Y" (Baroeg: publicatiedatum "augustus 20, 2026" vóór de eventdatum "oktober 31, 2026
+            # 19:00"): in dit formaat is de datum waar direct een tijd achter staat die van het event
+            m = next((x for x in ms if re.match(r"\W{0,4}(?:om\s+)?\d{1,2}[:.u]\d{2}\b", low[x.end(): x.end() + 12])), m)
         if m:
             groups = [g for g in m.groups() if g]
+            if re.fullmatch(MONTH_RE, groups[0]) and len(groups) == 3:
+                groups = [groups[1], groups[0], groups[2]]   # maand-dag-jaar -> dag maand jaar
             dt = parse_dt(" ".join(groups[-3:] if len(groups) >= 3 and groups[-1].isdigit() and len(groups[-1]) == 4 else groups[-2:]))
             if dt:
                 break
@@ -392,8 +405,11 @@ def extract_from_text_ex(txt: str) -> Extracted:
     # tijd direct achter de datum zonder label ("zaterdag 5 september 2026 14:30 uur", Estrado): dat is de aanvang.
     # Dezelfde datum kan vaker op de pagina staan ("vr 02 okt … vrijdag 2 oktober 2026 20:30 uur"): elke vermelding proberen
     if not start and dt is not None:
-        for mm2 in re.finditer(rf"\b(?:{WEEKDAY_RE}\.?\s+)?(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+\d{{4}})?", low):
-            d2 = parse_dt(" ".join(g for g in mm2.groups() if g and not re.fullmatch(WEEKDAY_RE, g)))
+        for mm2 in re.finditer(rf"\b(?:{WEEKDAY_RE}\.?\s+)?(\d{{1,2}})\s+{MONTH_RE}\.?(?:\s+\d{{4}})?|\b{MONTH_RE}\s+(\d{{1,2}}),\s+(\d{{4}})", low):
+            gs = [g for g in mm2.groups() if g and not re.fullmatch(WEEKDAY_RE, g)]
+            if gs and re.fullmatch(MONTH_RE, gs[0]) and len(gs) == 3:
+                gs = [gs[1], gs[0], gs[2]]
+            d2 = parse_dt(" ".join(gs))
             if not d2 or d2.date() != dt.date():
                 continue
             after = low[mm2.end(): mm2.end() + 18]
@@ -498,8 +514,9 @@ def _pick_price_ex(low: str) -> tuple[str | None, str | None]:
     daarna wint het eerste bedrag met een 'gewone' context, anders het eerste bedrag."""
     raw = []
     # "Stage 3 € 15,50" (Patronaat: zaalnaam vóór de prijs): "3 €" is geen bedrag als het €-teken zelf een bedrag inleidt
-    for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)(?!\s?\d)",
-                r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b"):
+    # "15 euro 25+" (Bitterzoet: leeftijd achter de prijs) blijft wél 15: cijfers gevolgd door + zijn geen bedrag
+    for pat in (r"€\s?(\d{1,3}(?:[.,]\d{2})?)(?:,-)?", r"(\d{1,3}(?:[.,]\d{2})?)\s?(?:€|(?<![a-z])euro\b)(?!\s?\d+(?:[.,]\d{2})?\b(?!\+))",
+                r"(?<![a-z])euro?\b\s?(\d{1,3}(?:[.,]\d{2})?)(?!\+)(?:,-)?", r"(?:tickets?|entree|kaarten|prijs|vvk|voorverkoop)\W{0,12}(\d{1,3}[.,]\d{2})\b"):
         for m in re.finditer(pat, low):
             # positie van het bedrag zelf, niet van het patroon: bij "voorverkoop € 18,50" hoort 'voorverkoop' bij de context
             raw.append((m.start(1), m.end(), m.group(1)))
@@ -513,7 +530,12 @@ def _pick_price_ex(low: str) -> tuple[str | None, str | None]:
             continue  # zelfde bedrag, door twee patronen gevonden
         # context = het label direct vóór dit bedrag (tot het vorige bedrag): "Door: €16,00 Early: €12,00 Regular: €14,50"
         lo = max(0, start - 28, prev_end if prev_end is not None else 0)
-        cands.append((start, val, low[lo:start], end))
+        ctx = low[lo:start]
+        # label ná het bedrag ("€ 19,95 vvk, € 24,95 deur", Iduna): telt als context als er vóór het bedrag geen label staat
+        post = re.split(r"€|\d{1,3}[.,]\d{2}", low[end:end + 16])[0]
+        if not (_DISCOUNT_CTX.search(ctx) or _PREFERRED_CTX.search(ctx)) and (_DISCOUNT_CTX.search(post) or _PREFERRED_CTX.search(post)):
+            ctx = ctx + " " + post
+        cands.append((start, val, ctx, end))
         prev_end = end
     cands = [(a, b, c) for a, b, c, _ in cands]
     # geen ticketprijs: bedrag met locker/garderobe/munt/parkeer-context (ook ná het bedrag: "3 euro voor een locker")

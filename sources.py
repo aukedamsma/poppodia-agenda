@@ -20,7 +20,7 @@ from taxonomy import normalize_tag, price_number, genre_hints, _fold
 import net as _net
 from common import EVENT_LINK_HINTS, Event, ROOT, TIMEOUT, TODAY, as_list, clean, in_window, log, page_text, soup_of
 from net import BROWSER_HEADERS, _BROWSER_UA_HOSTS, get, http_get, http_post
-from extract import _DISCOUNT_CTX, _PREFERRED_CTX, _ampm_to_24h, _fee_inclusive, _strip_tz, _title_key, clean_lineup, date_from_url, extract_from_text, extract_from_text_ex, fmt_price, jsonld_events, normalize_price, parse_dt, price_from_embedded_json, times_from_embedded_json, to_local
+from extract import is_ticket_url, _DISCOUNT_CTX, _PREFERRED_CTX, _ampm_to_24h, _fee_inclusive, _strip_tz, _title_key, clean_lineup, date_from_url, extract_from_text, extract_from_text_ex, fmt_price, jsonld_events, normalize_price, parse_dt, price_from_embedded_json, times_from_embedded_json, to_local
 
 
 def event_from_jsonld(n: dict, v: dict, page_url: str, source: str) -> Event | None:
@@ -865,9 +865,23 @@ def _event_time_tag(s: BeautifulSoup):
             continue
         cands.append(t)
     for t in cands:
-        if in_window(parse_dt(t["datetime"])):
+        if in_window(_time_tag_value(t)):
             return t
-    return cands[0] if cands else None
+    return None   # alleen verleden/ongeldige tags (Nobel: publicatietijd): dan telt de datum uit de tekst
+
+
+def _time_tag_value(t) -> datetime | None:
+    """Datum van een <time>: normaal het datetime-attribuut, maar staat er in de tekst een andere dag ("<time
+    datetime='2026-08-06T13:30:01'>zaterdag 07 november 2026</time>", Nobel: het attribuut is de publicatietijd), dan de tekst.
+    Een attribuut met seconden ongelijk aan 00 is vrijwel altijd zo'n tijdstempel."""
+    attr = parse_dt(t["datetime"])
+    txt = clean(t.get_text(" ")) or ""
+    shown = parse_dt(txt) if re.search(r"\d", txt) else None
+    if shown and attr and shown.date() != attr.date():
+        return shown
+    if attr and attr.second and shown:
+        return shown
+    return attr
 
 
 def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Event | None:
@@ -892,9 +906,11 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         cache[url] = {"fetched": TODAY.isoformat(), "event": None, "error": str(ex)[:200]}
         return None
     ev = None
+    utc_labeled = False   # JSON-LD-tijd met Z/+00:00: sites zetten daar vaak gewoon de lokale kloktijd in
     for n in jsonld_events(html):
         ev = event_from_jsonld(n, v, url, "jsonld_detail")
         if ev:
+            utc_labeled = bool(re.search(r"(Z|\+00:?00)$", str(n.get("startDate") or "")))
             break
     if ev is None:
         ev = event_from_flight_json(html, url, v)
@@ -909,7 +925,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
     if ev is None:
         s = soup_of(html)
         t = _event_time_tag(s)
-        h1 = s.find("h1")
+        h1 = next((h for h in s.find_all("h1") if clean(h.get_text())), None)   # eerste niet-lege h1 (Baroeg: lege h1 met logo)
         if title is None and h1:
             title = clean(h1.get_text())
         if title is None:
@@ -925,7 +941,7 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
             el = s.select_one(v["detail_date"])
             if el is not None:
                 sel_dt = parse_dt(clean(el.get_text())) or extract_from_text(el.get_text(" "))[0]
-        dt = sel_dt or (parse_dt(t["datetime"]) if t else None) or date_from_url(url) or tdt
+        dt = sel_dt or (_time_tag_value(t) if t else None) or date_from_url(url) or tdt
         if dt and (dt.hour, dt.minute) == (0, 0) and (tstart or tdoors):
             dt = dt.replace(hour=(tstart or tdoors)[0], minute=(tstart or tdoors)[1])
         if dt and title:
@@ -949,6 +965,11 @@ def fetch_detail(v: dict, url: str, cache: dict, title: str | None = None) -> Ev
         if tstart and (((st.hour, st.minute) == (0, 0)) or (tdoors and (st.hour, st.minute) == tdoors and tstart != tdoors)):
             ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
             ev.time_src = tkind
+        elif tstart and tkind == "label" and utc_labeled and ((st.hour * 60 + st.minute) - (tstart[0] * 60 + tstart[1])) in (60, 120):
+            # Doornroosje/Merleyn: JSON-LD "22:00:00+00:00" (-> 23:00 na omrekening) terwijl de pagina "aanvang 22:00" zegt:
+            # de 'UTC' was al lokale tijd. Een gelabelde aanvang die precies de tijdzone-afstand eerder ligt wint dan.
+            ev.start = st.replace(hour=tstart[0], minute=tstart[1]).isoformat(timespec="minutes")
+            ev.time_src = "label"
         if not ev.price and tprice:
             ev.price, ev.price_src = tprice, tpkind
         if not ev.price and v.get("ticketshops", True):
@@ -1259,6 +1280,10 @@ def enrich_from_detail(v: dict, evs: list[Event], cache: dict) -> None:
     for e in evs:
         needs_time = e.start[11:16] in ("", "00:00")
         if not (needs_time or not e.price or not e.genres) or not e.url or e.url.rstrip("/") == v["url"].rstrip("/"):
+            continue
+        if is_ticket_url(e.url):
+            # een Stager-/ticketshop-pagina is geen eventpagina: de tekst bevat álle events van de shop, en een 'aanvang 21:00'
+            # van een ander event zou de juiste API-tijd kunnen overschrijven (Vera, dB's in de fixtures-test)
             continue
         cached = ("x|" + e.url) in cache
         if not cached:

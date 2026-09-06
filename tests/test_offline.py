@@ -823,6 +823,37 @@ def test_run_diff():
     assert d["vanished_venues"] == {"V": 8}
 
 
+def test_fixture_lessons():
+    """Regels die uit de fixtures-test van 6 sep kwamen (echte pagina's van ~55 podia)."""
+    ex = fetch.extract_from_text_ex
+    assert ex("15 euro 25+ deuren open 19:00")[3] == "€ 15"                    # Bitterzoet: leeftijd achter de prijs is geen bedrag
+    assert ex("Stage 3 € 15,50")[3] == "€ 15,50"                              # Patronaat blijft goed
+    assert ex("€ 19,95 vvk, € 24,95 deur")[3] == "€ 19,95"                    # Iduna: label ná het bedrag
+    e = ex("Halloween Madness augustus 20, 2026 voorstellingen oktober 31, 2026 19:00 Baroeg vvk € 19,00. Entree € 20,00.")
+    assert e.dt.date().isoformat() == "2026-10-31" and e.start == (19, 0) and e.price == "€ 19"   # Baroeg: F j, Y + postdatum
+    e = ex("De kaartverkoop van dit evenement start donderdag 25 juni om 11:00u. Open 20:00 start 20:30")
+    assert e.dt is None and e.start == (20, 30)                                # Simplon: verkoopstart is geen eventdatum
+    # Nobel: <time datetime=publicatietijd>zaterdag 07 november 2026</time> -> de tekst telt; alleen-verleden tags tellen niet
+    s = fetch.soup_of('<html><body><time datetime="2026-08-06T13:30:01+0200">zaterdag 07 november 2026</time></body></html>')
+    t = fetch._event_time_tag(s)
+    assert t is not None and fetch._time_tag_value(t).date().isoformat() == "2026-11-07"
+    assert fetch._event_time_tag(fetch.soup_of('<html><body><time datetime="2025-01-01T10:00:00">1 januari 2025</time></body></html>')) is None
+    # EKKO: <main> is een fragment, datum/aanvang/prijs staan ernaast -> hele pagina lezen
+    html = '<html><body><header><nav><a>x</a></nav></header><section class="general-info">do 15 okt Aanvang 20:30 € 14.50</section>' \
+           '<main><article>' + "Beschrijving. " * 3 + '</article></main></body></html>'
+    assert "20:30" in fetch.page_text(html)
+    # Doornroosje/Merleyn: JSON-LD "22:00:00+00:00" (-> 23:00) maar de pagina zegt aanvang 22:00: de 'UTC' was lokale tijd
+    class S:
+        headers = {}
+        def get(self, url, **kw):
+            return FakeResp(text='<html><body><script type="application/ld+json">{"@context":"https://schema.org","@type":"Event","name":"Julia Sabaté",'
+                                 '"startDate":"' + FUT + 'T22:00:00+00:00","location":{"@type":"Place","name":"Merleyn"}}</script>'
+                                 '<h1>Julia Sabaté</h1><p>Zaal open 21:00 Aanvang 22:00 Tickets € 17,50</p></body></html>')
+    fetch.net.SESSION = S()
+    ev = fetch.fetch_detail({"name": "Doornroosje", "city": "Nijmegen", "url": "https://www.doornroosje.nl/", "ticketshops": False}, "https://www.doornroosje.nl/event/julia-sabate/", {})
+    assert ev is not None and ev.start[11:16] == "22:00" and ev.time_src == "label"
+
+
 if __name__ == "__main__":
     import inspect
     fails = 0

@@ -103,6 +103,7 @@
 
 - name: EKKO
   city: Utrecht
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 275
   url: https://www.ekko.nl/agenda/
   type: wp_event
@@ -135,6 +136,7 @@
 
 - name: Bitterzoet
   city: Amsterdam
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 350
   url: https://www.bitterzoet.com/agenda/
   type: wp_event
@@ -183,6 +185,7 @@
 
 - name: Doornroosje
   city: Nijmegen
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 1700
   url: https://www.doornroosje.nl/programma/
   type: jsonld_detail
@@ -262,6 +265,7 @@
     tags: {concert: Concert, dansen: Clubnacht, festival: Festival, zienema: Film}
 - name: Simplon
   city: Groningen
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 600
   url: https://simplon.nl/programma/
   type: html
@@ -294,7 +298,7 @@
   max_detail: 300
   detail_date: ".program_date-wrapper.is-hero"
   notes: "Webflow; lijst max 100 per pagina (?d9baa62c_page=2 geeft de rest); geen structured data, datum in .program_date-wrapper.is-hero ('Fri 4 Sep', verderop staan kaarten met andere datums), 'Deuren open: 17:00 | Aanvang: 21:00', 'Gratis' of '€ 25,-'"
-- {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/", capacity: 725}
+- {name: Iduna, city: Drachten, url: "https://iduna.nl/evenementen/", capacity: 725, cache_version: 11}
 - name: Luxor Live
   city: Arnhem
   capacity: 900
@@ -390,6 +394,7 @@
 - {name: Victorie, city: Alkmaar, url: "https://www.podiumvictorie.nl/programma/", capacity: 1140}
 - name: Nobel
   city: Leiden
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 1000
   url: https://nobel.nl/agenda
   type: html
@@ -441,6 +446,7 @@
   notes: "Next.js + Prismic; de agenda laadt via RSC (5 events in de HTML, 81 live). Sitemap (urlset, 3131 events incl. verleden) met lastmod: alleen recent gewijzigde URL's; eventpagina heeft JSON-LD Event (startDate in UTC) en prijs in de tekst ('Tickets €25,50')"
 - name: Baroeg
   city: Rotterdam
+  cache_version: 11   # eventpagina's opnieuw na parserfixes uit de fixtures-test (6 sep)
   capacity: 350
   url: https://www.baroeg.nl/agenda
   type: auto

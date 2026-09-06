@@ -67,6 +67,9 @@ def run(only: list[str]) -> int:
             v = venues.get(meta["venue"])
             if not it or not v or (only and meta["venue"] not in only):
                 continue
+            if fetch.is_ticket_url(meta["url"]):
+                print(f"- {meta['venue']:22} {it['title'][:35]:35} ticketshop-pagina (geen eventpagina): niet getest, prijs/tijd komen uit de shop-API")
+                continue
             html = gzip.decompress((FIX / f"{key}.html.gz").read_bytes()).decode("utf-8", "replace")
             fetch.net.SESSION = _FixtureSession(meta["url"], html)
             fetch._STAGER_SESSIONS.clear()
