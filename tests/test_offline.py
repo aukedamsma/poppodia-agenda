@@ -142,11 +142,11 @@ def test_wp_event_bitterzoet_date_from_detail_text():
 
 def test_html_selectors_patronaat():
     item = '''<div class="event-program"><div class="event-program__content">
-      <div class="event-program__date"><a href="https://patronaat.nl/event/donnas-hot-stuff-{dd}/">vr 4 sep 2026</a></div>
+      <div class="event-program__date"><a href="https://patronaat.nl/event/donnas-hot-stuff-{dd}/">{txt}</a></div>
       <h3 class="event-program__name"><a href="https://patronaat.nl/event/donnas-hot-stuff-{dd}/">Donna’s Hot Stuff</a></h3>
       <div class="event-program__subtitle">Een groots eerbetoon</div><div class="event-program__genres">klassiekers / tributes pop</div></div></div>'''
     d = date.today() + timedelta(days=10)
-    html = item.format(dd=d.strftime("%d-%m-%y")) * 4
+    html = item.format(dd=d.strftime("%d-%m-%y"), txt=d.strftime("vr %-d %b %Y").replace("Sep", "sep").replace("Oct", "okt")) * 4
     fake_session({"patronaat": FakeResp(html)})
     v = {"name": "Patronaat", "city": "Haarlem", "url": "https://www.patronaat.nl/programma/", "type": "html", "item": ".event-program",
          "title": ".event-program__name", "date": ".event-program__date", "link": ".event-program__name a", "subtitle": ".event-program__subtitle",
