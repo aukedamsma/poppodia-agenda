@@ -40,6 +40,21 @@ run-op-run verschil, groundtruth) en `fetch.py` (strategieketen per podium en de
   podia, MusicBrainz-tags en — met `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` als GitHub-secrets — Spotify-genres en
   populariteit). Events zonder genre krijgen er een via de kennisbank. Basis voor de smaakscore.
 
+## Zoeken op de pagina
+
+Eén veld (tab met het vergrootglas, of `/` vanuit elke weergave) doorzoekt de hele komende agenda: artiest, titel,
+line-up, podium, stad en genre. De filters uit de balk gelden er niet en zijn daarom in deze weergave verborgen.
+
+- **Direct filteren** — een treffer op een podium, stad of genre komt bovenaan als knop. Die zet de treffer om in een
+  echt filter (podia-selectie of genre) en springt naar de weekweergave.
+- **Artiesten** — artiesten met meer dan één komend concert krijgen een eigen kop met aantal en periode. Rangorde:
+  exacte naam → naam begint met de zoekterm → begin van een woord → ergens in de naam; daarna op aantal concerten.
+- **Overige concerten** — al het andere chronologisch, inclusief eenmalige treffers (een titel die het woord toevallig
+  bevat hoort niet als artiest bovenaan). Beide lijsten laden per stap bij.
+- **Zonder zoekterm** staat er een startscherm: recent gezocht, en ingangen om te bladeren (podia, steden, genres,
+  artiesten die op minstens drie podia staan). Bij nul treffers volgt een 'bedoelde je' op basis van Levenshtein-afstand.
+- De zoekterm staat in de url (`#zoek=...`), zodat een zoekopdracht te delen en te bewaren is. `Esc` maakt het veld leeg.
+
 ## Methodiek: regels die voor álle podia gelden
 
 Elke fout die bij één podium is gevonden, is omgezet in een generieke regel in `fetch.py`, zodat hij bij alle

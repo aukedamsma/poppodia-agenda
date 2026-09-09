@@ -201,6 +201,36 @@ main{padding:6px 0 60px}
 .asearch{display:flex;align-items:center;gap:8px;color:var(--ink-3);height:31px;width:340px}
 .asearch input{flex:1;font:inherit;font-size:13px;font-weight:500;border:0;background:transparent;color:var(--ink);outline:none}
 .srch .dayhead{font-family:var(--sans);text-transform:none;font-weight:600;font-size:16px;letter-spacing:0}
+/* zoeken: breed veld, snelfilters, groepen per artiest, startscherm met suggesties */
+.asearch{width:min(460px,40vw)}
+.asearch input::-webkit-search-cancel-button{display:none}
+.asearch .clr{color:var(--ink-3);font-size:15px;line-height:1;padding:0 2px 2px}
+.asearch .clr:hover{color:var(--ink)}
+.srch .shead{display:flex;align-items:baseline;gap:9px;margin:20px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600}
+.srch .shead .cnt{font-weight:500}
+.srch .shead small{text-transform:none;letter-spacing:0;font-weight:400}
+.srch .dayhead .cnt{margin-left:0}
+.srch .dayhead .rng{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-3);text-transform:none;letter-spacing:0;margin-left:auto}
+.srch mark{background:transparent;color:inherit;padding:0;box-shadow:inset 0 -2px 0 var(--accent)}
+.qf{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:14px 0 0}
+.qf .ql{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-right:2px}
+.qchip{background:var(--card);box-shadow:var(--shadow);font-size:12.5px;padding:4px 11px}
+.qchip:hover,.chip.sug:hover{border-color:var(--ink);color:var(--ink)}
+.qt{color:var(--ink-3);margin-left:6px;font-size:11.5px}
+.sstart{padding:26px 0 60px;max-width:820px}
+.slead{color:var(--ink-2);margin:0 0 22px;font-size:15px}
+.slead b{font-weight:600}
+.sgrp{margin:0 0 18px}
+.sgrp h3{display:flex;align-items:baseline;gap:10px;margin:0 0 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600}
+.chips.wide{max-width:none}
+.chip.sug{background:var(--card);padding:4px 11px;font-size:12.5px}
+.lnk{font-size:11.5px;color:var(--ink-3);text-decoration:underline;text-transform:none;letter-spacing:0;font-weight:400}
+.stip{color:var(--ink-3);font-size:12.5px;margin:24px 0 0}
+.stip kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:var(--card);font:inherit;font-size:11.5px}
+.did{display:block;margin-top:12px}
+.did .chip.sug{margin:0 3px}
+@media (max-width:1380px){ .asearch{width:min(330px,34vw)} }
+@media (max-width:760px){ .anav{flex:1 1 100% !important} .asearch{width:100%} }
 .more{display:block;margin:24px auto 0;padding:9px 18px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-weight:500}
 
 footer{background:var(--paper);border-top:1px solid var(--line);padding:8px 0;font-size:12.5px;color:var(--ink-3)}
@@ -247,10 +277,10 @@ button:focus-visible{outline:none}
   </div>
   <div class="tabs tools" role="group" aria-label="Extra">
     <button data-view="new" aria-pressed="false" class="ico" aria-label="Nieuw aangekondigd" title="Nieuw aangekondigd"><span class="newdot"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg></span><span class="n" id="newCount"></span></button>
-    <button data-view="search" aria-pressed="false" class="ico" aria-label="Artiesten zoeken" title="Artiesten zoeken"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></button>
+    <button data-view="search" aria-pressed="false" class="ico" aria-label="Zoeken" title="Zoeken — artiest, podium, stad of genre (/)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></button>
     <button data-view="saved" aria-pressed="false" class="ico" aria-label="Mijn lijstje" title="Mijn lijstje"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg><span class="n" id="savedCount"></span></button>
   </div>
-  <div class="tabs anav" id="artistnav" hidden><label class="asearch"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><input id="aq" type="search" placeholder="Zoek een artiest in de hele agenda…" autocomplete="off"></label></div>
+  <div class="tabs anav" id="artistnav" hidden><label class="asearch"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><input id="aq" type="search" placeholder="Zoek artiest, podium, stad of genre…" autocomplete="off"><button class="clr" id="aqClear" type="button" aria-label="Zoekveld leegmaken" hidden>&#10005;</button></label></div>
   <div class="tabs pnav" id="periodnav" hidden>
     <button id="prevP" aria-label="Vorige">‹</button>
     <button id="nextP" aria-label="Volgende">›</button>
@@ -347,7 +377,10 @@ button:focus-visible{outline:none}
   if (state.view==='day') state.view='all';
   const save = () => { try { localStorage.setItem('podiumagenda2', JSON.stringify(state)); } catch(e){} };
   const esc = s => String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const fold = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  // accenten weg zonder de lengte te veranderen: posities blijven bruikbaar voor <mark>
+  const DEACC='ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÑñÒÓÔÕÖØòóôõöøÙÚÛÜùúûüÝýÿŠšŽž';
+  const PLAIN='AAAAAAaaaaaaCcEEEEeeeeIIIIiiiiNnOOOOOOooooooUUUUuuuuYyySsZz';
+  const fold = s => (s||'').replace(/[^\u0000-\u007f]/g, c => { const i=DEACC.indexOf(c); return i<0?c:PLAIN[i]; }).toLowerCase();
   const isNew = e => e.first_seen && e.first_seen >= NEW_SINCE && e.start.slice(0,10) >= TODAY;
 
   // kop
@@ -534,7 +567,7 @@ button:focus-visible{outline:none}
     document.getElementById('genreBtn').classList.toggle('active', !!(state.genres.length+state.subs.length));
     const list=document.getElementById('list');
     if (!rows.length && !['week','month','search'].includes(state.view)){ list.innerHTML='<p class="empty">'+(state.view==='saved'?'Nog niets bewaard. Klik op het vlaggetje rechtsonder op een kaartje om een concert aan je lijstje toe te voegen.':state.view==='all'?'Geen concerten op deze dag met deze filters.':'Niets gevonden met deze filters.')+'</p>'; wireSaves(); return; }
-    if (state.view==='search'){ renderSearch(EVENTS.filter(e=>e.start.slice(0,10)>=TODAY && e.status!=='afgelast'), list); wireSaves(); return; }
+    if (state.view==='search'){ renderSearch(list); wireSaves(); return; }
     if (state.view==='week'){ renderWeeks(rows, list); wireSaves(); return; }
     if (state.view==='month'){ renderMonths(rows, list); wireSaves(); return; }
     // groeperen per dag (in tab Nieuw: per aankondigdag, nieuwste eerst)
@@ -557,19 +590,162 @@ button:focus-visible{outline:none}
     const more=document.getElementById('more'); if(more) more.addEventListener('click',()=>{ shownDays+=PAGE; render(false); });
     wireSaves();
   }
-  // artiesten zoeken: hele agenda, gegroepeerd per artiest
-  function renderSearch(rows, list){
-    const q=fold(state.aq||'').trim();
-    if (q.length<2){ list.innerHTML='<p class="empty">Typ minstens twee letters in het zoekveld bovenin. Je zoekt in alle artiesten van alle podia, ongeacht datum en filters.</p>'; return; }
-    const byArtist=new Map();
-    rows.forEach(e=>{ const names=(e.artists&&e.artists.length)?e.artists:[e.title]; names.forEach(a=>{ if(fold(a).includes(q)){ const k=fold(a); if(!byArtist.has(k)) byArtist.set(k,{name:a,evs:[]}); const g=byArtist.get(k); if(a!==a.toUpperCase() && g.name===g.name.toUpperCase()) g.name=a; g.evs.push(e); } }); });
-    const groups=[...byArtist.values()].sort((a,b)=>b.evs.length-a.evs.length||a.name.localeCompare(b.name,'nl')).slice(0,40);
-    if (!groups.length){ list.innerHTML=`<p class="empty">Geen artiest gevonden voor "${esc(state.aq)}".</p>`; return; }
-    let html='<section class="srch">';
-    groups.forEach(g=>{ g.evs.sort((a,b)=>a.start.localeCompare(b.start)); html+=`<section class="day"><h2 class="dayhead">${esc(g.name)}<span class="cnt">${g.evs.length}</span></h2><div class="grid">${g.evs.map(e=>card(e)).join('')}</div></section>`; });
-    list.innerHTML=html+'</section>';
+  // ---- zoeken -------------------------------------------------------------
+  // Eén veld voor artiest, podium, stad en genre. Zoekt altijd in de hele komende
+  // agenda; de filters in de balk gelden hier niet en zijn daarom verborgen.
+  // Treffers op podium/stad/genre komen bovenaan als 'direct filteren'-knop:
+  // die zet de treffer om in een echt filter en springt naar de weekweergave.
+  const RECENT_KEY='podiumagenda_recent';
+  let recent=[]; try{ recent=JSON.parse(localStorage.getItem(RECENT_KEY)||'[]'); }catch(e){}
+  function pushRecent(v){ v=(v||'').trim(); if(v.length<2) return;
+    recent=[v,...recent.filter(x=>fold(x)!==fold(v))].slice(0,8);
+    try{ localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); }catch(e){} }
+  let SIDX=null, QUICK=[], sMoreA=0, sMoreO=0, sLastQ=null;
+  function sindex(){
+    if (SIDX) return SIDX;
+    const rows=EVENTS.filter(e=>e.start.slice(0,10)>=TODAY && e.status!=='afgelast');
+    const am=new Map();
+    rows.forEach(e=>{ const names=(e.artists&&e.artists.length)?e.artists:[e.title];
+      names.forEach(a=>{ const k=fold(a).trim(); if(k.length<2) return;
+        let g=am.get(k); if(!g){ g={name:a,key:k,evs:[]}; am.set(k,g); }
+        if(a!==a.toUpperCase() && g.name===g.name.toUpperCase()) g.name=a;
+        if(g.evs[g.evs.length-1]!==e) g.evs.push(e); }); });
+    const bump=(m,label,extra)=>{ if(!label) return; let o=m.get(label); if(!o){ o=Object.assign({label:label,n:0},extra||{}); m.set(label,o); } o.n++; };
+    const vm=new Map(), cm=new Map(), gm=new Map();
+    rows.forEach(e=>{ bump(vm,e.venue,{city:e.city}); bump(cm,e.city,null);
+      (e.genre_norm||[]).forEach(g=>bump(gm,GROUPS[g]||g,{code:g,sub:false}));
+      subsOf(e).forEach(x=>bump(gm,SUBL[x]||x,{code:x,sub:true})); });
+    SIDX={rows:rows, artists:[...am.values()], venues:[...vm.values()], cities:[...cm.values()], genres:[...gm.values()]};
+    SIDX.artists.forEach(g=>g.evs.sort((a,b)=>a.start.localeCompare(b.start)));
+    return SIDX;
   }
-  (function(){ const i=document.getElementById('aq'); i.value=state.aq||''; let t; i.addEventListener('input',()=>{ state.aq=i.value; save(); clearTimeout(t); t=setTimeout(()=>render(false),160); }); })();
+  // rangorde: exact > begint met > begin van een woord > ergens in de naam
+  function srank(k,q){ const i=k.indexOf(q); if(i<0) return -1; if(k===q) return 0; if(i===0) return 1; return /[^a-z0-9]/.test(k[i-1])?2:3; }
+  function hilite(name,q){ const k=fold(name), i=q?k.indexOf(q):-1; if(i<0) return esc(name);
+    return esc(name.slice(0,i))+'<mark>'+esc(name.slice(i,i+q.length))+'</mark>'+esc(name.slice(i+q.length)); }
+  const YEAR=String(today.getFullYear());
+  const fmtLong=iso=>fmtCard(iso)+(iso.slice(0,4)===YEAR?'':" '"+iso.slice(2,4));
+  const drange=evs=>{ const a=evs[0].start.slice(0,10), b=evs[evs.length-1].start.slice(0,10);
+    return a===b?fmtLong(a):fmtLong(a)+' – '+fmtLong(b); };
+  function lev(a,b){ if(Math.abs(a.length-b.length)>2) return 9;
+    let prev=[...Array(b.length+1).keys()], cur=[];
+    for(let i=1;i<=a.length;i++){ cur=[i]; for(let j=1;j<=b.length;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+    return prev[b.length]; }
+  function suggest(q,ix){ const max=q.length<=5?1:2;
+    const d=(k)=>Math.min(lev(q,k), lev(q,k.slice(0,q.length)), lev(q,k.split(' ')[0]));
+    return ix.artists.map(g=>({g:g,d:d(g.key)})).filter(x=>x.d<=max)
+      .sort((a,b)=>a.d-b.d||b.g.evs.length-a.g.evs.length).slice(0,6).map(x=>x.g.name); }
+  const QTYPE={venue:'podium',city:'stad',genre:'genre'};
+  function pickQuick(arr,q,n,type){
+    return arr.map(o=>({o:o,r:srank(fold(o.label),q)})).filter(x=>x.r>=0)
+      .sort((a,b)=>a.r-b.r||b.o.n-a.o.n).slice(0,n).map(x=>Object.assign({t:type},x.o)); }
+  // een treffer op podium/stad/genre omzetten in een filter en de agenda tonen
+  function applyQuick(x){
+    if (!x) return;
+    if (x.t==='venue' || x.t==='city'){
+      const keep = x.t==='venue' ? (v=>v.name===x.label) : (v=>v.city===x.label);
+      state.venuesOff = REPORT.venues.filter(v=>!keep(v)).map(v=>v.name);
+      if (REPORT.venues.some(v=>keep(v) && v.section && v.section!=='poppodium')){
+        state.vnpf=false; state.scope='all'; vnpfBox.checked=false; applyVnpf();
+      }
+      venueList.querySelectorAll('input[data-venue]').forEach(c=>{ c.checked=!state.venuesOff.includes(c.dataset.venue); });
+      cityBoxes.forEach(f=>f());
+    } else {
+      state.genres = x.sub ? (SUBG[x.code]?[SUBG[x.code]]:[]) : [x.code];
+      state.subs = x.sub ? [x.code] : [];
+      [...chips.children].forEach((b,i)=>b.setAttribute('aria-pressed', state.genres.includes(topG[i])));
+      buildSubs();
+    }
+    state.view='week'; save(); syncHash();
+    document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view==='week'));
+    render(); window.scrollTo({top:0});
+  }
+  // startscherm zonder zoekterm: uitleg, wat je eerder zocht, en ingangen om te bladeren
+  const JUNK=/[€\d]|toegang|organisatie|organization|adviesleeftijd|lunchconcert|u-pas/i;
+  function chipRow(title, items){
+    if (!items.length) return '';
+    return '<div class="sgrp"><h3>'+title+'</h3><div class="chips wide">'+items.map(x=>
+      '<button class="chip sug" data-term="'+esc(x.label)+'">'+esc(x.label)+'<span class="qt">'+x.n+'</span></button>').join('')+'</div></div>';
+  }
+  function sStart(ix){
+    const byN=(a,b)=>b.n-a.n||a.label.localeCompare(b.label,'nl');
+    const tour=[...ix.artists].map(g=>({label:g.name, n:new Set(g.evs.map(e=>e.venue)).size}))
+      .filter(x=>x.n>=3 && !JUNK.test(x.label) && x.label.split(/\s+/).length<=4).sort(byN).slice(0,10);
+    let h='<div class="sstart"><p class="slead">Zoek in <b>'+ix.rows.length+'</b> komende concerten van <b>'+
+      REPORT.venues.filter(v=>v.ok).length+'</b> podia — op artiest, podium, stad of genre. De filters in de balk tellen hier niet mee.</p>';
+    if (recent.length) h+='<div class="sgrp"><h3>Recent gezocht <button class="lnk" data-clear="1">wissen</button></h3><div class="chips wide">'+
+      recent.map(r=>'<button class="chip sug" data-term="'+esc(r)+'">'+esc(r)+'</button>').join('')+'</div></div>';
+    h+=chipRow('Podia', [...ix.venues].sort(byN).slice(0,10));
+    h+=chipRow('Steden', [...ix.cities].sort(byN).slice(0,8));
+    h+=chipRow('Genres', ix.genres.filter(g=>!g.sub).sort(byN).slice(0,12));
+    h+=chipRow('Veel op tournee', tour);
+    h+='<p class="stip">Druk vanuit elke weergave op <kbd>/</kbd> om hier te komen. <kbd>Esc</kbd> maakt het veld leeg.</p></div>';
+    return h;
+  }
+  function renderSearch(list){
+    const raw=(state.aq||'').trim(), q=fold(raw), ix=sindex();
+    if (q!==sLastQ){ sMoreA=0; sMoreO=0; sLastQ=q; }
+    if (q.length<2){ list.innerHTML=sStart(ix); sWire(list); return; }
+    const hit=ix.artists.map(g=>({g:g,r:srank(g.key,q)})).filter(x=>x.r>=0)
+      .sort((a,b)=>a.r-b.r||b.g.evs.length-a.g.evs.length||a.g.name.localeCompare(b.g.name,'nl')).map(x=>x.g);
+    // een kop per artiest heeft alleen zin bij meer dan één concert; eenmalige treffers
+    // (vaak een titel die toevallig het woord bevat) gaan chronologisch in de tweede lijst
+    const groups=hit.filter(g=>g.evs.length>1);
+    const inArtist=new Set(); groups.forEach(g=>g.evs.forEach(e=>inArtist.add(e)));
+    const loose=new Set(); hit.filter(g=>g.evs.length<2).forEach(g=>g.evs.forEach(e=>loose.add(e)));
+    const other=ix.rows.filter(e=>!inArtist.has(e) && (loose.has(e) || fold([e.title,e.subtitle||'',e.venue,e.city,
+        (e.lineup||[]).join(' '), (e.genre_norm||[]).map(g=>GROUPS[g]||g).join(' '), subsOf(e).map(x=>SUBL[x]||x).join(' ')
+      ].join(' ')).includes(q))).sort((a,b)=>a.start.localeCompare(b.start));
+    QUICK=[...pickQuick(ix.venues,q,4,'venue'), ...pickQuick(ix.cities,q,3,'city'), ...pickQuick(ix.genres,q,3,'genre')];
+    if (!groups.length && !other.length){
+      const sug=suggest(q,ix);
+      list.innerHTML='<p class="empty">Geen treffers voor “'+esc(raw)+'”.'+(sug.length?'<span class="did">Bedoelde je '+sug.map(s=>'<button class="chip sug" data-term="'+esc(s)+'">'+esc(s)+'</button>').join('')+'</span>':'')+'</p>';
+      sWire(list); return;
+    }
+    const html=['<div class="srch">'];
+    if (QUICK.length) html.push('<div class="qf"><span class="ql">Direct filteren</span>'+QUICK.map((x,i)=>
+      '<button class="chip qchip" data-qf="'+i+'">'+hilite(x.label,q)+'<span class="qt">'+QTYPE[x.t]+' · '+x.n+'</span></button>').join('')+'</div>');
+    if (groups.length){
+      const AN=8+sMoreA;
+      html.push('<h3 class="shead">Artiesten<span class="cnt">'+groups.length+'</span><small>meerdere concerten</small></h3>');
+      groups.slice(0,AN).forEach(g=>{ html.push('<section class="day"><h2 class="dayhead">'+hilite(g.name,q)+
+        '<span class="cnt">'+g.evs.length+'</span><small class="rng">'+drange(g.evs)+'</small></h2><div class="grid">'+
+        g.evs.map(e=>card(e)).join('')+'</div></section>'); });
+      if (groups.length>AN) html.push('<button class="more" data-more="a">Meer artiesten ('+(groups.length-AN)+' resterend)</button>');
+    }
+    if (other.length){
+      const ON=24+sMoreO;
+      html.push('<h3 class="shead">'+(groups.length?'Overige concerten':'Concerten')+'<span class="cnt">'+other.length+'</span><small>op datum · treffer in artiest, titel, podium, stad of genre</small></h3>'+
+        '<div class="grid">'+other.slice(0,ON).map(e=>card(e)).join('')+'</div>');
+      if (other.length>ON) html.push('<button class="more" data-more="o">Meer concerten ('+(other.length-ON)+' resterend)</button>');
+    }
+    list.innerHTML=html.join('')+'</div>';
+    sWire(list);
+  }
+  function sWire(list){
+    list.querySelectorAll('[data-term]').forEach(b=>b.addEventListener('click',()=>setQuery(b.dataset.term)));
+    const c=list.querySelector('[data-clear]'); if(c) c.addEventListener('click',()=>{ recent=[]; try{ localStorage.removeItem(RECENT_KEY); }catch(e){} render(false); });
+    list.querySelectorAll('[data-qf]').forEach(b=>b.addEventListener('click',()=>applyQuick(QUICK[+b.dataset.qf])));
+    const ma=list.querySelector('[data-more="a"]'); if(ma) ma.addEventListener('click',()=>{ sMoreA+=10; render(false); });
+    const mo=list.querySelector('[data-more="o"]'); if(mo) mo.addEventListener('click',()=>{ sMoreO+=24; render(false); });
+  }
+  function setQuery(v){ const i=document.getElementById('aq'); i.value=v; state.aq=v; pushRecent(v);
+    document.getElementById('aqClear').hidden=!v; save(); syncHash(); render(false); i.focus(); }
+  // zoekterm in de url, zodat een zoekopdracht te delen en te bewaren is
+  function syncHash(){ const v=(state.aq||'').trim();
+    try{ history.replaceState(null,'', (v && state.view==='search') ? '#zoek='+encodeURIComponent(v) : location.pathname+location.search); }catch(e){} }
+  function goSearch(){ state.view='search'; save();
+    document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view==='search'));
+    render(false); setTimeout(()=>document.getElementById('aq').focus(),0); }
+  (function(){ const i=document.getElementById('aq'), x=document.getElementById('aqClear'); i.value=state.aq||''; x.hidden=!i.value; let t;
+    i.addEventListener('input',()=>{ state.aq=i.value; x.hidden=!i.value; save(); clearTimeout(t); t=setTimeout(()=>{ syncHash(); render(false); },160); });
+    i.addEventListener('keydown',ev=>{
+      if (ev.key==='Enter'){ ev.preventDefault(); clearTimeout(t); state.aq=i.value; pushRecent(i.value); save(); syncHash(); render(false); }
+      if (ev.key==='Escape'){ ev.preventDefault(); if(i.value){ i.value=''; state.aq=''; x.hidden=true; save(); syncHash(); render(false); } else i.blur(); } });
+    x.addEventListener('click',()=>{ i.value=''; state.aq=''; x.hidden=true; save(); syncHash(); render(false); i.focus(); });
+  })();
+  document.addEventListener('keydown',ev=>{ if (ev.target.matches('input,textarea,select')) return;
+    if (ev.key==='/' || ((ev.metaKey||ev.ctrlKey) && (ev.key==='k'||ev.key==='K'))){ ev.preventDefault(); goSearch(); } });
   function renderWeeks(rows, list){
     const byDay = new Map(); rows.forEach(e=>{ const k=e.start.slice(0,10); if(!byDay.has(k)) byDay.set(k,[]); byDay.get(k).push(e); });
     const last = rows.reduce((m,e)=>e.start.slice(0,10)>m?e.start.slice(0,10):m, TODAY);
@@ -638,6 +814,7 @@ button:focus-visible{outline:none}
     document.getElementById('daynav').hidden = state.view!=='all';
     document.getElementById('pnavpick').hidden = !['week','month'].includes(state.view);
     document.getElementById('periodnav').hidden = !['all','week','month'].includes(state.view);
+    document.querySelector('.filters').hidden = state.view==='search';
     const an=document.getElementById('artistnav'); const wasHidden=an.hidden; an.hidden = state.view!=='search'; if (!an.hidden && wasHidden) setTimeout(()=>document.getElementById('aq').focus(),0);
     const pl=document.getElementById('plabel');
     if (state.view==='all'){ const dd=new Date((state.day||TODAY)+'T12:00:00'); document.getElementById('dow').textContent = `${DOWS[dd.getDay()]} ${String(dd.getDate()).padStart(2,'0')}-${String(dd.getMonth()+1).padStart(2,'0')}-${dd.getFullYear()}`; }
@@ -681,6 +858,14 @@ button:focus-visible{outline:none}
     lines.push('END:VCALENDAR');
     const blob=new Blob([lines.filter(Boolean).join('\r\n')],{type:'text/calendar'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='mijn-lijstje.ics'; a.click();
   });
+  // een gedeelde zoek-url (#zoek=...) opent meteen het zoekscherm
+  (function(){ const m=/^#zoek=(.*)$/.exec(location.hash||''); if(!m) return;
+    let v=''; try{ v=decodeURIComponent(m[1]); }catch(e){ v=m[1]; }
+    if (!v) return;
+    state.aq=v; state.view='search';
+    const i=document.getElementById('aq'); i.value=v; document.getElementById('aqClear').hidden=false;
+    document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view==='search'));
+  })();
   render();
 })();
 </script>
