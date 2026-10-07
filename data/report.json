@@ -1,12 +1,12 @@
 {
- "generated": "2026-10-06T11:52:38",
+ "generated": "2026-10-07T11:37:31",
  "venues": [
   {
    "name": "Tolhuistuin",
    "city": "Amsterdam",
    "url": "https://tolhuistuin.nl/agenda",
    "strategy": "embedded",
-   "events": 83,
+   "events": 82,
    "note": "",
    "ok": true,
    "audit": {
@@ -31,11 +31,80 @@
    "capacity": 550
   },
   {
+   "name": "Bitterzoet",
+   "city": "Amsterdam",
+   "url": "https://www.bitterzoet.com/agenda/",
+   "strategy": "wp_event",
+   "events": 63,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 1,
+     "offsets": [
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.21
+    },
+    "weekend": 14,
+    "horizon": "2027-04-23"
+   },
+   "section": "poppodium",
+   "capacity": 350
+  },
+  {
+   "name": "Merleyn",
+   "city": "Nijmegen",
+   "url": "https://www.doornroosje.nl/programma/?location=merleyn",
+   "strategy": "passive",
+   "events": 0,
+   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
+   "ok": true,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "poppodium",
+   "capacity": 250
+  },
+  {
+   "name": "013",
+   "city": "Tilburg",
+   "url": "https://www.013.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 167,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.98,
+     "genre": 0.77
+    },
+    "weekend": 16,
+    "horizon": "2027-10-23"
+   },
+   "section": "poppodium",
+   "capacity": 3700
+  },
+  {
    "name": "Melkweg",
    "city": "Amsterdam",
    "url": "https://www.melkweg.nl/nl/agenda",
    "strategy": "embedded",
-   "events": 289,
+   "events": 292,
    "note": "",
    "ok": true,
    "audit": {
@@ -60,19 +129,52 @@
    "capacity": 2150
   },
   {
-   "name": "Merleyn",
-   "city": "Nijmegen",
-   "url": "https://www.doornroosje.nl/programma/?location=merleyn",
-   "strategy": "passive",
-   "events": 0,
-   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
+   "name": "PAARD",
+   "city": "Den Haag",
+   "url": "https://www.paard.nl/event/",
+   "strategy": "jsonld",
+   "events": 174,
+   "note": "",
    "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.94,
+     "genre": 0.76
+    },
+    "weekend": 16,
+    "horizon": "2027-10-17"
    },
    "section": "poppodium",
-   "capacity": 250
+   "capacity": 1550
+  },
+  {
+   "name": "Hedon",
+   "city": "Zwolle",
+   "url": "https://www.hedon-zwolle.nl/",
+   "strategy": "none",
+   "events": 0,
+   "note": "embedded: 0 events; LET OP: 0 events, was 139 in de laatste 7 runs",
+   "ok": false,
+   "audit": {
+    "weekend": 0,
+    "horizon": null,
+    "regression": {
+     "was": 139,
+     "now": 0
+    }
+   },
+   "section": "poppodium",
+   "capacity": 1050
   },
   {
    "name": "De Helling",
@@ -103,12 +205,78 @@
    "capacity": 500
   },
   {
+   "name": "Effenaar",
+   "city": "Eindhoven",
+   "url": "https://www.effenaar.nl/agenda",
+   "strategy": "embedded",
+   "events": 126,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.98
+    },
+    "weekend": 16,
+    "horizon": "2027-10-03"
+   },
+   "section": "poppodium",
+   "capacity": 1970
+  },
+  {
+   "name": "Patronaat",
+   "city": "Haarlem",
+   "url": "https://www.patronaat.nl/programma/",
+   "strategy": "html",
+   "events": 167,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.93,
+     "genre": 0.94
+    },
+    "weekend": 15,
+    "horizon": "2027-10-13"
+   },
+   "section": "poppodium",
+   "capacity": 1450
+  },
+  {
+   "name": "SPOT",
+   "city": "Groningen",
+   "url": "https://www.spotgroningen.nl/programma/",
+   "strategy": "none",
+   "events": 3,
+   "note": "html: 0 events; bron onbereikbaar: 3 events van de vorige run hergebruikt; dun programma: 1/16 weekenddagen met een event (podium van 1600 plaatsen)",
+   "ok": true,
+   "audit": {
+    "stale": true,
+    "weekend": 1,
+    "horizon": "2026-11-28",
+    "thin": true
+   },
+   "section": "poppodium",
+   "capacity": 1600
+  },
+  {
    "name": "dB's",
    "city": "Utrecht",
    "url": "https://www.dbstudio.nl/agenda/",
    "strategy": "tribe",
-   "events": 57,
-   "note": "ticketshop herkend: dbs.stager.co; extra bron https://dbs.stager.co/shop/default/events: 46 events via stager, 46 nieuw",
+   "events": 59,
+   "note": "ticketshop herkend: dbs.stager.co; extra bron https://dbs.stager.co/shop/default/events: 47 events via stager, 47 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -123,7 +291,7 @@
      "genre": 0.52
     },
     "weekend": 15,
-    "horizon": "2027-05-08"
+    "horizon": "2027-05-13"
    },
    "section": "poppodium",
    "capacity": null
@@ -155,123 +323,12 @@
    "capacity": 275
   },
   {
-   "name": "PAARD",
-   "city": "Den Haag",
-   "url": "https://www.paard.nl/event/",
-   "strategy": "jsonld",
-   "events": 175,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.94,
-     "genre": 0.75
-    },
-    "weekend": 16,
-    "horizon": "2027-10-17"
-   },
-   "section": "poppodium",
-   "capacity": 1550
-  },
-  {
-   "name": "Hedon",
-   "city": "Zwolle",
-   "url": "https://www.hedon-zwolle.nl/",
-   "strategy": "none",
-   "events": 0,
-   "note": "embedded: 0 events; LET OP: 0 events, was 139 in de laatste 7 runs",
-   "ok": false,
-   "audit": {
-    "weekend": 0,
-    "horizon": null,
-    "regression": {
-     "was": 139,
-     "now": 0
-    }
-   },
-   "section": "poppodium",
-   "capacity": 1050
-  },
-  {
-   "name": "Effenaar",
-   "city": "Eindhoven",
-   "url": "https://www.effenaar.nl/agenda",
-   "strategy": "embedded",
-   "events": 125,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.98
-    },
-    "weekend": 16,
-    "horizon": "2027-10-03"
-   },
-   "section": "poppodium",
-   "capacity": 1970
-  },
-  {
-   "name": "Bitterzoet",
-   "city": "Amsterdam",
-   "url": "https://www.bitterzoet.com/agenda/",
-   "strategy": "wp_event",
-   "events": 63,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 1,
-     "offsets": [
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.21
-    },
-    "weekend": 14,
-    "horizon": "2027-04-23"
-   },
-   "section": "poppodium",
-   "capacity": 350
-  },
-  {
-   "name": "SPOT",
-   "city": "Groningen",
-   "url": "https://www.spotgroningen.nl/programma/",
-   "strategy": "none",
-   "events": 3,
-   "note": "html: 0 events; bron onbereikbaar: 3 events van de vorige run hergebruikt; dun programma: 1/16 weekenddagen met een event (podium van 1600 plaatsen)",
-   "ok": true,
-   "audit": {
-    "stale": true,
-    "weekend": 1,
-    "horizon": "2026-11-28",
-    "thin": true
-   },
-   "section": "poppodium",
-   "capacity": 1600
-  },
-  {
    "name": "Simplon",
    "city": "Groningen",
    "url": "https://simplon.nl/programma/",
    "strategy": "html",
-   "events": 79,
-   "note": "ticketshop herkend: simplon.stager.co; extra bron https://simplon.stager.co/shop/default/events: 54 events via stager, 54 nieuw",
+   "events": 80,
+   "note": "ticketshop herkend: simplon.stager.co; extra bron https://simplon.stager.co/shop/default/events: 55 events via stager, 55 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -309,7 +366,7 @@
      ]
     },
     "coverage": {
-     "time": 0.97,
+     "time": 0.95,
      "price": 1.0,
      "genre": 0.07
     },
@@ -320,70 +377,12 @@
    "capacity": 530
   },
   {
-   "name": "Patronaat",
-   "city": "Haarlem",
-   "url": "https://www.patronaat.nl/programma/",
-   "strategy": "html",
-   "events": 167,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.93,
-     "genre": 0.94
-    },
-    "weekend": 15,
-    "horizon": "2027-10-13"
-   },
-   "section": "poppodium",
-   "capacity": 1450
-  },
-  {
-   "name": "013",
-   "city": "Tilburg",
-   "url": "https://www.013.nl/programma",
+   "name": "Neushoorn",
+   "city": "Leeuwarden",
+   "url": "https://www.neushoorn.nl/programma",
    "strategy": "jsonld_detail",
-   "events": 167,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.98,
-     "genre": 0.77
-    },
-    "weekend": 16,
-    "horizon": "2027-10-23"
-   },
-   "section": "poppodium",
-   "capacity": 3700
-  },
-  {
-   "name": "Willemeen",
-   "city": "Arnhem",
-   "url": "https://www.willemeen.nl/programma/",
-   "strategy": "html",
-   "events": 64,
-   "note": "ticketshop herkend: willemeen.stager.co; extra bron https://willemeen.stager.co/shop/default/events: 47 events via stager, 47 nieuw",
+   "events": 103,
+   "note": "ticketshop herkend: neushoorn.stager.co; extra bron https://neushoorn.stager.co/shop/neushoorn/events: 72 events via stager, 72 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -397,41 +396,13 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.47
-    },
-    "weekend": 15,
-    "horizon": "2027-04-17"
-   },
-   "section": "poppodium",
-   "capacity": 375
-  },
-  {
-   "name": "Luxor Live",
-   "city": "Arnhem",
-   "url": "https://www.luxorlive.nl/agenda/",
-   "strategy": "microdata",
-   "events": 125,
-   "note": "ticketshop herkend: luxorlive.stager.co; extra bron https://luxorlive.stager.co/shop/luxor-live/events: 123 events via stager, 123 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.94,
-     "genre": 0.28
+     "genre": 0.22
     },
     "weekend": 16,
-    "horizon": "2027-05-27"
+    "horizon": "2027-05-14"
    },
    "section": "poppodium",
-   "capacity": 900
+   "capacity": 1000
   },
   {
    "name": "Iduna",
@@ -462,12 +433,41 @@
    "capacity": 725
   },
   {
-   "name": "Neushoorn",
-   "city": "Leeuwarden",
-   "url": "https://www.neushoorn.nl/programma",
+   "name": "Doornroosje",
+   "city": "Nijmegen",
+   "url": "https://www.doornroosje.nl/programma/",
    "strategy": "jsonld_detail",
-   "events": 103,
-   "note": "ticketshop herkend: neushoorn.stager.co; extra bron https://neushoorn.stager.co/shop/neushoorn/events: 73 events via stager, 73 nieuw",
+   "events": 198,
+   "note": "172 events getagd via podiumfilters, 14 uitgesloten (andere locatie)",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.99,
+     "price": 0.99,
+     "genre": 0.91
+    },
+    "weekend": 15,
+    "horizon": "2027-05-02"
+   },
+   "section": "poppodium",
+   "capacity": 1700
+  },
+  {
+   "name": "Willemeen",
+   "city": "Arnhem",
+   "url": "https://www.willemeen.nl/programma/",
+   "strategy": "html",
+   "events": 64,
+   "note": "ticketshop herkend: willemeen.stager.co; extra bron https://willemeen.stager.co/shop/default/events: 48 events via stager, 48 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -481,13 +481,13 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.22
+     "genre": 0.47
     },
-    "weekend": 16,
-    "horizon": "2027-05-14"
+    "weekend": 15,
+    "horizon": "2027-04-17"
    },
    "section": "poppodium",
-   "capacity": 1000
+   "capacity": 375
   },
   {
    "name": "De Vorstin",
@@ -519,18 +519,75 @@
    "capacity": 1150
   },
   {
-   "name": "Metropool",
-   "city": "Hengelo",
-   "url": "https://metropool.nl/agenda",
-   "strategy": "html",
-   "events": 163,
-   "note": "",
+   "name": "GIGANT",
+   "city": "Apeldoorn",
+   "url": "https://www.gigant.nl/concerten/",
+   "strategy": "wp_event",
+   "events": 50,
+   "note": "wp_event: 39 events; extra bron https://www.gigant.nl/clubnachten/: 11 events via wp_event, 11 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.96,
+     "genre": 1.0
+    },
+    "weekend": 14,
+    "horizon": "2027-05-29"
+   },
+   "section": "poppodium",
+   "capacity": 500
+  },
+  {
+   "name": "Burgerweeshuis",
+   "city": "Deventer",
+   "url": "https://www.burgerweeshuis.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 59,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; ticketshop herkend: burgerweeshuis.stager.co; extra bron https://burgerweeshuis.stager.co/shop/default/events: 53 events via stager, 53 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
      "sampled": 2,
      "offsets": [
       0.0,
+      -0.6
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.94,
+     "genre": 0.24
+    },
+    "weekend": 15,
+    "horizon": "2027-08-07"
+   },
+   "section": "poppodium",
+   "capacity": 450
+  },
+  {
+   "name": "Metropool",
+   "city": "Hengelo",
+   "url": "https://metropool.nl/agenda",
+   "strategy": "html",
+   "events": 165,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      -1.0,
       0.0
      ]
     },
@@ -544,164 +601,6 @@
    },
    "section": "poppodium",
    "capacity": 1000
-  },
-  {
-   "name": "TivoliVredenburg",
-   "city": "Utrecht",
-   "url": "https://www.tivolivredenburg.nl/agenda/",
-   "strategy": "jsonld_detail",
-   "events": 882,
-   "note": "749 events getagd via podiumfilters",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.94
-    },
-    "weekend": 16,
-    "horizon": "2027-10-29"
-   },
-   "section": "poppodium",
-   "capacity": 2650
-  },
-  {
-   "name": "Burgerweeshuis",
-   "city": "Deventer",
-   "url": "https://www.burgerweeshuis.nl/programma",
-   "strategy": "jsonld_detail",
-   "events": 58,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; ticketshop herkend: burgerweeshuis.stager.co; extra bron https://burgerweeshuis.stager.co/shop/default/events: 52 events via stager, 52 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 2,
-     "offsets": [
-      0.0,
-      -0.6
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.95,
-     "genre": 0.24
-    },
-    "weekend": 15,
-    "horizon": "2027-08-07"
-   },
-   "section": "poppodium",
-   "capacity": 450
-  },
-  {
-   "name": "FLUOR",
-   "city": "Amersfoort",
-   "url": "https://fluor033.nl/programma/",
-   "strategy": "tribe",
-   "events": 63,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: fluor.stager.co; extra bron https://fluor.stager.co/shop/default/events: 59 events via stager, 59 nieuw; 49 events getagd via podiumfilters",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.51
-    },
-    "weekend": 15,
-    "horizon": "2027-09-24"
-   },
-   "section": "poppodium",
-   "capacity": 800
-  },
-  {
-   "name": "Slachthuis",
-   "city": "Haarlem",
-   "url": "https://slachthuishaarlem.nl/programma/",
-   "strategy": "jsonld_detail",
-   "events": 5,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html:patronaat-thema: 5 events; tribe: HTTPError 404 Client Error: Not Found for url: https://slachthuishaarlem.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: 0 events; jsonld_detail: 5 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 1,
-     "offsets": [
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.2
-    },
-    "weekend": 4,
-    "horizon": "2026-11-27"
-   },
-   "section": "poppodium",
-   "capacity": 100
-  },
-  {
-   "name": "Nobel",
-   "city": "Leiden",
-   "url": "https://nobel.nl/agenda",
-   "strategy": "html",
-   "events": 110,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 0.99,
-     "price": 0.97,
-     "genre": 1.0
-    },
-    "weekend": 16,
-    "horizon": "2027-05-07"
-   },
-   "section": "poppodium",
-   "capacity": 1000
-  },
-  {
-   "name": "Cinetol",
-   "city": "Amsterdam",
-   "url": "https://www.cinetol.nl/programma",
-   "strategy": "html",
-   "events": 66,
-   "note": "ticketshop herkend: cinetol.stager.co; extra bron https://cinetol.stager.co/shop/cinetol-tickets/events: 63 events via stager, 63 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.51
-    },
-    "weekend": 15,
-    "horizon": "2027-04-21"
-   },
-   "section": "poppodium",
-   "capacity": 210
   },
   {
    "name": "Q-factory",
@@ -733,96 +632,12 @@
    "capacity": 1100
   },
   {
-   "name": "Musicon",
-   "city": "Den Haag",
-   "url": "https://musicon.nl/programma/",
-   "strategy": "jsonld",
-   "events": 67,
-   "note": "ticketshop herkend: musicon.stager.co; extra bron https://musicon.stager.co/shop/default/events: 56 events via stager, 56 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 2,
-     "offsets": [
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.99,
-     "genre": 0.35
-    },
-    "weekend": 14,
-    "horizon": "2027-04-16"
-   },
-   "section": "poppodium",
-   "capacity": 220
-  },
-  {
-   "name": "Boerderij",
-   "city": "Zoetermeer",
-   "url": "https://poppodiumboerderij.nl/programma/",
-   "strategy": "json_api",
-   "events": 75,
-   "note": "extra bron https://boerderij.stager.co/shop/default/events: 71 events via stager, 71 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.99,
-     "genre": 0.27
-    },
-    "weekend": 14,
-    "horizon": "2027-05-23"
-   },
-   "section": "poppodium",
-   "capacity": 850
-  },
-  {
-   "name": "WORM",
-   "city": "Rotterdam",
-   "url": "https://worm.org/agenda/",
-   "strategy": "html",
-   "events": 31,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.71,
-     "genre": 1.0
-    },
-    "weekend": 10,
-    "horizon": "2026-11-25"
-   },
-   "section": "poppodium",
-   "capacity": 350
-  },
-  {
    "name": "P60",
    "city": "Amstelveen",
    "url": "https://www.p60.nl/agenda",
    "strategy": "wp_event",
-   "events": 33,
-   "note": "wp_event: 33 events",
+   "events": 32,
+   "note": "wp_event: 32 events",
    "ok": true,
    "audit": {
     "time_check": {
@@ -846,12 +661,68 @@
    "capacity": 680
   },
   {
-   "name": "GIGANT",
-   "city": "Apeldoorn",
-   "url": "https://www.gigant.nl/concerten/",
+   "name": "Luxor Live",
+   "city": "Arnhem",
+   "url": "https://www.luxorlive.nl/agenda/",
+   "strategy": "microdata",
+   "events": 127,
+   "note": "ticketshop herkend: luxorlive.stager.co; extra bron https://luxorlive.stager.co/shop/luxor-live/events: 126 events via stager, 126 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 2,
+     "offsets": [
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.94,
+     "genre": 0.28
+    },
+    "weekend": 16,
+    "horizon": "2027-11-11"
+   },
+   "section": "poppodium",
+   "capacity": 900
+  },
+  {
+   "name": "Nobel",
+   "city": "Leiden",
+   "url": "https://nobel.nl/agenda",
+   "strategy": "html",
+   "events": 110,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.99,
+     "price": 0.97,
+     "genre": 1.0
+    },
+    "weekend": 16,
+    "horizon": "2027-05-07"
+   },
+   "section": "poppodium",
+   "capacity": 1000
+  },
+  {
+   "name": "Victorie",
+   "city": "Alkmaar",
+   "url": "https://www.podiumvictorie.nl/programma/",
    "strategy": "wp_event",
-   "events": 48,
-   "note": "wp_event: 37 events; extra bron https://www.gigant.nl/clubnachten/: 11 events via wp_event, 11 nieuw",
+   "events": 103,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumvictorie.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta",
    "ok": true,
    "audit": {
     "time_check": {
@@ -865,77 +736,67 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.96,
-     "genre": 1.0
+     "price": 1.0,
+     "genre": 0.35
     },
-    "weekend": 13,
-    "horizon": "2027-05-29"
+    "weekend": 16,
+    "horizon": "2027-10-22"
    },
    "section": "poppodium",
-   "capacity": 500
+   "capacity": 1140
   },
   {
-   "name": "Baroeg",
-   "city": "Rotterdam",
-   "url": "https://www.baroeg.nl/agenda",
-   "strategy": "html:theater-for-wordpress",
-   "events": 31,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: baroeg.stager.co; extra bron https://baroeg.stager.co/shop/default/events: 25 events via stager, 25 nieuw",
+   "name": "Slachthuis",
+   "city": "Haarlem",
+   "url": "https://slachthuishaarlem.nl/programma/",
+   "strategy": "jsonld_detail",
+   "events": 5,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html:patronaat-thema: 5 events; tribe: HTTPError 404 Client Error: Not Found for url: https://slachthuishaarlem.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: 0 events; jsonld_detail: 5 events",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 3,
+     "sampled": 1,
      "offsets": [
-      0.0,
-      0.0,
-      4.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.96,
-     "genre": 0.17
-    },
-    "weekend": 11,
-    "horizon": "2027-03-19"
-   },
-   "section": "poppodium",
-   "capacity": 350
-  },
-  {
-   "name": "Rotown",
-   "city": "Rotterdam",
-   "url": "https://www.rotown.nl/",
-   "strategy": "jsonld",
-   "events": 137,
-   "note": "ticketshop herkend: rotown.stager.co; extra bron https://rotown.stager.co/shop/default/events: 88 events via stager, 88 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
       0.0
      ]
     },
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.22
+     "genre": 0.2
     },
-    "weekend": 16,
-    "horizon": "2027-10-16"
+    "weekend": 4,
+    "horizon": "2026-11-27"
    },
    "section": "poppodium",
-   "capacity": 250
+   "capacity": 100
   },
   {
-   "name": "Mezz",
-   "city": "Breda",
-   "url": "https://www.mezz.nl/programma/",
-   "strategy": "json_api",
-   "events": 144,
+   "name": "FLUOR",
+   "city": "Amersfoort",
+   "url": "https://fluor033.nl/programma/",
+   "strategy": "tribe",
+   "events": 64,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: fluor.stager.co; extra bron https://fluor.stager.co/shop/default/events: 60 events via stager, 60 nieuw; 49 events getagd via podiumfilters",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.51
+    },
+    "weekend": 15,
+    "horizon": "2027-09-24"
+   },
+   "section": "poppodium",
+   "capacity": 800
+  },
+  {
+   "name": "WORM",
+   "city": "Rotterdam",
+   "url": "https://worm.org/agenda/",
+   "strategy": "html",
+   "events": 33,
    "note": "",
    "ok": true,
    "audit": {
@@ -950,42 +811,22 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 1.0,
-     "genre": 0.53
+     "price": 0.73,
+     "genre": 1.0
     },
-    "weekend": 14,
-    "horizon": "2027-09-26"
+    "weekend": 10,
+    "horizon": "2026-11-26"
    },
    "section": "poppodium",
-   "capacity": 750
+   "capacity": 350
   },
   {
-   "name": "Hall of Fame",
-   "city": "Tilburg",
-   "url": "https://hall-fame.stager.co/shop/default/events",
-   "strategy": "stager",
-   "events": 37,
-   "note": "stager: 37 events; ticketshop herkend: hall-fame.stager.co; extra bron https://hall-fame.stager.co/shop/default/events: 37 events via stager, 0 nieuw",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.0
-    },
-    "weekend": 11,
-    "horizon": "2027-02-18"
-   },
-   "section": "poppodium",
-   "capacity": 400
-  },
-  {
-   "name": "Bibelot",
-   "city": "Dordrecht",
-   "url": "https://bibelot.net/programma/",
+   "name": "Cinetol",
+   "city": "Amsterdam",
+   "url": "https://www.cinetol.nl/programma",
    "strategy": "html",
-   "events": 100,
-   "note": "ticketshop herkend: bibelot.stager.co; extra bron https://bibelot.stager.co/shop/ticketshopnew/events: 89 events via stager, 89 nieuw",
+   "events": 65,
+   "note": "ticketshop herkend: cinetol.stager.co; extra bron https://cinetol.stager.co/shop/cinetol-tickets/events: 62 events via stager, 62 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -999,13 +840,13 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.52
+     "genre": 0.51
     },
-    "weekend": 16,
-    "horizon": "2027-10-22"
+    "weekend": 15,
+    "horizon": "2027-04-21"
    },
    "section": "poppodium",
-   "capacity": 1100
+   "capacity": 210
   },
   {
    "name": "LantarenVenster",
@@ -1037,12 +878,95 @@
    "capacity": 525
   },
   {
-   "name": "Victorie",
-   "city": "Alkmaar",
-   "url": "https://www.podiumvictorie.nl/programma/",
-   "strategy": "wp_event",
-   "events": 102,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumvictorie.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta",
+   "name": "Musicon",
+   "city": "Den Haag",
+   "url": "https://musicon.nl/programma/",
+   "strategy": "jsonld",
+   "events": 67,
+   "note": "ticketshop herkend: musicon.stager.co; extra bron https://musicon.stager.co/shop/default/events: 56 events via stager, 56 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 2,
+     "offsets": [
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.99,
+     "genre": 0.35
+    },
+    "weekend": 14,
+    "horizon": "2027-04-16"
+   },
+   "section": "poppodium",
+   "capacity": 220
+  },
+  {
+   "name": "Baroeg",
+   "city": "Rotterdam",
+   "url": "https://www.baroeg.nl/agenda",
+   "strategy": "html:theater-for-wordpress",
+   "events": 31,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: baroeg.stager.co; extra bron https://baroeg.stager.co/shop/default/events: 26 events via stager, 26 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.96,
+     "genre": 0.18
+    },
+    "weekend": 12,
+    "horizon": "2027-03-19"
+   },
+   "section": "poppodium",
+   "capacity": 350
+  },
+  {
+   "name": "Boerderij",
+   "city": "Zoetermeer",
+   "url": "https://poppodiumboerderij.nl/programma/",
+   "strategy": "json_api",
+   "events": 76,
+   "note": "extra bron https://boerderij.stager.co/shop/default/events: 72 events via stager, 72 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.99,
+     "genre": 0.27
+    },
+    "weekend": 14,
+    "horizon": "2027-05-23"
+   },
+   "section": "poppodium",
+   "capacity": 850
+  },
+  {
+   "name": "Mezz",
+   "city": "Breda",
+   "url": "https://www.mezz.nl/programma/",
+   "strategy": "json_api",
+   "events": 145,
+   "note": "",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1057,13 +981,89 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.35
+     "genre": 0.52
     },
-    "weekend": 16,
-    "horizon": "2027-10-22"
+    "weekend": 14,
+    "horizon": "2027-09-26"
    },
    "section": "poppodium",
-   "capacity": 1140
+   "capacity": 750
+  },
+  {
+   "name": "BIRD",
+   "city": "Rotterdam",
+   "url": "https://bird-rotterdam.nl/agenda",
+   "strategy": "sitemap_detail",
+   "events": 73,
+   "note": "ticketshop herkend: bird.stager.co; extra bron https://bird.stager.co/shop/default/events: 40 events via stager, 40 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.97,
+     "genre": 0.5
+    },
+    "weekend": 15,
+    "horizon": "2027-04-22"
+   },
+   "section": "poppodium",
+   "capacity": 300
+  },
+  {
+   "name": "Rotown",
+   "city": "Rotterdam",
+   "url": "https://www.rotown.nl/",
+   "strategy": "jsonld",
+   "events": 138,
+   "note": "ticketshop herkend: rotown.stager.co; extra bron https://rotown.stager.co/shop/default/events: 90 events via stager, 90 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.99,
+     "genre": 0.21
+    },
+    "weekend": 16,
+    "horizon": "2027-10-16"
+   },
+   "section": "poppodium",
+   "capacity": 250
+  },
+  {
+   "name": "Hall of Fame",
+   "city": "Tilburg",
+   "url": "https://hall-fame.stager.co/shop/default/events",
+   "strategy": "stager",
+   "events": 37,
+   "note": "stager: 37 events; ticketshop herkend: hall-fame.stager.co; extra bron https://hall-fame.stager.co/shop/default/events: 37 events via stager, 0 nieuw",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.0
+    },
+    "weekend": 11,
+    "horizon": "2027-02-18"
+   },
+   "section": "poppodium",
+   "capacity": 400
   },
   {
    "name": "PX",
@@ -1095,70 +1095,95 @@
    "capacity": null
   },
   {
-   "name": "Doornroosje",
-   "city": "Nijmegen",
-   "url": "https://www.doornroosje.nl/programma/",
-   "strategy": "jsonld_detail",
-   "events": 194,
-   "note": "170 events getagd via podiumfilters, 14 uitgesloten (andere locatie)",
+   "name": "Bibelot",
+   "city": "Dordrecht",
+   "url": "https://bibelot.net/programma/",
+   "strategy": "html",
+   "events": 99,
+   "note": "ticketshop herkend: bibelot.stager.co; extra bron https://bibelot.stager.co/shop/ticketshopnew/events: 90 events via stager, 90 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 4,
+     "sampled": 3,
      "offsets": [
-      0.0,
       0.0,
       0.0,
       0.0
      ]
     },
     "coverage": {
-     "time": 0.99,
-     "price": 0.99,
-     "genre": 0.92
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.52
     },
-    "weekend": 15,
-    "horizon": "2027-05-02"
+    "weekend": 16,
+    "horizon": "2027-10-22"
    },
    "section": "poppodium",
-   "capacity": 1700
+   "capacity": 1100
   },
   {
-   "name": "Willem Twee",
-   "city": "Den Bosch",
-   "url": "https://www.willem-twee.nl/alle-activiteiten?locatie=poppodium",
-   "strategy": "html",
-   "events": 48,
-   "note": "ticketshop herkend: willem-twee.stager.co; extra bron https://willem-twee.stager.co/shop/default/events: 0 events via none, 0 nieuw",
+   "name": "TivoliVredenburg",
+   "city": "Utrecht",
+   "url": "https://www.tivolivredenburg.nl/agenda/",
+   "strategy": "jsonld_detail",
+   "events": 885,
+   "note": "751 events getagd via podiumfilters",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 4,
+     "sampled": 3,
      "offsets": [
-      0.0,
-      0.0,
+      0.5,
       0.0,
       0.0
      ]
     },
     "coverage": {
-     "time": 0.98,
-     "price": 0.98,
-     "genre": 1.0
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.94
     },
-    "weekend": 15,
-    "horizon": "2027-08-14"
+    "weekend": 16,
+    "horizon": "2027-10-29"
    },
    "section": "poppodium",
-   "capacity": 1630
+   "capacity": 2650
+  },
+  {
+   "name": "Nieuwe Nor",
+   "city": "Heerlen",
+   "url": "https://nieuwenor.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 85,
+   "note": "jsonld_detail: 30 events; ticketshop herkend: nieuwenor.stager.co; extra bron https://nieuwenor.stager.co/shop/default/events: 69 events via stager, 69 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 2,
+     "offsets": [
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.99,
+     "genre": 0.17
+    },
+    "weekend": 12,
+    "horizon": "2027-10-22"
+   },
+   "section": "poppodium",
+   "capacity": 1100
   },
   {
    "name": "Grenswerk",
    "city": "Venlo",
    "url": "https://www.grenswerk.nl/agenda/",
    "strategy": "html",
-   "events": 92,
-   "note": "ticketshop herkend: grenswerk.stager.co; extra bron https://grenswerk.stager.co/shop/default/events: 68 events via stager, 68 nieuw",
+   "events": 93,
+   "note": "ticketshop herkend: grenswerk.stager.co; extra bron https://grenswerk.stager.co/shop/default/events: 72 events via stager, 72 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1172,7 +1197,7 @@
     "coverage": {
      "time": 1.0,
      "price": 0.88,
-     "genre": 0.56
+     "genre": 0.55
     },
     "weekend": 16,
     "horizon": "2027-09-25"
@@ -1181,67 +1206,11 @@
    "capacity": 600
   },
   {
-   "name": "De Gelderlandfabriek",
-   "city": "Culemborg",
-   "url": "https://degelderlandfabriek.nl/agenda/",
-   "strategy": "wp_event",
-   "events": 48,
-   "note": "wp_event: 5 events; ticketshop herkend: degelderlandfabriek.stager.co; extra bron https://degelderlandfabriek.stager.co/shop/default/events: 47 events via stager, 47 nieuw; dun programma: 8/16 weekenddagen met een event (podium van 410 plaatsen)",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 1,
-     "offsets": [
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.88,
-     "genre": 0.1
-    },
-    "weekend": 8,
-    "horizon": "2027-06-24",
-    "thin": true
-   },
-   "section": "poppodium",
-   "capacity": 410
-  },
-  {
-   "name": "BIRD",
-   "city": "Rotterdam",
-   "url": "https://bird-rotterdam.nl/agenda",
-   "strategy": "sitemap_detail",
-   "events": 71,
-   "note": "ticketshop herkend: bird.stager.co; extra bron https://bird.stager.co/shop/default/events: 41 events via stager, 41 nieuw; LET OP: 34 toekomstige events van de vorige run zijn weg",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.98,
-     "genre": 0.5
-    },
-    "weekend": 15,
-    "horizon": "2027-04-22",
-    "vanished": 34
-   },
-   "section": "poppodium",
-   "capacity": 300
-  },
-  {
    "name": "De Pul",
    "city": "Uden",
    "url": "https://www.livepul.com/agenda",
    "strategy": "html",
-   "events": 61,
+   "events": 62,
    "note": "",
    "ok": true,
    "audit": {
@@ -1266,12 +1235,12 @@
    "capacity": 750
   },
   {
-   "name": "Bolwerk (Poort)",
-   "city": "Sneek",
-   "url": "https://ontdekpoort.nl/programma/",
-   "strategy": "wp_event",
-   "events": 130,
-   "note": "dun programma: 9/16 weekenddagen met een event (podium van 650 plaatsen)",
+   "name": "Willem Twee",
+   "city": "Den Bosch",
+   "url": "https://www.willem-twee.nl/alle-activiteiten?locatie=poppodium",
+   "strategy": "html",
+   "events": 50,
+   "note": "ticketshop herkend: willem-twee.stager.co; extra bron https://willem-twee.stager.co/shop/default/events: 0 events via none, 0 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1284,16 +1253,42 @@
      ]
     },
     "coverage": {
-     "time": 0.92,
-     "price": 1.0,
-     "genre": 0.62
+     "time": 0.98,
+     "price": 0.98,
+     "genre": 1.0
     },
-    "weekend": 9,
-    "horizon": "2027-10-15",
+    "weekend": 15,
+    "horizon": "2027-08-14"
+   },
+   "section": "poppodium",
+   "capacity": 1630
+  },
+  {
+   "name": "De Gelderlandfabriek",
+   "city": "Culemborg",
+   "url": "https://degelderlandfabriek.nl/agenda/",
+   "strategy": "wp_event",
+   "events": 49,
+   "note": "wp_event: 6 events; ticketshop herkend: degelderlandfabriek.stager.co; extra bron https://degelderlandfabriek.stager.co/shop/default/events: 48 events via stager, 48 nieuw; dun programma: 8/16 weekenddagen met een event (podium van 410 plaatsen)",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 1,
+     "offsets": [
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.85,
+     "genre": 0.11
+    },
+    "weekend": 8,
+    "horizon": "2027-06-24",
     "thin": true
    },
    "section": "poppodium",
-   "capacity": 650
+   "capacity": 410
   },
   {
    "name": "De Piek",
@@ -1324,32 +1319,32 @@
    "capacity": 200
   },
   {
-   "name": "'t Beest",
-   "city": "Goes",
-   "url": "https://tbeest.nl/evenementen/",
-   "strategy": "html:theater-for-wordpress",
-   "events": 63,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: tbeest.stager.co; extra bron https://tbeest.stager.co/shop/default/events: 59 events via stager, 59 nieuw; 62 events getagd via podiumfilters",
+   "name": "Paradiso",
+   "city": "Amsterdam",
+   "url": "https://www.paradiso.nl/",
+   "strategy": "graphql_detail",
+   "events": 443,
+   "note": "",
    "ok": true,
    "audit": {
     "time_check": {
      "sampled": 3,
      "offsets": [
-      6.5,
       0.0,
-      0.0
+      0.0,
+      -1.0
      ]
     },
     "coverage": {
      "time": 1.0,
-     "price": 1.0,
-     "genre": 0.51
+     "price": 0.97,
+     "genre": 0.59
     },
-    "weekend": 13,
-    "horizon": "2027-05-13"
+    "weekend": 16,
+    "horizon": "2027-09-24"
    },
    "section": "poppodium",
-   "capacity": 450
+   "capacity": 1710
   },
   {
    "name": "Het Podium",
@@ -1367,12 +1362,40 @@
    "capacity": 375
   },
   {
+   "name": "'t Beest",
+   "city": "Goes",
+   "url": "https://tbeest.nl/evenementen/",
+   "strategy": "html:theater-for-wordpress",
+   "events": 61,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: tbeest.stager.co; extra bron https://tbeest.stager.co/shop/default/events: 58 events via stager, 58 nieuw; 61 events getagd via podiumfilters",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      9.5,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.51
+    },
+    "weekend": 13,
+    "horizon": "2027-05-15"
+   },
+   "section": "poppodium",
+   "capacity": 450
+  },
+  {
    "name": "Estrado",
    "city": "Harderwijk",
    "url": "https://www.estrado.nl/agenda",
    "strategy": "jsonld_detail",
    "events": 22,
-   "note": "jsonld_detail: 22 events; dun programma: 8/16 weekenddagen met een event (podium van 420 plaatsen)",
+   "note": "jsonld_detail: 22 events; dun programma: 7/16 weekenddagen met een event (podium van 420 plaatsen)",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1389,7 +1412,7 @@
      "price": 1.0,
      "genre": 0.59
     },
-    "weekend": 8,
+    "weekend": 7,
     "horizon": "2027-03-13",
     "thin": true
    },
@@ -1425,17 +1448,18 @@
    "capacity": 350
   },
   {
-   "name": "Porgy en Bess",
-   "city": "Terneuzen",
-   "url": "https://www.porgyenbess.nl/programma/",
-   "strategy": "html:theater-for-wordpress",
-   "events": 42,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: porgyenbess.stager.co; extra bron https://porgyenbess.stager.co/shop/porgyenbess/events: 29 events via stager, 29 nieuw",
+   "name": "De Peppel",
+   "city": "Zeist",
+   "url": "https://peppel-zeist.nl/",
+   "strategy": "tribe",
+   "events": 26,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 3,
+     "sampled": 4,
      "offsets": [
+      0.0,
       0.0,
       0.0,
       0.0
@@ -1443,14 +1467,41 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.97,
-     "genre": 0.31
+     "price": 1.0,
+     "genre": 1.0
     },
-    "weekend": 10,
-    "horizon": "2027-10-31"
+    "weekend": 9,
+    "horizon": "2027-06-04"
    },
    "section": "poppodium",
-   "capacity": 250
+   "capacity": 350
+  },
+  {
+   "name": "De Spot",
+   "city": "Middelburg",
+   "url": "https://despotmiddelburg.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 97,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://despotmiddelburg.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; ticketshop herkend: despot.stager.co; extra bron https://despot.stager.co/shop/default/events: 43 events via stager, 43 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 2,
+     "offsets": [
+      7.0,
+      7.5
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.24
+    },
+    "weekend": 16,
+    "horizon": "2027-05-21"
+   },
+   "section": "poppodium",
+   "capacity": 400
   },
   {
    "name": "ECI Cultuurfabriek",
@@ -1483,12 +1534,40 @@
    "capacity": 600
   },
   {
+   "name": "Porgy en Bess",
+   "city": "Terneuzen",
+   "url": "https://www.porgyenbess.nl/programma/",
+   "strategy": "html:theater-for-wordpress",
+   "events": 43,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: porgyenbess.stager.co; extra bron https://porgyenbess.stager.co/shop/porgyenbess/events: 30 events via stager, 30 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 3,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.97,
+     "genre": 0.32
+    },
+    "weekend": 10,
+    "horizon": "2027-10-31"
+   },
+   "section": "poppodium",
+   "capacity": 250
+  },
+  {
    "name": "Muziekgieterij",
    "city": "Maastricht",
    "url": "https://muziekgieterij.nl/",
    "strategy": "wp_event",
-   "events": 132,
-   "note": "ticketshop herkend: muziekgieterij.stager.co; extra bron https://muziekgieterij.stager.co/shop/concert/events: 78 events via stager, 78 nieuw",
+   "events": 133,
+   "note": "ticketshop herkend: muziekgieterij.stager.co; extra bron https://muziekgieterij.stager.co/shop/concert/events: 77 events via stager, 77 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1509,35 +1588,6 @@
    },
    "section": "poppodium",
    "capacity": 1520
-  },
-  {
-   "name": "De Peppel",
-   "city": "Zeist",
-   "url": "https://peppel-zeist.nl/",
-   "strategy": "tribe",
-   "events": 26,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.96,
-     "genre": 1.0
-    },
-    "weekend": 9,
-    "horizon": "2027-06-04"
-   },
-   "section": "poppodium",
-   "capacity": 350
   },
   {
    "name": "Capsloc",
@@ -1568,31 +1618,32 @@
    "capacity": 280
   },
   {
-   "name": "De Spot",
-   "city": "Middelburg",
-   "url": "https://despotmiddelburg.nl/programma",
+   "name": "De Bosuil",
+   "city": "Weert",
+   "url": "https://www.debosuil.nl/programma/",
    "strategy": "jsonld_detail",
-   "events": 97,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://despotmiddelburg.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; ticketshop herkend: despot.stager.co; extra bron https://despot.stager.co/shop/default/events: 43 events via stager, 43 nieuw",
+   "events": 69,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.debosuil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; ticketshop herkend: debosuil.stager.co; extra bron https://debosuil.stager.co/shop/default/events: 62 events via stager, 62 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 2,
+     "sampled": 3,
      "offsets": [
-      7.0,
-      7.5
+      0.0,
+      0.0,
+      0.0
      ]
     },
     "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.24
+     "time": 0.99,
+     "price": 0.98,
+     "genre": 0.31
     },
-    "weekend": 16,
-    "horizon": "2027-05-21"
+    "weekend": 14,
+    "horizon": "2027-05-23"
    },
    "section": "poppodium",
-   "capacity": 400
+   "capacity": 800
   },
   {
    "name": "Manifesto",
@@ -1615,7 +1666,7 @@
     "coverage": {
      "time": 1.0,
      "price": 0.29,
-     "genre": 0.48
+     "genre": 0.43
     },
     "weekend": 12,
     "horizon": "2027-04-03"
@@ -1624,12 +1675,12 @@
    "capacity": 300
   },
   {
-   "name": "De Flux",
-   "city": "Zaandam",
-   "url": "https://www.podiumdeflux.nl/agenda/",
-   "strategy": "jsonld_detail",
-   "events": 9,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 9 events; ticketshop herkend: flux.stager.co; extra bron https://flux.stager.co/shop/default/events: 5 events via stager, 5 nieuw",
+   "name": "So What!",
+   "city": "Gouda",
+   "url": "https://www.so-what.nl/agenda/",
+   "strategy": "wp_event",
+   "events": 31,
+   "note": "wp_event: 31 events; extra bron https://so-what.stager.co/shop/default/events: 23 events via stager, 23 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -1643,13 +1694,13 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.14
+     "genre": 0.57
     },
-    "weekend": 5,
-    "horizon": "2027-03-19"
+    "weekend": 16,
+    "horizon": "2027-06-28"
    },
    "section": "poppodium",
-   "capacity": 350
+   "capacity": 420
   },
   {
    "name": "Kroepoekfabriek",
@@ -1680,17 +1731,18 @@
    "capacity": 300
   },
   {
-   "name": "So What!",
-   "city": "Gouda",
-   "url": "https://www.so-what.nl/agenda/",
-   "strategy": "wp_event",
-   "events": 32,
-   "note": "wp_event: 32 events; extra bron https://so-what.stager.co/shop/default/events: 23 events via stager, 23 nieuw",
+   "name": "De Flux",
+   "city": "Zaandam",
+   "url": "https://www.podiumdeflux.nl/agenda/",
+   "strategy": "jsonld_detail",
+   "events": 10,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 10 events; ticketshop herkend: flux.stager.co; extra bron https://flux.stager.co/shop/default/events: 5 events via stager, 5 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 3,
+     "sampled": 4,
      "offsets": [
+      0.0,
       0.0,
       0.0,
       0.0
@@ -1699,41 +1751,13 @@
     "coverage": {
      "time": 1.0,
      "price": 1.0,
-     "genre": 0.58
+     "genre": 0.2
     },
-    "weekend": 16,
-    "horizon": "2027-06-28"
+    "weekend": 6,
+    "horizon": "2027-03-19"
    },
    "section": "poppodium",
-   "capacity": 420
-  },
-  {
-   "name": "Nieuwe Nor",
-   "city": "Heerlen",
-   "url": "https://nieuwenor.nl/programma",
-   "strategy": "jsonld_detail",
-   "events": 111,
-   "note": "ticketshop herkend: nieuwenor.stager.co; extra bron https://nieuwenor.stager.co/shop/default/events: 69 events via stager, 69 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.97,
-     "genre": 0.33
-    },
-    "weekend": 16,
-    "horizon": "2027-10-22"
-   },
-   "section": "poppodium",
-   "capacity": 1100
+   "capacity": 350
   },
   {
    "name": "De Cacaofabriek",
@@ -1763,34 +1787,6 @@
    },
    "section": "poppodium",
    "capacity": 550
-  },
-  {
-   "name": "De Bosuil",
-   "city": "Weert",
-   "url": "https://www.debosuil.nl/programma/",
-   "strategy": "jsonld_detail",
-   "events": 70,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.debosuil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; ticketshop herkend: debosuil.stager.co; extra bron https://debosuil.stager.co/shop/default/events: 63 events via stager, 63 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 0.99,
-     "price": 0.98,
-     "genre": 0.31
-    },
-    "weekend": 14,
-    "horizon": "2027-05-23"
-   },
-   "section": "poppodium",
-   "capacity": 800
   },
   {
    "name": "Maassilo",
@@ -1823,6 +1819,35 @@
    "capacity": 3500
   },
   {
+   "name": "Volt",
+   "city": "Sittard",
+   "url": "https://www.poppodium-volt.nl/programma",
+   "strategy": "jsonld_detail",
+   "events": 52,
+   "note": "49 events getagd via podiumfilters",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.96
+    },
+    "weekend": 13,
+    "horizon": "2027-04-30"
+   },
+   "section": "poppodium",
+   "capacity": 600
+  },
+  {
    "name": "Corneel",
    "city": "Lelystad",
    "url": "https://www.corneel.nl/agenda/",
@@ -1851,33 +1876,19 @@
    "capacity": 400
   },
   {
-   "name": "Groene Engel",
-   "city": "Oss",
-   "url": "https://www.groene-engel.nl/programma/",
-   "strategy": "html",
-   "events": 48,
-   "note": "ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 0 events via none, 0 nieuw",
+   "name": "Zonnehuis",
+   "city": "Amsterdam",
+   "url": "https://www.paradiso.nl/",
+   "strategy": "passive",
+   "events": 0,
+   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
    "ok": true,
    "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.9,
-     "genre": 1.0
-    },
-    "weekend": 12,
-    "horizon": "2027-06-28"
+    "weekend": 0,
+    "horizon": null
    },
-   "section": "poppodium",
-   "capacity": 650
+   "section": "overig",
+   "capacity": 400
   },
   {
    "name": "Popcentrale",
@@ -1909,77 +1920,32 @@
    "capacity": 150
   },
   {
-   "name": "Zonnehuis",
-   "city": "Amsterdam",
-   "url": "https://www.paradiso.nl/",
-   "strategy": "passive",
-   "events": 0,
-   "note": "geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)",
-   "ok": true,
-   "audit": {
-    "weekend": 0,
-    "horizon": null
-   },
-   "section": "overig",
-   "capacity": 400
-  },
-  {
-   "name": "Volt",
-   "city": "Sittard",
-   "url": "https://www.poppodium-volt.nl/programma",
-   "strategy": "jsonld_detail",
-   "events": 52,
-   "note": "49 events getagd via podiumfilters",
+   "name": "Gebouw-T",
+   "city": "Bergen op Zoom",
+   "url": "https://www.gebouw-t.nl/agenda",
+   "strategy": "wp_event",
+   "events": 264,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://gebouw-t.nl/wp-json/tribe/events/v1/events?page=1&per_page=50&start_date=20; ticketshop herkend: gebouw-t.stager.co; extra bron https://gebouw-t.stager.co/shop/default/events: 70 events via stager, 70 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 4,
+     "sampled": 3,
      "offsets": [
-      0.0,
       0.0,
       0.0,
       0.0
      ]
     },
     "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.96
+     "time": 0.98,
+     "price": 0.85,
+     "genre": 0.23
     },
-    "weekend": 13,
-    "horizon": "2027-04-30"
+    "weekend": 16,
+    "horizon": "2027-10-29"
    },
    "section": "poppodium",
-   "capacity": 600
-  },
-  {
-   "name": "De Meester",
-   "city": "Almere",
-   "url": "https://poppodiumdemeester.nl/",
-   "strategy": "jsonld_detail",
-   "events": 29,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://poppodiumdemeester.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.38
-    },
-    "weekend": 13,
-    "horizon": "2027-03-12"
-   },
-   "section": "poppodium",
-   "capacity": 300
+   "capacity": 700
   },
   {
    "name": "Astrant",
@@ -2009,6 +1975,35 @@
    "capacity": 150
   },
   {
+   "name": "De Meester",
+   "city": "Almere",
+   "url": "https://poppodiumdemeester.nl/",
+   "strategy": "jsonld_detail",
+   "events": 30,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://poppodiumdemeester.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.37
+    },
+    "weekend": 14,
+    "horizon": "2027-03-12"
+   },
+   "section": "poppodium",
+   "capacity": 300
+  },
+  {
    "name": "Skatecafe",
    "city": "Amsterdam",
    "url": "https://www.skatecafe.nl/",
@@ -2024,12 +2019,90 @@
    "capacity": 300
   },
   {
+   "name": "Groene Engel",
+   "city": "Oss",
+   "url": "https://www.groene-engel.nl/programma/",
+   "strategy": "html",
+   "events": 49,
+   "note": "ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 0 events via none, 0 nieuw",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.9,
+     "genre": 1.0
+    },
+    "weekend": 12,
+    "horizon": "2027-06-28"
+   },
+   "section": "poppodium",
+   "capacity": 650
+  },
+  {
+   "name": "Cpunt",
+   "city": "Hoofddorp",
+   "url": "https://www.cpunt.nl/agenda/concerten",
+   "strategy": "jsonld_detail",
+   "events": 127,
+   "note": "88 events getagd via podiumfilters",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      -0.2,
+      -6.5,
+      -0.5,
+      -0.5
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.85
+    },
+    "weekend": 15,
+    "horizon": "2027-09-09"
+   },
+   "section": "poppodium",
+   "capacity": 900
+  },
+  {
+   "name": "Maloe Melo",
+   "city": "Amsterdam",
+   "url": "https://www.maloemelo.com/",
+   "strategy": "tribe",
+   "events": 17,
+   "note": "jsonld: 5 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 17 events; wp_event: 17 events; jsonld_detail: 5 events",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 0.65,
+     "genre": 0.94
+    },
+    "weekend": 7,
+    "horizon": "2026-12-11"
+   },
+   "section": "overig",
+   "capacity": 150
+  },
+  {
    "name": "Poppodium Phoenix",
    "city": "Breda",
    "url": "https://www.poppodiumphoenix.nl/",
    "strategy": "tribe",
-   "events": 55,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: phoenix.stager.co; extra bron https://phoenix.stager.co/shop/default/events: 48 events via stager, 48 nieuw",
+   "events": 58,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: phoenix.stager.co; extra bron https://phoenix.stager.co/shop/default/events: 51 events via stager, 51 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -2052,12 +2125,41 @@
    "capacity": 150
   },
   {
+   "name": "Altstadt",
+   "city": "Eindhoven",
+   "url": "https://www.altstadt.nl/",
+   "strategy": "wp_event",
+   "events": 32,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.altstadt.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.25,
+     "price": 0.28,
+     "genre": 0.38
+    },
+    "weekend": 6,
+    "horizon": "2027-07-30"
+   },
+   "section": "overig",
+   "capacity": 250
+  },
+  {
    "name": "The Cave",
    "city": "Amsterdam",
    "url": "https://www.thecaveamsterdam.nl/",
    "strategy": "jsonld_detail",
-   "events": 5,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.thecaveamsterdam.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&s; wp_event: 0 events; jsonld_detail: 5 events",
+   "events": 6,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.thecaveamsterdam.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&s; wp_event: 0 events; jsonld_detail: 6 events",
    "ok": true,
    "audit": {
     "coverage": {
@@ -2065,48 +2167,11 @@
      "price": 0.0,
      "genre": 1.0
     },
-    "weekend": 5,
-    "horizon": "2026-10-23"
+    "weekend": 6,
+    "horizon": "2026-10-24"
    },
    "section": "overig",
    "capacity": 135
-  },
-  {
-   "name": "Maloe Melo",
-   "city": "Amsterdam",
-   "url": "https://www.maloemelo.com/",
-   "strategy": "tribe",
-   "events": 18,
-   "note": "jsonld: 5 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 18 events; wp_event: 18 events; jsonld_detail: 5 events",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 0.67,
-     "genre": 0.94
-    },
-    "weekend": 7,
-    "horizon": "2026-12-11"
-   },
-   "section": "overig",
-   "capacity": 150
-  },
-  {
-   "name": "Parallel",
-   "city": "Amsterdam",
-   "url": "https://parallel.am/",
-   "strategy": "none",
-   "events": 14,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://parallel.am/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events; jsonld_detail: 0 events; bron onbereikbaar: 14 events van de vorige run hergebruikt; dun programma: 6/16 weekenddagen met een event (podium van 750 plaatsen)",
-   "ok": true,
-   "audit": {
-    "stale": true,
-    "weekend": 6,
-    "horizon": "2027-02-11",
-    "thin": true
-   },
-   "section": "overig",
-   "capacity": 750
   },
   {
    "name": "AFAS Live",
@@ -2122,7 +2187,7 @@
      "offsets": [
       0.0,
       0.0,
-      0.0,
+      -3.0,
       0.0
      ]
     },
@@ -2136,6 +2201,23 @@
    },
    "section": "overig",
    "capacity": 6000
+  },
+  {
+   "name": "Parallel",
+   "city": "Amsterdam",
+   "url": "https://parallel.am/",
+   "strategy": "none",
+   "events": 15,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://parallel.am/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events; jsonld_detail: 0 events; bron onbereikbaar: 15 events van de vorige run hergebruikt; dun programma: 6/16 weekenddagen met een event (podium van 750 plaatsen)",
+   "ok": true,
+   "audit": {
+    "stale": true,
+    "weekend": 6,
+    "horizon": "2027-02-11",
+    "thin": true
+   },
+   "section": "overig",
+   "capacity": 750
   },
   {
    "name": "Ziggo Dome",
@@ -2158,35 +2240,6 @@
    "capacity": 17000
   },
   {
-   "name": "OCCII",
-   "city": "Amsterdam",
-   "url": "https://occii.org/",
-   "strategy": "jsonld_detail",
-   "events": 25,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://occii.org/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026; wp_event: 0 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.44
-    },
-    "weekend": 12,
-    "horizon": "2027-01-24"
-   },
-   "section": "overig",
-   "capacity": 200
-  },
-  {
    "name": "Amsterdamse Bostheater",
    "city": "Amsterdam",
    "url": "https://bostheater.nl/",
@@ -2200,354 +2253,6 @@
    },
    "section": "overig",
    "capacity": 1400
-  },
-  {
-   "name": "V11",
-   "city": "Rotterdam",
-   "url": "https://www.vessel11.nl/",
-   "strategy": "jsonld_detail",
-   "events": 5,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.vessel11.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 2 events; ticketshop herkend: v11.stager.co; extra bron https://v11.stager.co/shop/default/events: 4 events via stager, 4 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 2,
-     "offsets": [
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.0
-    },
-    "weekend": 2,
-    "horizon": "2026-11-28"
-   },
-   "section": "overig",
-   "capacity": 180
-  },
-  {
-   "name": "Altstadt",
-   "city": "Eindhoven",
-   "url": "https://www.altstadt.nl/",
-   "strategy": "wp_event",
-   "events": 31,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.altstadt.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 0.23,
-     "price": 0.26,
-     "genre": 0.39
-    },
-    "weekend": 6,
-    "horizon": "2027-07-30"
-   },
-   "section": "overig",
-   "capacity": 250
-  },
-  {
-   "name": "Grounds",
-   "city": "Rotterdam",
-   "url": "https://www.grounds.nu/",
-   "strategy": "none",
-   "events": 26,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.grounds.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: grounds.stager.co; extra bron https://grounds.stager.co/shop/default/events: 26 events via stager, 26 nieuw",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 0.96,
-     "genre": 0.0
-    },
-    "weekend": 10,
-    "horizon": "2027-04-23"
-   },
-   "section": "overig",
-   "capacity": 200
-  },
-  {
-   "name": "WPC Nederland 3",
-   "city": "Wateringen",
-   "url": "https://www.nederlanddrie.nl/",
-   "strategy": "tribe",
-   "events": 24,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 1.0
-    },
-    "weekend": 12,
-    "horizon": "2027-06-12"
-   },
-   "section": "overig",
-   "capacity": 250
-  },
-  {
-   "name": "DJS",
-   "city": "Dordrecht",
-   "url": "https://muziekpodiumdjs.nl/",
-   "strategy": "none",
-   "events": 36,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: muziekpodiumdjs.stager.co; extra bron https://muziekpodiumdjs.stager.co/shop/default/events: 36 events via stager, 36 nieuw",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 0.61,
-     "genre": 0.0
-    },
-    "weekend": 15,
-    "horizon": "2027-01-29"
-   },
-   "section": "overig",
-   "capacity": 100
-  },
-  {
-   "name": "De Amer",
-   "city": "Amen",
-   "url": "https://www.cafedeamer.nl/",
-   "strategy": "jsonld_detail",
-   "events": 46,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.cafedeamer.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 10 events; ticketshop herkend: amer.stager.co; extra bron https://amer.stager.co/shop/default/events: 45 events via stager, 45 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 1,
-     "offsets": [
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 0.98,
-     "genre": 0.04
-    },
-    "weekend": 12,
-    "horizon": "2027-02-19"
-   },
-   "section": "overig",
-   "capacity": 100
-  },
-  {
-   "name": "Resistor",
-   "city": "Leiden",
-   "url": "https://www.resistor.nl/",
-   "strategy": "jsonld_detail",
-   "events": 6,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 6 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.resistor.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 6 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.67
-    },
-    "weekend": 6,
-    "horizon": "2026-11-21"
-   },
-   "section": "overig",
-   "capacity": null
-  },
-  {
-   "name": "Openluchttheater De Goffert",
-   "city": "Nijmegen",
-   "url": "https://www.oltgoffert.nl/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.oltgoffert.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 2 events",
-   "ok": false,
-   "audit": {
-    "weekend": 0,
-    "horizon": null
-   },
-   "section": "overig",
-   "capacity": 1500
-  },
-  {
-   "name": "De Beuk",
-   "city": "Barendrecht",
-   "url": "https://www.beukonline.nl/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.beukonline.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: beuk.stager.co; extra bron https://beuk.stager.co/shop/default/events: 0 events via none, 0 nieuw",
-   "ok": false,
-   "audit": {
-    "weekend": 0,
-    "horizon": null
-   },
-   "section": "overig",
-   "capacity": 150
-  },
-  {
-   "name": "Beauforthuis",
-   "city": "Austerlitz",
-   "url": "https://www.beauforthuis.nl/",
-   "strategy": "jsonld",
-   "events": 53,
-   "note": "",
-   "ok": true,
-   "audit": {
-    "coverage": {
-     "time": 1.0,
-     "price": 0.91,
-     "genre": 0.43
-    },
-    "weekend": 4,
-    "horizon": "2027-05-09"
-   },
-   "section": "overig",
-   "capacity": 160
-  },
-  {
-   "name": "Cpunt",
-   "city": "Hoofddorp",
-   "url": "https://www.cpunt.nl/agenda/concerten",
-   "strategy": "jsonld_detail",
-   "events": 128,
-   "note": "89 events getagd via podiumfilters",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.2,
-      -0.5,
-      -6.2,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.85
-    },
-    "weekend": 15,
-    "horizon": "2027-09-09"
-   },
-   "section": "poppodium",
-   "capacity": 900
-  },
-  {
-   "name": "Caprera",
-   "city": "Bloemendaal",
-   "url": "https://caprera.nu/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://caprera.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
-   "audit": {
-    "weekend": 0,
-    "horizon": null
-   },
-   "section": "overig",
-   "capacity": 1100
-  },
-  {
-   "name": "Paradiso",
-   "city": "Amsterdam",
-   "url": "https://www.paradiso.nl/",
-   "strategy": "graphql_detail",
-   "events": 426,
-   "note": "LET OP: aanvang op eventpagina's wijkt -1u af van de lijst -> zet time_is_local of controleer tijdzone",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      -1.0,
-      -1.0,
-      -1.0
-     ]
-    },
-    "time_shift": -1.0,
-    "coverage": {
-     "time": 1.0,
-     "price": 0.93,
-     "genre": 0.57
-    },
-    "weekend": 16,
-    "horizon": "2027-09-24"
-   },
-   "section": "poppodium",
-   "capacity": 1710
-  },
-  {
-   "name": "Little Devil",
-   "city": "Tilburg",
-   "url": "https://www.littledevil.nl/",
-   "strategy": "none",
-   "events": 7,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.littledevil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; bron onbereikbaar: 7 events van de vorige run hergebruikt",
-   "ok": true,
-   "audit": {
-    "stale": true,
-    "weekend": 3,
-    "horizon": "2027-01-22"
-   },
-   "section": "overig",
-   "capacity": 175
-  },
-  {
-   "name": "De Grote Weiver",
-   "city": "Wormerveer",
-   "url": "https://degrooteweiver.nl/",
-   "strategy": "jsonld_detail",
-   "events": 11,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://degrooteweiver.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 11 events",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 4,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 1.0,
-     "price": 1.0,
-     "genre": 0.55
-    },
-    "weekend": 6,
-    "horizon": "2026-10-30"
-   },
-   "section": "overig",
-   "capacity": 200
   },
   {
    "name": "Ahoy",
@@ -2579,27 +2284,59 @@
    "capacity": 16500
   },
   {
-   "name": "Toekomstmuziek",
-   "city": "Amsterdam",
-   "url": "https://www.toekomstmuziek.com/",
-   "strategy": "none",
-   "events": 0,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.toekomstmuziek.com/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events; jsonld_detail: 0 events",
-   "ok": false,
+   "name": "V11",
+   "city": "Rotterdam",
+   "url": "https://www.vessel11.nl/",
+   "strategy": "jsonld_detail",
+   "events": 5,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.vessel11.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 2 events; ticketshop herkend: v11.stager.co; extra bron https://v11.stager.co/shop/default/events: 4 events via stager, 4 nieuw",
+   "ok": true,
    "audit": {
-    "weekend": 0,
-    "horizon": null
+    "time_check": {
+     "sampled": 2,
+     "offsets": [
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.0
+    },
+    "weekend": 2,
+    "horizon": "2026-11-28"
    },
    "section": "overig",
-   "capacity": null
+   "capacity": 180
   },
   {
-   "name": "Loburg",
-   "city": "Wageningen",
-   "url": "https://www.loburg.com/",
-   "strategy": "wp_event",
-   "events": 14,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.loburg.com/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 14 events; jsonld_detail: 0 events",
+   "name": "Grounds",
+   "city": "Rotterdam",
+   "url": "https://www.grounds.nu/",
+   "strategy": "none",
+   "events": 26,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.grounds.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: grounds.stager.co; extra bron https://grounds.stager.co/shop/default/events: 26 events via stager, 26 nieuw",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 0.96,
+     "genre": 0.0
+    },
+    "weekend": 10,
+    "horizon": "2027-04-23"
+   },
+   "section": "overig",
+   "capacity": 200
+  },
+  {
+   "name": "OCCII",
+   "city": "Amsterdam",
+   "url": "https://occii.org/",
+   "strategy": "jsonld_detail",
+   "events": 26,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://occii.org/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026; wp_event: 0 events",
    "ok": true,
    "audit": {
     "time_check": {
@@ -2613,22 +2350,115 @@
     },
     "coverage": {
      "time": 1.0,
-     "price": 0.43,
-     "genre": 0.21
+     "price": 1.0,
+     "genre": 0.42
     },
-    "weekend": 6,
-    "horizon": "2027-05-30"
+    "weekend": 12,
+    "horizon": "2027-03-12"
    },
    "section": "overig",
    "capacity": 200
   },
   {
-   "name": "De Vereeniging",
-   "city": "Nijmegen",
-   "url": "https://www.stadsschouwburgendevereeniging.nl/",
+   "name": "WPC Nederland 3",
+   "city": "Wateringen",
+   "url": "https://www.nederlanddrie.nl/",
+   "strategy": "tribe",
+   "events": 27,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.93,
+     "genre": 1.0
+    },
+    "weekend": 15,
+    "horizon": "2027-06-12"
+   },
+   "section": "overig",
+   "capacity": 250
+  },
+  {
+   "name": "Resistor",
+   "city": "Leiden",
+   "url": "https://www.resistor.nl/",
    "strategy": "jsonld_detail",
-   "events": 12,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.stadsschouwburgendevereeniging.nl/wp-json/tribe/events/v1/events?per_pa; wp_event: 0 events; jsonld_detail: 14 events",
+   "events": 6,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 6 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.resistor.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 6 events",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.67
+    },
+    "weekend": 6,
+    "horizon": "2026-11-21"
+   },
+   "section": "overig",
+   "capacity": null
+  },
+  {
+   "name": "DJS",
+   "city": "Dordrecht",
+   "url": "https://muziekpodiumdjs.nl/",
+   "strategy": "none",
+   "events": 36,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: muziekpodiumdjs.stager.co; extra bron https://muziekpodiumdjs.stager.co/shop/default/events: 36 events via stager, 36 nieuw",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 0.61,
+     "genre": 0.0
+    },
+    "weekend": 15,
+    "horizon": "2027-01-29"
+   },
+   "section": "overig",
+   "capacity": 100
+  },
+  {
+   "name": "Openluchttheater De Goffert",
+   "city": "Nijmegen",
+   "url": "https://www.oltgoffert.nl/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.oltgoffert.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 2 events",
+   "ok": false,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "overig",
+   "capacity": 1500
+  },
+  {
+   "name": "De Amer",
+   "city": "Amen",
+   "url": "https://www.cafedeamer.nl/",
+   "strategy": "jsonld_detail",
+   "events": 46,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.cafedeamer.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 10 events; ticketshop herkend: amer.stager.co; extra bron https://amer.stager.co/shop/default/events: 45 events via stager, 45 nieuw",
    "ok": true,
    "audit": {
     "time_check": {
@@ -2638,15 +2468,81 @@
      ]
     },
     "coverage": {
-     "time": 0.64,
-     "price": 1.0,
-     "genre": 0.07
+     "time": 1.0,
+     "price": 0.98,
+     "genre": 0.04
     },
-    "weekend": 3,
-    "horizon": "2027-01-19"
+    "weekend": 12,
+    "horizon": "2027-02-19"
    },
    "section": "overig",
-   "capacity": null
+   "capacity": 100
+  },
+  {
+   "name": "De Beuk",
+   "city": "Barendrecht",
+   "url": "https://www.beukonline.nl/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.beukonline.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: beuk.stager.co; extra bron https://beuk.stager.co/shop/default/events: 0 events via none, 0 nieuw",
+   "ok": false,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "overig",
+   "capacity": 150
+  },
+  {
+   "name": "Caprera",
+   "city": "Bloemendaal",
+   "url": "https://caprera.nu/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://caprera.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "overig",
+   "capacity": 1100
+  },
+  {
+   "name": "Little Devil",
+   "city": "Tilburg",
+   "url": "https://www.littledevil.nl/",
+   "strategy": "none",
+   "events": 7,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.littledevil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; bron onbereikbaar: 7 events van de vorige run hergebruikt",
+   "ok": true,
+   "audit": {
+    "stale": true,
+    "weekend": 3,
+    "horizon": "2027-01-22"
+   },
+   "section": "overig",
+   "capacity": 175
+  },
+  {
+   "name": "Beauforthuis",
+   "city": "Austerlitz",
+   "url": "https://www.beauforthuis.nl/",
+   "strategy": "jsonld",
+   "events": 53,
+   "note": "",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 1.0,
+     "price": 0.91,
+     "genre": 0.43
+    },
+    "weekend": 4,
+    "horizon": "2027-05-09"
+   },
+   "section": "overig",
+   "capacity": 160
   },
   {
    "name": "Aa-Theater",
@@ -2678,6 +2574,99 @@
    "capacity": 200
   },
   {
+   "name": "Toekomstmuziek",
+   "city": "Amsterdam",
+   "url": "https://www.toekomstmuziek.com/",
+   "strategy": "none",
+   "events": 0,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.toekomstmuziek.com/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events; jsonld_detail: 0 events",
+   "ok": false,
+   "audit": {
+    "weekend": 0,
+    "horizon": null
+   },
+   "section": "overig",
+   "capacity": null
+  },
+  {
+   "name": "De Grote Weiver",
+   "city": "Wormerveer",
+   "url": "https://degrooteweiver.nl/",
+   "strategy": "jsonld_detail",
+   "events": 11,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://degrooteweiver.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 11 events",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 1.0,
+     "genre": 0.55
+    },
+    "weekend": 6,
+    "horizon": "2026-10-30"
+   },
+   "section": "overig",
+   "capacity": 200
+  },
+  {
+   "name": "De Vereeniging",
+   "city": "Nijmegen",
+   "url": "https://www.stadsschouwburgendevereeniging.nl/",
+   "strategy": "jsonld_detail",
+   "events": 12,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.stadsschouwburgendevereeniging.nl/wp-json/tribe/events/v1/events?per_pa; wp_event: 0 events; jsonld_detail: 13 events",
+   "ok": true,
+   "audit": {
+    "coverage": {
+     "time": 0.69,
+     "price": 1.0,
+     "genre": 0.15
+    },
+    "weekend": 3,
+    "horizon": "2027-01-19"
+   },
+   "section": "overig",
+   "capacity": null
+  },
+  {
+   "name": "Loburg",
+   "city": "Wageningen",
+   "url": "https://www.loburg.com/",
+   "strategy": "wp_event",
+   "events": 15,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.loburg.com/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 15 events; jsonld_detail: 0 events",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 1.0,
+     "price": 0.47,
+     "genre": 0.2
+    },
+    "weekend": 7,
+    "horizon": "2027-05-30"
+   },
+   "section": "overig",
+   "capacity": 200
+  },
+  {
    "name": "PHIL",
    "city": "Haarlem",
    "url": "https://www.philhaarlem.nl/",
@@ -2699,914 +2688,633 @@
    "capacity": 660
   },
   {
+   "name": "Bolwerk (Poort)",
+   "city": "Sneek",
+   "url": "https://ontdekpoort.nl/programma/",
+   "strategy": "wp_event",
+   "events": 130,
+   "note": "dun programma: 9/16 weekenddagen met een event (podium van 650 plaatsen)",
+   "ok": true,
+   "audit": {
+    "time_check": {
+     "sampled": 4,
+     "offsets": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "coverage": {
+     "time": 0.92,
+     "price": 1.0,
+     "genre": 0.66
+    },
+    "weekend": 9,
+    "horizon": "2027-10-15",
+    "thin": true
+   },
+   "section": "poppodium",
+   "capacity": 650
+  },
+  {
    "name": "De Nieuwe Anita",
    "city": "Amsterdam",
    "url": "https://www.denieuweanita.nl/",
-   "strategy": "jsonld_detail",
-   "events": 3,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.denieuweanita.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: ReadTimeout HTTPSConnectionPool(host='www.denieuweanita.nl', port=443): Read timed out. (read timeout=25); jsonld_detail: 3 events; LET OP: 3 events, was 18 in de laatste 7 runs; LET OP: 15 toekomstige events van de vorige run zijn weg",
+   "strategy": "wp_event",
+   "events": 18,
+   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.denieuweanita.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star; wp_event: 18 events; jsonld_detail: 3 events",
    "ok": true,
    "audit": {
     "time_check": {
-     "sampled": 1,
+     "sampled": 2,
      "offsets": [
+      0.0,
       0.0
      ]
     },
     "coverage": {
-     "time": 0.67,
-     "price": 0.33,
-     "genre": 0.67
+     "time": 0.89,
+     "price": 0.56,
+     "genre": 0.83
     },
     "weekend": 1,
-    "horizon": "2027-01-08",
-    "regression": {
-     "was": 18,
-     "now": 3
-    },
-    "vanished": 15
+    "horizon": "2027-07-02"
    },
    "section": "overig",
    "capacity": 250
-  },
-  {
-   "name": "Gebouw-T",
-   "city": "Bergen op Zoom",
-   "url": "https://www.gebouw-t.nl/agenda",
-   "strategy": "wp_event",
-   "events": 265,
-   "note": "jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://gebouw-t.nl/wp-json/tribe/events/v1/events?page=1&per_page=50&start_date=20; ticketshop herkend: gebouw-t.stager.co; extra bron https://gebouw-t.stager.co/shop/default/events: 70 events via stager, 70 nieuw",
-   "ok": true,
-   "audit": {
-    "time_check": {
-     "sampled": 3,
-     "offsets": [
-      0.0,
-      0.0,
-      0.0
-     ]
-    },
-    "coverage": {
-     "time": 0.98,
-     "price": 0.85,
-     "genre": 0.23
-    },
-    "weekend": 16,
-    "horizon": "2027-10-29"
-   },
-   "section": "poppodium",
-   "capacity": 700
   }
  ],
- "relocated": 281,
- "deduped": 194,
+ "relocated": 288,
+ "deduped": 195,
  "regressions": [
   {
    "venue": "Hedon",
    "was": 139,
    "now": 0
-  },
-  {
-   "venue": "De Nieuwe Anita",
-   "was": 18,
-   "now": 3
   }
  ],
  "diff": {
-  "n_gone": 78,
-  "n_day": 3,
-  "n_time": 15,
-  "n_price": 28,
+  "n_gone": 38,
+  "n_day": 2,
+  "n_time": 31,
+  "n_price": 11,
   "gone": [
    {
-    "venue": "Gebouw-T",
-    "title": "Quiz’m Top 2000",
-    "start": "2026-12-22T15:00",
-    "url": "https://gebouw-t.nl/agenda/quizm-top-2000-4/"
-   },
-   {
-    "venue": "Gebouw-T",
-    "title": "PIÑA",
-    "start": "2027-01-18T21:00",
-    "url": "https://gebouw-t.nl/agenda/pina-5/"
-   },
-   {
-    "venue": "Gebouw-T",
-    "title": "28e Bergse Blues Route",
-    "start": "2027-04-03T20:00",
-    "url": "https://gebouw-t.nl/agenda/28e-bergse-blues-route/"
-   },
-   {
-    "venue": "Bitterzoet",
-    "title": "Tiana Major9",
-    "start": "2026-10-06T20:30",
-    "url": "https://www.paradiso.nl/programma/tiana-major9/2905123"
-   },
-   {
-    "venue": "Grenswerk",
-    "title": "SOB - 'Verstand op nul, frituur op 180'",
-    "start": "2026-11-05T11:00",
-    "url": "https://www.grenswerk.nl/agenda/"
-   },
-   {
-    "venue": "Melkweg",
-    "title": "Eve",
-    "start": "2026-11-04T19:00",
-    "url": "https://www.melkweg.nl/nl/agenda/eve-04-11-2026"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Julia Adriana",
-    "start": "2026-11-05T19:30",
-    "url": "https://www.paradiso.nl/programma/julia-adriana/2895784"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Bartofso 'Le Tour de Masque'",
-    "start": "2026-11-07T22:00",
-    "url": "https://www.paradiso.nl/programma/bartofso-le-tour-de-masque/2885263"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Macy Gray - The Trouble With The Truth Tour",
-    "start": "2026-11-10T20:30",
-    "url": "https://www.paradiso.nl/programma/macy-gray-the-trouble-with-the-truth-tour/2915810"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Bokoesam",
-    "start": "2026-11-15T20:30",
-    "url": "https://www.paradiso.nl/programma/bokoesam/2908023"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Elmiene",
-    "start": "2026-11-28T20:00",
-    "url": "https://www.paradiso.nl/programma/elmiene/2860874"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Tank and the Bangas",
-    "start": "2026-11-30T20:30",
-    "url": "https://www.paradiso.nl/programma/tank-and-the-bangas/2911492"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Paris Paloma",
-    "start": "2026-12-01T20:30",
-    "url": "https://www.paradiso.nl/programma/paris-paloma/2889290"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "The Tubs",
-    "start": "2026-12-06T19:30",
-    "url": "https://www.paradiso.nl/programma/the-tubs/2886934"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Saam Sultan",
-    "start": "2026-12-10T19:30",
-    "url": "https://www.paradiso.nl/programma/saam-sultan/2925704"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Getdown Services",
-    "start": "2027-03-24T20:30",
-    "url": "https://www.paradiso.nl/programma/getdown-services/2919733"
-   },
-   {
-    "venue": "TivoliVredenburg",
-    "title": "Park 6",
-    "start": "2026-10-24T22:00",
-    "url": "https://www.tivolivredenburg.nl/agenda/22033122/park-6-24-10-2026"
-   },
-   {
-    "venue": "Tolhuistuin",
-    "title": "ONE FINE MESS",
-    "start": "2026-10-16T19:00",
-    "url": "https://tolhuistuin.nl/evenementen/one-fine-mess-8"
-   },
-   {
-    "venue": "Tolhuistuin",
-    "title": "Girls In Hawaii + Blumi",
-    "start": "2026-10-28T20:30",
-    "url": "https://www.paradiso.nl/programma/girls-in-hawaii/2866457"
-   },
-   {
-    "venue": "Tolhuistuin",
-    "title": "Lily Seabird",
-    "start": "2026-11-10T20:30",
-    "url": "https://www.paradiso.nl/programma/lily-seabird/2906751"
-   },
-   {
-    "venue": "Tolhuistuin",
-    "title": "Moses Boyd",
-    "start": "2027-03-23T20:30",
-    "url": "https://www.paradiso.nl/programma/moses-boyd/2927475"
+    "venue": "De Vereeniging",
+    "title": "Gratis lunchconcert — Jan Van de Watering op trombone",
+    "start": "2026-10-07T12:30",
+    "url": "https://www.stadsschouwburgendevereeniging.nl/programma/gratis-lunchconcert-qgh5"
    },
    {
     "venue": "'t Beest",
-    "title": "The Cycle of Love",
-    "start": "2026-10-06T10:30",
-    "url": "https://tbeest.nl/productie/the-cycle-of-love/"
+    "title": "Juste une Illusion",
+    "start": "2026-10-07T13:30",
+    "url": "https://tbeest.nl/evenementen/"
    },
    {
-    "venue": "BIRD",
-    "title": "Azymuth",
-    "start": "2026-10-06T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Brothers Moving (Support: BWH)",
-    "start": "2026-10-10T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": ".Multibeat",
-    "start": "2026-10-11T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Myles Sanko",
-    "start": "2026-10-15T19:30",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "360 Degrees: Theo Parrish x Shy One",
-    "start": "2026-10-16T23:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Dina Ögon",
-    "start": "2026-10-18T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "New Jazz Underground",
-    "start": "2026-10-29T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "The Meltdown",
-    "start": "2026-10-30T19:30",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Ruben Hein",
-    "start": "2026-10-30T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Mark Guiliana Beat Music",
-    "start": "2026-11-01T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Tasha",
-    "start": "2026-11-02T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "MANU 'De Herontdekking van de Hemel'",
-    "start": "2026-11-04T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Infinity Song | Support Act: uwase",
-    "start": "2026-11-11T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Nyve",
-    "start": "2026-11-13T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Delany",
-    "start": "2026-11-14T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Joyce Moreno",
-    "start": "2026-11-18T19:30",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Chico Chico",
-    "start": "2026-11-19T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Momoko Gill",
-    "start": "2026-11-20T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Collier plays Coltrane",
-    "start": "2026-11-21T18:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Caoilfhionn Rose",
-    "start": "2026-11-21T19:30",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Rijck",
-    "start": "2026-11-26T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Josylvio",
-    "start": "2026-12-03T19:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Zwangere Guy",
-    "start": "2026-12-03T19:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Nusantara Beat",
-    "start": "2026-12-08T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Gallowstreet",
-    "start": "2026-12-13T19:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "BIRD NYE : ONE Love",
-    "start": "2026-12-31T23:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Karate Boogaloo",
-    "start": "2027-02-03T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Yong Yello",
-    "start": "2027-02-19T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "New Cool Collective",
-    "start": "2027-02-20T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "anaiis",
-    "start": "2027-02-27T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Soyuz ( СОЮЗ )",
-    "start": "2027-03-06T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Kans",
-    "start": "2027-03-12T19:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Saul Williams | Leap Life Tour",
-    "start": "2027-04-02T20:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "BIRD",
-    "title": "Kraak & Smaak",
-    "start": "2027-04-22T19:00",
-    "url": "https://bird-rotterdam.nl/agenda"
-   },
-   {
-    "venue": "Bolwerk (Poort)",
-    "title": "Drukwerk + DJ René CD Schijn Een Lichtje Op Mij",
-    "start": "2027-01-15T20:30",
-    "url": "https://ontdekpoort.nl/programma/3043/drukwerk-dj-rene-cd/"
-   },
-   {
-    "venue": "Bolwerk (Poort)",
-    "title": "Loïs Lane in concert: 40 jaar",
-    "start": "2027-01-16T20:15",
-    "url": "https://ontdekpoort.nl/programma/3045/lois-lane/"
-   },
-   {
-    "venue": "V11",
-    "title": "Halloween Party met DnDykes",
+    "venue": "WORM",
+    "title": "Cockroaches Welcome!",
     "start": "2026-10-31T22:00",
-    "url": "https://www.vessel11.nl/nl/events/halloween-party-met-dndykes/"
+    "url": "https://worm.org/production/cockroaches-welcome/"
    },
    {
-    "venue": "Rotown",
-    "title": "Gallowstreet",
-    "start": "2026-12-13T20:00",
-    "url": "https://www.rotown.nl/agenda/gallowstreet-1/"
+    "venue": "Paradiso",
+    "title": "La Casa Del Perreo",
+    "start": "2026-10-17T23:59",
+    "url": "https://www.paradiso.nl/programma/la-casa-del-perreo/2940814"
    },
    {
-    "venue": "Zonnehuis",
-    "title": "Dayna Kurtz & Robert Maché",
-    "start": "2026-12-09T20:30",
-    "url": "https://www.paradiso.nl/programma/dayna-kurtz-robert-mache/2905460"
+    "venue": "Paradiso",
+    "title": "Eastern Margins & Natural Mind- ADE",
+    "start": "2026-10-22T20:00",
+    "url": "https://www.paradiso.nl/programma/eastern-margins-ade/2926125"
    },
    {
-    "venue": "Burgerweeshuis",
-    "title": "Luwten - BRUT & Burgerweeshuis present",
-    "start": "2026-12-19T20:30",
-    "url": "https://www.burgerweeshuis.nl/programma"
+    "venue": "TivoliVredenburg",
+    "title": "IKFU Cinema: De muziekwereld van Vera Beths",
+    "start": "2026-12-27T16:00",
+    "url": "https://www.tivolivredenburg.nl/agenda/18674650/ikfu-cinema-de-muziekwereld-van-vera-beths-27-12-2026"
+   },
+   {
+    "venue": "BIRD",
+    "title": "Gallowstreet | Annabel Rotterdam | 13 Dec 2026",
+    "start": "2026-12-13T20:30",
+    "url": "https://bird-rotterdam.nl/event/gallowstreet-at-annabel-13-12-2026"
+   },
+   {
+    "venue": "Metropool",
+    "title": "Starman - The Dutch David Bowie Tribute",
+    "start": "2027-04-16T20:00",
+    "url": "https://metropool.nl/agenda/starman-the-dutch-david-bowie-tribute"
+   },
+   {
+    "venue": "Willemeen",
+    "title": "Gathering Bizarro met: Paindemonium + In All Fours + Von Mollestein + Mismorium + Skumratzz",
+    "start": "2027-01-23T20:00",
+    "url": "https://www.willemeen.nl/programma/gathering-bizarro-met-paindemonium-in-all-fours-be-von-mollestein-mismorium-skumratzz/"
+   },
+   {
+    "venue": "Bibelot",
+    "title": "Studio Brandstof: Ann My Guard",
+    "start": "2026-10-23T22:45",
+    "url": "https://bibelot.net/programma/studio-brandstof-ann-my-guard/"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "First Bass",
+    "start": "2026-10-31T22:00",
+    "url": "https://nieuwenor.nl/programma/2026/10/31/first-bass"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Voorronde Comedy Festival Limburg",
+    "start": "2026-11-01T15:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/01/voorronde-comedyfestival"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "De Nacht Academy: Seminar - Sessie 4",
+    "start": "2026-11-04T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/04/de-nacht-academy-seminar-sessie-4"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Fresku x Metropole Orkest - Theater Heerlen",
+    "start": "2026-11-04T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/04/fresku-x-metropole-orkest"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Club Zer00's",
+    "start": "2026-11-06T20:30",
+    "url": "https://nieuwenor.nl/programma/2026/11/06/club-zer00s"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Knaltibal",
+    "start": "2026-11-07T22:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/07/knaltibal"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Turpentine Valey & Ka'Una",
+    "start": "2026-11-12T20:30",
+    "url": "https://nieuwenor.nl/programma/2026/11/12/sagor-som-leder-mot-slutet-turpentine-valley"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Nirvana Tribute: Paceshifters Play Nevermind",
+    "start": "2026-11-13T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/13/paceshifters-play-nevermind"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Early Resurrection",
+    "start": "2026-11-13T22:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/13/early-resurrection"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Timeless Indoor 2026",
+    "start": "2026-11-20T21:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/20/timeless-indoor"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Mosae Zappa",
+    "start": "2026-11-21T19:30",
+    "url": "https://nieuwenor.nl/programma/2026/11/21/mosae-zappa"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Hard Surface",
+    "start": "2026-11-27T23:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/27/hard-surface"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "40UP",
+    "start": "2026-11-28T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/28/40up"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Platenbeurs",
+    "start": "2026-11-29T12:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/29/platenbeurs-heerlen"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Luka Bloom - LIMBURGzaal",
+    "start": "2026-12-02T20:30",
+    "url": "https://nieuwenor.nl/programma/2026/12/02/luka-bloom"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "De Nacht Academy: Seminar - Sessie 6",
+    "start": "2026-12-09T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/09/de-nacht-academy-seminar-sessie-6"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Mental Theo + Dr. Rude",
+    "start": "2026-12-11T21:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/11/mental-theo-dr-rude"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Karaoke Café",
+    "start": "2026-12-18T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/18/karaoke-café"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "VroegZat",
+    "start": "2026-12-19T19:30",
+    "url": "https://nieuwenor.nl/programma/2026/12/19/vroegzat"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Platenbeurs Heerlen: XL Kersteditie",
+    "start": "2026-12-28T12:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/28/platenbeurs-heerlen-xl-kersteditie"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "De Nacht Academy: Seminar - Sessie 7",
+    "start": "2027-01-13T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/13/de-nacht-academy-seminar-sessie-7"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Time Bandits",
+    "start": "2027-01-15T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/15/novastar"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Nostalgia Night",
+    "start": "2027-01-16T22:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/16/nostalgia-night"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "South Wave",
+    "start": "2027-01-23T20:30",
+    "url": "https://nieuwenor.nl/programma/2027/01/23/south-wave"
+   },
+   {
+    "venue": "De Vorstin",
+    "title": "Jamsessie",
+    "start": "2026-10-11T15:15",
+    "url": "https://vorstin.nl/agenda/jamsessie-13-09-2026/"
+   },
+   {
+    "venue": "Grenswerk",
+    "title": "Hitster Night",
+    "start": "2026-10-15T20:00",
+    "url": "https://www.grenswerk.nl/agenda/hitster-night-okt/"
+   },
+   {
+    "venue": "Baroeg",
+    "title": "Riffsniffer presents: Colour Haze + Smokemaster",
+    "start": "2027-02-21T15:30",
+    "url": "https://www.baroeg.nl/agenda"
    },
    {
     "venue": "Maassilo",
-    "title": "Gotu Jim",
-    "start": "2026-11-19T20:00",
-    "url": "https://www.rotown.nl/agenda/gotu-jim-1/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Kinderevent Podium Zonder Drempel",
-    "start": "2027-01-14T14:00",
-    "url": "https://denieuweanita.nl/agenda/podium-zonder-drempel/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Boekenruil Tussen de Regels",
-    "start": "2027-02-15T18:00",
-    "url": "https://denieuweanita.nl/agenda/boekenruil-tussen-de-regels/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Keldercabaret",
-    "start": "2027-02-19T20:15",
-    "url": "https://denieuweanita.nl/agenda/keldercabaret-22/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Boekpresentatie Archipel in inkt",
-    "start": "2027-03-04T20:00",
-    "url": "https://denieuweanita.nl/agenda/archipel-in-inkt/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Amsterdam Vinyl Club",
-    "start": "2027-03-11T19:30",
-    "url": "https://denieuweanita.nl/agenda/amsterdam-vinyl-club/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Literanita met Zoë Blue, Insayno, Martin Wijtgaard, Rende Arends en Masja Ottenheim",
-    "start": "2027-03-15T20:30",
-    "url": "https://denieuweanita.nl/agenda/literanita-22/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Amsterdam Vinyl Club",
-    "start": "2027-03-20T20:00",
-    "url": "https://denieuweanita.nl/agenda/amsterdam-vinyl-club-2/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Karafaan + PARO + DJ Sjaak",
-    "start": "2027-03-25T20:30",
-    "url": "https://denieuweanita.nl/agenda/karafaan-paro-dj-sjaak/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "SOLD OUT – Keldercabaret",
-    "start": "2027-04-16T20:15",
-    "url": "https://denieuweanita.nl/agenda/keldercabaret-20/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Oh La La!",
-    "start": "2027-05-07T20:00",
-    "url": "https://denieuweanita.nl/agenda/oh-la-la-dj-natashka/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Trippin’ Blues",
-    "start": "2027-06-18T21:00",
-    "url": "https://denieuweanita.nl/agenda/trippin-blues-amsterdam/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Trippin’ Blues Open Stage + Timm knipt!",
-    "start": "2027-06-23T20:00",
-    "url": "https://denieuweanita.nl/agenda/timm-knipt-13/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Temps Perdu #2",
-    "start": "2027-07-01T20:00",
-    "url": "https://denieuweanita.nl/agenda/temps-perdu-2/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Oh La La!",
-    "start": "2027-07-02T00:00",
-    "url": "https://denieuweanita.nl/agenda/oh-la-la-2/"
-   },
-   {
-    "venue": "De Nieuwe Anita",
-    "title": "Duo-expositie opening: Marijke Hoenderdos & Kees Kerkhoven",
-    "start": "2027-07-02T18:00",
-    "url": "https://denieuweanita.nl/agenda/duo-expositie-opening-marijke-hoenderdos-kees-kerkhoven/"
+    "title": "Zwangere Guy",
+    "start": "2026-12-03T20:00",
+    "url": "https://www.rotown.nl/agenda/zwangere-guy/"
    }
   ],
   "day": [
    {
-    "venue": "Bitterzoet",
-    "title": "Petch Mode, An Evening With Depeche Mode Music [POSTPONED]",
-    "start": "2026-10-07T19:30",
-    "url": "https://www.bitterzoet.com/event/petch-mode-an-evening-with-depeche-mode-music/",
-    "now": "2027-04-23T19:30"
+    "venue": "WORM",
+    "title": "Kunstavond: WORM MEGAZine Launch",
+    "start": "2026-11-06T20:30",
+    "url": "https://worm.org/production/kunstavond-worm-megazine-launch/",
+    "now": "2026-11-26T20:30"
    },
    {
-    "venue": "Burgerweeshuis",
-    "title": "Luwten",
-    "start": "2026-10-09T19:30",
-    "url": "https://www.burgerweeshuis.nl/events/luwten",
-    "now": "2026-12-19T20:00"
-   },
-   {
-    "venue": "De Flux",
-    "title": "Def Americans – Johnny Cash Tribute",
-    "start": "2026-10-09T20:30",
-    "url": "https://www.podiumdeflux.nl/event/def-americans/",
-    "now": "2027-03-19T20:30"
+    "venue": "Estrado",
+    "title": "Helen Jewett",
+    "start": "2026-10-10T20:30",
+    "url": "https://estrado.nl/productie/helen-jewett/",
+    "now": "2027-02-12T20:30"
    }
   ],
   "time": [
    {
-    "venue": "So What!",
-    "title": "Rock Pulse",
-    "start": "2026-10-23T22:30",
-    "url": "https://www.so-what.nl/event/rock-pulse-oct-2026/",
-    "now": "2026-10-23T20:00"
-   },
-   {
-    "venue": "Doornroosje",
-    "title": "Smells Like 80s",
-    "start": "2026-11-21T21:00",
-    "url": "https://www.doornroosje.nl/event/smells-like-80s-6/",
-    "now": "2026-11-21T23:59"
-   },
-   {
     "venue": "Paradiso",
-    "title": "Froukje + Jaïr Faria",
-    "start": "2026-12-10T20:30",
-    "url": "https://www.paradiso.nl/programma/froukje/2896656",
-    "now": "2026-12-10T19:30"
+    "title": "Tones Presents: Juls - ADE",
+    "start": "2026-10-22T18:45",
+    "url": "https://www.paradiso.nl/programma/tones-presents-juls-ade/2941966",
+    "now": "2026-10-22T20:15"
    },
    {
-    "venue": "Paradiso",
-    "title": "The Klittens: Klitfest",
-    "start": "2026-12-17T19:30",
-    "url": "https://www.paradiso.nl/programma/the-klittens-klitfest/2914450",
-    "now": "2026-12-17T21:00"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Elmer",
-    "start": "2027-05-29T20:00",
-    "url": "https://www.paradiso.nl/programma/elmer/2924230",
-    "now": "2027-05-29T19:00"
-   },
-   {
-    "venue": "Tolhuistuin",
-    "title": "LOE.",
-    "start": "2026-10-08T20:30",
-    "url": "https://www.paradiso.nl/programma/loe/2855768",
-    "now": "2026-10-08T19:30"
-   },
-   {
-    "venue": "'t Beest",
-    "title": "The Rivals of Amziah King",
-    "start": "2026-10-06T13:30",
-    "url": "https://tbeest.nl/productie/the-rivals-of-amziah-king/",
-    "now": "2026-10-06T20:00"
-   },
-   {
-    "venue": "013",
-    "title": "IJSLAND",
-    "start": "2026-10-08T20:00",
-    "url": "https://www.013.nl/programma/126662/ijsland",
-    "now": "2026-10-08T21:00"
-   },
-   {
-    "venue": "013",
-    "title": "Ernst, Bobbie & de rest",
-    "start": "2026-11-23T11:00",
-    "url": "https://www.013.nl/programma/159485/ernst-bobbie-de-rest",
-    "now": "2026-11-23T15:30"
-   },
-   {
-    "venue": "013",
-    "title": "Ernst, Bobbie & de rest",
-    "start": "2026-11-24T11:00",
-    "url": "https://www.013.nl/programma/159486/ernst-bobbie-de-rest",
-    "now": "2026-11-24T15:30"
-   },
-   {
-    "venue": "013",
-    "title": "Ernst, Bobbie & de rest",
-    "start": "2026-11-25T11:00",
-    "url": "https://www.013.nl/programma/159487/ernst-bobbie-de-rest",
-    "now": "2026-11-25T13:30"
-   },
-   {
-    "venue": "013",
-    "title": "Ernst, Bobbie & de rest",
-    "start": "2026-11-26T11:00",
-    "url": "https://www.013.nl/programma/159494/ernst-bobbie-de-rest",
-    "now": "2026-11-26T15:30"
-   },
-   {
-    "venue": "013",
-    "title": "JOB Dutchtuber & Billy The Kit",
-    "start": "2027-01-24T13:00",
-    "url": "https://www.013.nl/programma/159540/job-dutchtuber-billy-the-kit",
-    "now": "2027-01-24T15:30"
+    "venue": "PAARD",
+    "title": "SUPAFLY 2026",
+    "start": "2026-10-10T19:45",
+    "url": "https://www.paard.nl/event/supafly-2026/",
+    "now": "2026-10-10T16:30"
    },
    {
     "venue": "Metropool",
-    "title": "NILE & Guests: REDSPHERE + INTREPID + ORECUS",
-    "start": "2026-12-11T20:30",
-    "url": "https://metropool.nl/agenda/nile-guests-redsphere-intrepid-orecus",
-    "now": "2026-12-11T19:30"
+    "title": "FEUERENGEL - A Tribute To Rammstein",
+    "start": "2026-11-28T20:30",
+    "url": "https://metropool.nl/agenda/feuerengel-a-tribute-to-rammstein-28-nov",
+    "now": "2026-11-28T19:30"
    },
    {
-    "venue": "Metropool",
-    "title": "Bouke & the ElvisMatters band",
-    "start": "2027-01-30T19:30",
-    "url": "https://metropool.nl/agenda/bouke-the-elvismatters-band-30-jan",
-    "now": "2027-01-30T20:30"
-   }
-  ],
-  "price": [
-   {
-    "venue": "Victorie",
-    "title": "Masterclass Carl Verheyen",
-    "start": "2026-10-15T16:30",
-    "url": "https://www.podiumvictorie.nl/programma/masterclass-carl-verheyen/",
-    "price": "€ 50",
-    "now": "€ 35"
+    "venue": "Muziekgieterij",
+    "title": "Dotan",
+    "start": "2026-10-09T21:00",
+    "url": "https://muziekgieterij.nl/event/dotan-2026-10-09/",
+    "now": "2026-10-09T19:45"
    },
    {
-    "venue": "Victorie",
-    "title": "Carl Verheyen (Supertramp)",
-    "start": "2026-10-15T20:30",
-    "url": "https://www.podiumvictorie.nl/programma/carl-verheyen/",
-    "price": "€ 50",
-    "now": "€ 35"
+    "venue": "Nobel",
+    "title": "Strictly RAM",
+    "start": "2027-01-16T19:00",
+    "url": "https://nobel.nl/agenda/strictly-ram-16-jan-2027",
+    "now": "2027-01-16T18:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Petch Mode, An Evening With Depeche Mode Music [POSTPONED]",
-    "start": "2026-10-07T19:30",
-    "url": "https://www.bitterzoet.com/event/petch-mode-an-evening-with-depeche-mode-music/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "The Cassandra Complex",
+    "start": "2026-11-08T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/08/the-cassandra-complex",
+    "now": "2026-11-08T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Bungalow Collect",
-    "start": "2026-10-09T19:30",
-    "url": "https://www.bitterzoet.com/event/bungalow-collect/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "WIES",
+    "start": "2026-11-14T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/11/14/wies",
+    "now": "2026-11-14T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Do You Remember",
-    "start": "2026-10-10T23:30",
-    "url": "https://www.bitterzoet.com/event/do-you-remember-21/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Bazart",
+    "start": "2026-12-05T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/05/bazart",
+    "now": "2026-12-05T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "ADE – DAVE NUNES PRESENTS: DIASPORA ADE SPECIAL",
-    "start": "2026-10-24T19:00",
-    "url": "https://www.bitterzoet.com/event/ade-dave-nunes-presents-diaspora-ade-special/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Razorlight",
+    "start": "2026-12-09T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/09/razorlight",
+    "now": "2026-12-09T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "ADE – JEA Presents: Can I Get A JEA",
-    "start": "2026-10-24T23:59",
-    "url": "https://www.bitterzoet.com/event/ade-can-i-get-a-jea/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Nile",
+    "start": "2026-12-10T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/10/nile",
+    "now": "2026-12-10T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Natanya - THE ATTITUDE TOUR",
-    "start": "2026-10-26T20:30",
-    "url": "https://www.paradiso.nl/programma/natanya-the-attitude-tour/2902260",
-    "price": "€ 19",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "MEROL",
+    "start": "2026-12-13T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/13/merol",
+    "now": "2026-12-13T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Kalben 'Land of Lost Poets' Tour",
-    "start": "2026-11-03T20:00",
-    "url": "https://www.paradiso.nl/programma/kalben-land-of-lost-poets-tour/2870556",
-    "price": "€ 34,20",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Jett Rebel",
+    "start": "2026-12-17T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/17/jett-rebel",
+    "now": "2026-12-17T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Alewya",
-    "start": "2026-11-12T20:30",
-    "url": "https://www.paradiso.nl/programma/alewya/2913064",
-    "price": "€ 18",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Queen Tribute by The Vipers",
+    "start": "2026-12-18T20:30",
+    "url": "https://nieuwenor.nl/programma/2026/12/18/the-vipers",
+    "now": "2026-12-18T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Raffaele Casarano",
-    "start": "2026-11-18T19:30",
-    "url": "https://www.bitterzoet.com/event/raffaele-casarano/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Bonkers Bingo",
+    "start": "2026-12-21T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/21/bonkers-bingo",
+    "now": "2026-12-21T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Mietze Conte",
-    "start": "2026-11-28T20:00",
-    "url": "https://www.paradiso.nl/programma/mietze-conte/2903037",
-    "price": "€ 17",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "The Fortunate Sons",
+    "start": "2027-01-10T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/10/the-fortunate-sons",
+    "now": "2027-01-10T19:00"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Senser",
-    "start": "2026-12-05T19:30",
-    "url": "https://www.bitterzoet.com/event/senser/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "LaFee",
+    "start": "2027-01-17T19:30",
+    "url": "https://nieuwenor.nl/programma/2027/01/17/lafee",
+    "now": "2027-01-17T18:30"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "Beardyman",
-    "start": "2026-12-12T20:30",
-    "url": "https://www.paradiso.nl/programma/beardyman/2894370",
-    "price": "€ 20",
-    "now": "€ 25,70"
+    "venue": "Nieuwe Nor",
+    "title": "Bonkers Bingo",
+    "start": "2027-01-22T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/22/bonkers-bingo",
+    "now": "2027-01-22T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "ACinDC",
+    "start": "2027-01-29T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/29/acindc",
+    "now": "2027-01-29T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "The Tool Experience",
+    "start": "2027-02-18T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/02/18/the-tool-experience",
+    "now": "2027-02-18T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "British Invasion ft. Musest, reEditors & Scummy Men",
+    "start": "2027-02-20T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/02/20/british-invasion-ft-musest-reeditors-scummy-men",
+    "now": "2027-02-20T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Somethin' Fresh",
+    "start": "2027-03-13T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/03/13/somethin-fresh",
+    "now": "2027-03-13T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "The Chameleons",
+    "start": "2027-03-20T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/03/20/the-chameleons",
+    "now": "2027-03-20T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Starman",
+    "start": "2027-03-25T19:00",
+    "url": "https://nieuwenor.nl/programma/2027/03/25/starman",
+    "now": "2027-03-25T18:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Ultimate Eagles",
+    "start": "2027-03-26T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/03/26/ultimate-eagles",
+    "now": "2027-03-26T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Living Theory + Limp Business",
+    "start": "2027-04-16T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/04/16/living-theory-limp-business",
+    "now": "2027-04-16T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Ritual - The Dutch Ghost Experience",
+    "start": "2027-05-22T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/05/22/ritual-the-dutch-ghost-experience",
+    "now": "2027-05-22T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Bettie Serveert",
+    "start": "2027-09-25T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/09/25/bettie-serveert",
+    "now": "2027-09-25T19:00"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Still Collins",
+    "start": "2027-10-22T21:00",
+    "url": "https://nieuwenor.nl/programma/2027/10/22/still-collins",
+    "now": "2027-10-22T20:00"
    },
    {
     "venue": "Bitterzoet",
     "title": "Xillan",
     "start": "2026-12-13T19:30",
     "url": "https://www.bitterzoet.com/event/xillan/",
-    "price": "€ 15",
-    "now": "€ 25,70"
+    "now": "2026-12-13T20:30"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "St. Lundi",
-    "start": "2027-03-10T19:30",
-    "url": "https://www.bitterzoet.com/event/st-lundi/",
-    "price": "€ 8",
-    "now": "€ 25,70"
+    "venue": "Q-factory",
+    "title": "Ambyar Fest Amsterdam — Q-Factory",
+    "start": "2026-10-09T18:30",
+    "url": "https://q-factory.com/nl/events/ambyar-fest-amsterdam",
+    "now": "2026-10-09T19:30"
    },
    {
-    "venue": "Bitterzoet",
-    "title": "ADMT",
-    "start": "2027-03-22T19:30",
-    "url": "https://www.bitterzoet.com/event/admt-2/",
-    "price": "€ 8",
-    "now": "€ 25,70"
-   },
-   {
-    "venue": "AFAS Live",
-    "title": "Lizzy McAlpine",
-    "start": "2027-03-26T18:30",
-    "url": "https://www.afaslive.nl/agenda/lizzymcalpine",
-    "price": "€ 53",
-    "now": "€ 61,45"
-   },
-   {
-    "venue": "Paradiso",
-    "title": "Froukje + Jaïr Faria",
-    "start": "2026-12-10T20:30",
-    "url": "https://www.paradiso.nl/programma/froukje/2896656",
-    "price": "€ 35",
-    "now": "€ 18,00"
-   },
-   {
-    "venue": "Cpunt",
-    "title": "The Rumpled",
-    "start": "2027-05-19T20:30",
-    "url": "https://www.cpunt.nl/agenda/the-rumpled",
-    "price": "€ 15",
-    "now": "€ 24,50"
-   },
+    "venue": "Baroeg",
+    "title": "Riffsniffer presents: Colour Haze + Smokemaster",
+    "start": "2027-02-21T19:00",
+    "url": "https://baroeg.nl/productie/riffsniffer-presents-colour-haze-smokemaster/",
+    "now": "2027-02-21T15:00"
+   }
+  ],
+  "price": [
    {
     "venue": "PAARD",
-    "title": "CHEF’SPECIAL",
-    "start": "2027-03-06T19:30",
-    "url": "https://www.paard.nl/event/chefspecial-7/",
-    "price": "€ 27,50",
-    "now": "€ 58,50"
-   },
-   {
-    "venue": "Ahoy",
-    "title": "C2C: Country to Country",
-    "start": "2027-03-05T15:15",
-    "url": "https://www.ahoy.nl/agenda/festival/c2c-country-to-country-2027",
-    "price": "€ 156,80",
-    "now": "€ € 89,60"
+    "title": "PICASSO HALLOWEEN FEEST",
+    "start": "2026-10-29T23:30",
+    "url": "https://www.paard.nl/event/picasso-halloween-feest/",
+    "price": "€ 15",
+    "now": "€ 7,50"
    },
    {
     "venue": "Willemeen",
     "title": "Back Alley Ritual: Sorcery + Cutthroat + Sons Of Snakes",
     "start": "2026-11-06T20:30",
     "url": "https://www.willemeen.nl/programma/back-alley-ritual-sorcery-se-cutthroat-ie-sons-of-snakes/",
-    "price": "€ 26,50",
-    "now": "€ 13"
+    "price": "€ 13",
+    "now": "€ 26,50"
    },
    {
     "venue": "Bibelot",
-    "title": "The Slackers + Leah Farmer & The Badasonics",
-    "start": "2026-10-17T20:00",
-    "url": "https://bibelot.net/programma/the-slackers-usa/",
-    "price": "€ 18,75",
-    "now": "€ 28"
+    "title": "Paceshifters play Nirvana",
+    "start": "2026-12-10T20:00",
+    "url": "https://bibelot.net/programma/paceshifters-play-nirvana/",
+    "price": "€ 17,25",
+    "now": "€ 25,76"
    },
    {
     "venue": "Bibelot",
-    "title": "Halloween: Alternative Anthems + Dracula’s Beach Party",
-    "start": "2026-10-31T20:00",
-    "url": "https://bibelot.net/programma/halloween-alternative-anthems-draculas-beach-party/",
-    "price": "€ 25,20",
-    "now": "€ 7,50"
-   },
-   {
-    "venue": "Bibelot",
-    "title": "The Obsessed + Svjetlost",
-    "start": "2026-11-04T20:00",
-    "url": "https://bibelot.net/programma/the-obsessed-us/",
-    "price": "€ 18,75",
-    "now": "€ 28"
+    "title": "The Dirty Daddies",
+    "start": "2026-12-19T21:00",
+    "url": "https://bibelot.net/programma/the-dirty-daddies-4/",
+    "price": "€ 44,80",
+    "now": "€ 30"
    },
    {
     "venue": "Nieuwe Nor",
-    "title": "Opening expo 'Voyage d'Amour'",
-    "start": "2026-10-15T20:00",
-    "url": "https://nieuwenor.nl/programma/2026/10/15/opening-expo-voyager-damour",
-    "price": "€ 5",
-    "now": "€ 39,50"
+    "title": "Bonkers Bingo",
+    "start": "2026-12-21T20:00",
+    "url": "https://nieuwenor.nl/programma/2026/12/21/bonkers-bingo",
+    "price": "€ 77,50",
+    "now": "€ 25"
    },
    {
-    "venue": "Q-factory",
-    "title": "Amsterdam Guitar Heaven 2026 — Q-Factory",
-    "start": "2026-11-21T12:00",
-    "url": "https://q-factory.com/nl/events/amsterdam-guitar-heaven-2026",
-    "price": "€ 13",
-    "now": "€ 20"
+    "venue": "Nieuwe Nor",
+    "title": "Bonkers Bingo",
+    "start": "2027-01-22T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/01/22/bonkers-bingo",
+    "price": "€ 77,50",
+    "now": "€ 25"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Somethin' Fresh",
+    "start": "2027-03-13T20:00",
+    "url": "https://nieuwenor.nl/programma/2027/03/13/somethin-fresh",
+    "price": "€ 20",
+    "now": "€ 32,50"
+   },
+   {
+    "venue": "Bitterzoet",
+    "title": "Natanya – THE ATTITUDE TOUR",
+    "start": "2026-10-26T20:30",
+    "url": "https://www.bitterzoet.com/event/natanya-the-attitude-tour/",
+    "price": "€ 25,70",
+    "now": "€ 19,00"
+   },
+   {
+    "venue": "Bitterzoet",
+    "title": "Mietze Conte",
+    "start": "2026-11-28T20:00",
+    "url": "https://www.bitterzoet.com/event/mietze-conte/",
+    "price": "€ 25,70",
+    "now": "€ 17,00"
+   },
+   {
+    "venue": "Bitterzoet",
+    "title": "Beardyman",
+    "start": "2026-12-12T20:30",
+    "url": "https://www.bitterzoet.com/event/beardyman/",
+    "price": "€ 25,70",
+    "now": "€ 20,00"
+   },
+   {
+    "venue": "Bitterzoet",
+    "title": "Xillan",
+    "start": "2026-12-13T19:30",
+    "url": "https://www.bitterzoet.com/event/xillan/",
+    "price": "€ 25,70",
+    "now": "€ 15,00"
    }
   ],
-  "vanished_venues": {
-   "BIRD": 34,
-   "De Nieuwe Anita": 15
-  }
+  "vanished_venues": {}
  },
  "learned": {
   "kind_tags": {
@@ -5802,10 +5510,26 @@
     "group": "alternative",
     "label": "post punk new wave",
     "obs": 5
+   },
+   "beeldende kunst": {
+    "group": "classical",
+    "label": "beeldende kunst",
+    "obs": 5
+   },
+   "housewarming": {
+    "group": "electronic",
+    "label": "housewarming",
+    "obs": 5
+   },
+   "dom gaan": {
+    "group": "hiphop",
+    "label": "dom gaan",
+    "obs": 5
    }
   }
  },
  "subgenre_labels": {
+  "african": "Afrikaans",
   "celtic": "Keltisch",
   "singer-songwriter": "Singer-songwriter",
   "neo-soul": "Neo-soul",
@@ -5825,29 +5549,73 @@
   "bluegrass": "Bluegrass",
   "nederpop": "Nederpop",
   "shoegaze": "Shoegaze",
+  "reggaeton": "Reggaeton",
+  "party hits": "party hits",
+  "decennia": "Decennia",
+  "afrobeats": "Afrobeats",
+  "uk garage": "UK garage",
   "indie pop": "Indiepop",
+  "dancepop": "dancepop",
+  "post-punk": "Post-punk",
+  "hardcore": "Hardcore",
+  "heavy metal": "Heavy metal",
+  "prog rock": "Progrock",
+  "motown": "Motown",
+  "neo-classical": "Neoklassiek",
+  "metalcore": "Metalcore",
+  "hyperpop": "Hyperpop",
+  "doom": "Doom",
+  "thrash": "Thrashmetal",
+  "pop punk": "Pop-punk",
+  "synthpop": "Synthpop",
+  "black metal": "Blackmetal",
+  "dancehall": "Dancehall",
+  "salsa": "Salsa",
+  "punkrock": "punkrock",
+  "hard rock": "Hardrock",
+  "blues": "Blues",
+  "tribute": "Tribute",
+  "electro": "Electro",
+  "levenslied": "Levenslied",
+  "kleinkunst": "Kleinkunst",
+  "trance": "Trance",
+  "drum & bass": "Drum & bass",
+  "post-hardcore": "Post-hardcore",
+  "post-metal": "Post-metal",
+  "post-rock": "Post-rock",
+  "death metal": "Deathmetal",
+  "brazilian": "Braziliaans",
+  "avant-garde": "Avant-garde",
+  "ska punk": "Ska-punk",
+  "cumbia": "Cumbia",
+  "noise": "Noise",
+  "garage rock": "Garagerock",
+  "stoner": "Stoner",
+  "dream pop": "Dreampop",
+  "riot grrrl": "riot grrrl",
+  "hardcore punk": "Hardcore-punk",
+  "jazz klassiekers": "jazz klassiekers",
+  "youtube": "youtube",
+  "kinderprogramma": "kinderprogramma",
+  "fusion": "Fusion",
+  "nu metal": "Nu-metal",
+  "folk": "Folk",
+  "britpop": "Britpop",
+  "idm": "IDM",
+  "downtempo": "Downtempo",
   "softrock": "softrock",
   "alt folk": "alt folk",
   "fantasy": "fantasy",
-  "dancepop": "dancepop",
   "tiktok sensatie": "tiktok sensatie",
   "house": "House",
   "drama": "drama",
-  "post-hardcore": "Post-hardcore",
-  "downtempo": "Downtempo",
   "disco": "Disco",
   "genre bending": "genre bending",
-  "party hits": "party hits",
-  "decennia": "Decennia",
-  "hardcore": "Hardcore",
   "fanfare": "fanfare",
   "ska": "Ska",
   "americana": "Americana",
-  "drum & bass": "Drum & bass",
   "folk punk": "Folk-punk",
   "korte films": "korte films",
-  "afrobeats": "Afrobeats",
-  "synthpop": "Synthpop",
   "christelijk": "christelijk",
   "rap": "Rap",
   "avant pop": "avant pop",
@@ -5856,54 +5624,38 @@
   "roma": "roma",
   "koreaans": "koreaans",
   "italodisco": "italodisco",
-  "dancehall": "Dancehall",
   "future house": "future house",
   "edm": "EDM",
   "future bass": "future bass",
   "hardhouse": "hardhouse",
-  "uk garage": "UK garage",
   "dubstep": "Dubstep",
   "melodic techno": "melodic techno",
   "komedie": "komedie",
   "v": "v",
-  "trance": "Trance",
-  "electro": "Electro",
   "amapiano": "Amapiano",
   "afro tech": "afro tech",
   "boekpresentatie": "boekpresentatie",
   "dub": "Dub",
-  "blues": "Blues",
   "saxofonist": "saxofonist",
-  "brazilian": "Braziliaans",
   "brega": "brega",
-  "britpop": "Britpop",
-  "metalcore": "Metalcore",
   "emo": "Emo",
   "hardcore hiphop": "hardcore hiphop",
   "ballroom culture": "ballroom culture",
   "baile funk": "Baile funk",
-  "kleinkunst": "Kleinkunst",
-  "pop punk": "Pop-punk",
   "countryrock": "countryrock",
   "trap": "Trap",
-  "folk": "Folk",
   "lokale invloeden": "lokale invloeden",
   "country": "Country",
-  "dream pop": "Dreampop",
   "minimalistisch": "minimalistisch",
   "melodic house": "melodic house",
   "nostalgie": "nostalgie",
   "hitjes": "hitjes",
-  "hard rock": "Hardrock",
-  "punkrock": "punkrock",
   "arabic": "Arabisch",
   "uk hiphop": "uk hiphop",
-  "nu metal": "Nu-metal",
   "french house": "french house",
   "vrolijk": "vrolijk",
   "eastcoast": "eastcoast",
   "modern jazz": "Moderne jazz",
-  "heavy metal": "Heavy metal",
   "underground": "underground",
   "cloudpop": "cloudpop",
   "soulful": "soulful",
@@ -5915,24 +5667,17 @@
   "dromerig": "dromerig",
   "jamaica": "jamaica",
   "nederhop": "Nederhop",
-  "post-punk": "Post-punk",
   "electroclash": "electroclash",
-  "fusion": "Fusion",
-  "hyperpop": "Hyperpop",
   "bedroompop": "bedroompop",
   "desi": "desi",
   "grime": "Grime",
   "psychedelic": "Psychedelisch",
-  "stoner": "Stoner",
-  "tribute": "Tribute",
   "dansbaar": "dansbaar",
   "funk": "Funk",
   "griekse volksmuziek": "griekse volksmuziek",
   "mystiek": "mystiek",
-  "noise": "Noise",
   "frans": "frans",
   "satire": "satire",
-  "hardcore punk": "Hardcore-punk",
   "progressieve rock": "progressieve rock",
   "post grunge": "post grunge",
   "soundcloud": "soundcloud",
@@ -5940,74 +5685,29 @@
   "bro country": "bro country",
   "linedance": "linedance",
   "viking": "viking",
-  "garage rock": "Garagerock",
   "australisch": "australisch",
   "italiaans": "italiaans",
   "klassieker": "klassieker",
   "gitarist": "gitarist",
   "rage": "rage",
-  "youtube": "youtube",
-  "kinderprogramma": "kinderprogramma",
   "franse chanson": "franse chanson",
   "franstalig": "franstalig",
   "handpan": "handpan",
   "politiek": "politiek",
   "duo": "duo",
-  "post-metal": "Post-metal",
-  "reggaeton": "Reggaeton",
-  "cumbia": "Cumbia",
-  "tekno": "tekno",
-  "doom": "Doom",
-  "salsa": "Salsa",
-  "prog rock": "Progrock",
-  "krautrock": "Krautrock",
-  "idm": "IDM",
-  "post-rock": "Post-rock",
-  "spacerock": "spacerock",
-  "cafe": "cafe",
-  "magic tom & yuri": "magic tom & yuri",
-  "one man band": "one man band",
-  "rock 'n roll": "rock 'n roll",
-  "black metal": "Blackmetal",
-  "karaoke": "karaoke",
-  "le guess who?": "le guess who?",
-  "singer song writer": "singer song writer",
-  "diy": "diy",
-  "darker wave": "darker wave",
-  "metal quiz & karaoke": "metal quiz & karaoke",
-  "boppin' the rock": "boppin' the rock",
-  "country & western": "country & western",
-  "surf": "Surf",
-  "afrika": "afrika",
-  "ritualistic dance music": "ritualistic dance music",
-  "ska'd for life": "ska'd for life",
-  "bus 12": "bus 12",
-  "club ekko": "club ekko",
-  "karaekko": "karaekko",
-  "diep in de groef": "diep in de groef",
-  "zora": "zora",
   "tropical": "Tropisch",
-  "death metal": "Deathmetal",
   "18+ nachtleven pop": "18+ nachtleven pop",
-  "african": "Afrikaans",
-  "levenslied": "Levenslied",
+  "krautrock": "Krautrock",
   "big band": "Bigband",
   "highlife": "Highlife",
   "classic": "classic",
+  "tekno": "tekno",
   "popcultuur": "popcultuur",
-  "motown": "Motown",
-  "neo-classical": "Neoklassiek",
-  "indie alternative": "indie alternative",
-  "zero for three": "zero for three",
-  "garage punk punkrock": "garage punk punkrock",
-  "prog metal": "Progmetal",
-  "boom bap": "Boom bap",
-  "indiestad": "indiestad",
-  "loud": "loud",
   "pop singer songwriter": "pop singer songwriter",
   "rock roots": "rock roots",
   "klassiek loud": "klassiek loud",
   "dance eigen productie": "dance eigen productie",
+  "loud": "loud",
   "jazz roots": "jazz roots",
   "hiphop nachtleven young creatives": "hiphop nachtleven young creatives",
   "tributes pop": "tributes pop",
@@ -6029,7 +5729,6 @@
   "jazz hiphop": "jazz hiphop",
   "tributes roots": "tributes roots",
   "tributes rock": "tributes rock",
-  "jazz klassiekers": "jazz klassiekers",
   "loud reggae": "loud reggae",
   "jazz indie": "jazz indie",
   "tributes loud": "tributes loud",
@@ -6037,10 +5736,38 @@
   "indie roots": "indie roots",
   "jazz loud": "jazz loud",
   "dancehall zoca flavor": "dancehall zoca flavor",
-  "thrash": "Thrashmetal",
-  "avant-garde": "Avant-garde",
-  "ska punk": "Ska-punk",
-  "riot grrrl": "riot grrrl",
+  "spacerock": "spacerock",
+  "cafe": "cafe",
+  "magic tom & yuri": "magic tom & yuri",
+  "one man band": "one man band",
+  "rock 'n roll": "rock 'n roll",
+  "karaoke": "karaoke",
+  "le guess who?": "le guess who?",
+  "singer song writer": "singer song writer",
+  "diy": "diy",
+  "darker wave": "darker wave",
+  "metal quiz & karaoke": "metal quiz & karaoke",
+  "boppin' the rock": "boppin' the rock",
+  "country & western": "country & western",
+  "surf": "Surf",
+  "afrika": "afrika",
+  "ritualistic dance music": "ritualistic dance music",
+  "ska'd for life": "ska'd for life",
+  "dom gaan": "dom gaan",
+  "bus 12": "bus 12",
+  "club ekko": "club ekko",
+  "karaekko": "karaekko",
+  "diep in de groef": "diep in de groef",
+  "zora": "zora",
+  "indie alternative": "indie alternative",
+  "zero for three": "zero for three",
+  "garage punk punkrock": "garage punk punkrock",
+  "prog metal": "Progmetal",
+  "boom bap": "Boom bap",
+  "indiestad": "indiestad",
+  "opera": "Opera",
+  "electronisch live": "electronisch live",
+  "goth": "Goth",
   "dark folk": "dark folk",
   "neo folk": "neo folk",
   "golden era hip hop": "golden era hip hop",
@@ -6058,7 +5785,6 @@
   "doom metal pioneers": "doom metal pioneers",
   "deathrash": "deathrash",
   "toxic rock": "toxic rock",
-  "goth": "Goth",
   "gabba": "gabba",
   "acidcore": "acidcore",
   "french hardcore": "french hardcore",
@@ -6070,8 +5796,6 @@
   "sexy burlesque dansacts op hardrock": "sexy burlesque dansacts op hardrock",
   "industrial disco metal with sing a longs": "industrial disco metal with sing a longs",
   "hardcore gabber": "hardcore gabber",
-  "electronisch live": "electronisch live",
-  "opera": "Opera",
   "80's tot nu": "80's tot nu",
   "bingo": "bingo",
   "pop & rock": "pop & rock",
@@ -6084,53 +5808,50 @@
   "belpop": "belpop",
   "60s rock": "60s rock",
   "classic pop": "classic pop",
+  "k-pop": "K-pop",
+  "dance pop": "dance pop",
+  "p60 cafe": "p60 cafe",
+  "(pop)cultuur": "(pop)cultuur",
+  "cultuur & maatschappij": "cultuur & maatschappij",
+  "fuzz punk garage punk": "fuzz punk garage punk",
+  "pop punk punkrock": "pop punk punkrock",
+  "dance algemeen": "dance algemeen",
+  "alternatief (dance)": "alternatief (dance)",
+  "talk": "Lezing",
+  "community": "community",
+  "schorem": "schorem",
+  "r&b": "R&B",
+  "flamenco": "Flamenco",
+  "gospel": "Gospel",
+  "strijkkwartet": "strijkkwartet",
+  "free jazz": "Free jazz",
+  "blaasinstrumenten": "blaasinstrumenten",
+  "ambient": "Ambient",
+  "r&b hiphop": "r&b hiphop",
+  "emo rap": "emo rap",
+  "soca": "soca",
+  "early club": "early club",
+  "afgelast": "afgelast",
+  "nieuwe datum!": "nieuwe datum!",
   "kennis & debat": "kennis & debat",
   "grindcore": "Grindcore",
-  "flamenco": "Flamenco",
-  "blaasinstrumenten": "blaasinstrumenten",
   "early music": "Oude muziek",
   "kamerorkest": "kamerorkest",
   "koerdisch": "koerdisch",
   "middle east": "middle east",
-  "strijkkwartet": "strijkkwartet",
   "oratorium": "oratorium",
-  "free jazz": "Free jazz",
   "soundtrack": "Filmmuziek",
   "gamemuziek": "gamemuziek",
-  "dance algemeen": "dance algemeen",
-  "alternatief (dance)": "alternatief (dance)",
-  "fuzz punk garage punk": "fuzz punk garage punk",
-  "pop punk punkrock": "pop punk punkrock",
-  "(pop)cultuur": "(pop)cultuur",
-  "cultuur & maatschappij": "cultuur & maatschappij",
-  "schorem": "schorem",
-  "k-pop": "K-pop",
-  "dance pop": "dance pop",
-  "ambient": "Ambient",
-  "talk": "Lezing",
-  "community": "community",
-  "p60 cafe": "p60 cafe",
-  "emo rap": "emo rap",
-  "r&b hiphop": "r&b hiphop",
-  "early club": "early club",
-  "afgelast": "afgelast",
-  "nieuwe datum!": "nieuwe datum!",
-  "r&b": "R&B",
-  "gospel": "Gospel",
+  "beeldende kunst": "beeldende kunst",
   "geannuleerd": "geannuleerd",
   "r'n'b": "r'n'b",
   "lunchconcert": "lunchconcert",
   "uitverkocht!": "uitverkocht!",
   "verhuring": "verhuring",
-  "soca": "soca",
-  "blues & roots": "blues & roots",
-  "cabaret & comedy": "cabaret & comedy",
-  "theatercollege": "theatercollege",
-  "jeugd & familie": "jeugd & familie",
-  "toneel": "toneel",
-  "klassiek & opera": "klassiek & opera",
+  "anarcho": "anarcho",
   "pagan": "pagan",
   "theaterconcert": "theaterconcert",
+  "post punk new wave": "post punk new wave",
   "rental": "rental",
   "cultuur": "cultuur",
   "elektronische dansmuziek": "elektronische dansmuziek",
@@ -6141,18 +5862,23 @@
   "academy": "academy",
   "klein kunst": "klein kunst",
   "dialect": "dialect",
+  "caribisch": "caribisch",
   "themafeest": "themafeest",
   "externe partij (dance)": "externe partij (dance)",
   "eigen special (dance)": "eigen special (dance)",
   "thema": "thema",
-  "caribisch": "caribisch",
-  "specials": "specials",
   "pubquiz": "pubquiz",
-  "spoken word": "Spoken word",
+  "specials": "specials",
   "calypso": "calypso",
-  "anarcho": "anarcho",
+  "spoken word": "Spoken word",
   "jasper somsen invites ...": "jasper somsen invites ...",
   "jazz in wageningen": "jazz in wageningen",
+  "blues & roots": "blues & roots",
+  "cabaret & comedy": "cabaret & comedy",
+  "theatercollege": "theatercollege",
+  "jeugd & familie": "jeugd & familie",
+  "toneel": "toneel",
+  "klassiek & opera": "klassiek & opera",
   "actie": "actie",
   "wereld": "wereld",
   "don't mind the gap": "don't mind the gap",
@@ -6212,9 +5938,10 @@
   "muziekfilm": "muziekfilm",
   "(dark) ambient": "(dark) ambient",
   "dub techno": "dub techno",
-  "post punk new wave": "post punk new wave"
+  "housewarming": "housewarming"
  },
  "subgenre_groups": {
+  "african": "world",
   "celtic": "world",
   "singer-songwriter": "folk",
   "neo-soul": "soul",
@@ -6234,29 +5961,73 @@
   "bluegrass": "country",
   "nederpop": "nederlandstalig",
   "shoegaze": "alternative",
+  "reggaeton": "latin",
+  "party hits": "party",
+  "decennia": "party",
+  "afrobeats": "afrobeats",
+  "uk garage": "electronic",
   "indie pop": "alternative",
+  "dancepop": "pop",
+  "post-punk": "punk",
+  "hardcore": "metal",
+  "heavy metal": "metal",
+  "prog rock": "rock",
+  "motown": "soul",
+  "neo-classical": "classical",
+  "metalcore": "metal",
+  "hyperpop": "pop",
+  "doom": "metal",
+  "thrash": "metal",
+  "pop punk": "punk",
+  "synthpop": "pop",
+  "black metal": "metal",
+  "dancehall": "reggae",
+  "salsa": "latin",
+  "punkrock": "punk",
+  "hard rock": "rock",
+  "blues": "blues",
+  "tribute": "party",
+  "electro": "electronic",
+  "levenslied": "nederlandstalig",
+  "kleinkunst": "nederlandstalig",
+  "trance": "electronic",
+  "drum & bass": "electronic",
+  "post-hardcore": "punk",
+  "post-metal": "metal",
+  "post-rock": "alternative",
+  "death metal": "metal",
+  "brazilian": "latin",
+  "avant-garde": "experimental",
+  "ska punk": "punk",
+  "cumbia": "latin",
+  "noise": "experimental",
+  "garage rock": "rock",
+  "stoner": "rock",
+  "dream pop": "alternative",
+  "riot grrrl": "punk",
+  "hardcore punk": "punk",
+  "jazz klassiekers": "funk",
+  "youtube": "nederlandstalig",
+  "kinderprogramma": "nederlandstalig",
+  "fusion": "jazz",
+  "nu metal": "metal",
+  "folk": "folk",
+  "britpop": "alternative",
+  "idm": "electronic",
+  "downtempo": "electronic",
   "softrock": "rock",
   "alt folk": "folk",
   "fantasy": "folk",
-  "dancepop": "pop",
   "tiktok sensatie": "pop",
   "house": "electronic",
   "drama": "electronic",
-  "post-hardcore": "punk",
-  "downtempo": "electronic",
   "disco": "funk",
   "genre bending": "funk",
-  "party hits": "party",
-  "decennia": "party",
-  "hardcore": "metal",
   "fanfare": "reggae",
   "ska": "reggae",
   "americana": "country",
-  "drum & bass": "electronic",
   "folk punk": "punk",
   "korte films": "world",
-  "afrobeats": "afrobeats",
-  "synthpop": "pop",
   "christelijk": "devotional",
   "rap": "hiphop",
   "avant pop": "pop",
@@ -6265,54 +6036,38 @@
   "roma": "world",
   "koreaans": "hiphop",
   "italodisco": "party",
-  "dancehall": "reggae",
   "future house": "electronic",
   "edm": "electronic",
   "future bass": "electronic",
   "hardhouse": "electronic",
-  "uk garage": "electronic",
   "dubstep": "electronic",
   "melodic techno": "electronic",
   "komedie": "electronic",
   "v": "electronic",
-  "trance": "electronic",
-  "electro": "electronic",
   "amapiano": "afrobeats",
   "afro tech": "electronic",
   "boekpresentatie": "spokenword",
   "dub": "reggae",
-  "blues": "blues",
   "saxofonist": "electronic",
-  "brazilian": "latin",
   "brega": "world",
-  "britpop": "alternative",
-  "metalcore": "metal",
   "emo": "alternative",
   "hardcore hiphop": "metal",
   "ballroom culture": "reggae",
   "baile funk": "world",
-  "kleinkunst": "nederlandstalig",
-  "pop punk": "punk",
   "countryrock": "country",
   "trap": "hiphop",
-  "folk": "folk",
   "lokale invloeden": "pop",
   "country": "country",
-  "dream pop": "alternative",
   "minimalistisch": "alternative",
   "melodic house": "electronic",
   "nostalgie": "party",
   "hitjes": "party",
-  "hard rock": "rock",
-  "punkrock": "punk",
   "arabic": "world",
   "uk hiphop": "hiphop",
-  "nu metal": "metal",
   "french house": "electronic",
   "vrolijk": "alternative",
   "eastcoast": "hiphop",
   "modern jazz": "jazz",
-  "heavy metal": "metal",
   "underground": "hiphop",
   "cloudpop": "hiphop",
   "soulful": "funk",
@@ -6324,24 +6079,17 @@
   "dromerig": "alternative",
   "jamaica": "reggae",
   "nederhop": "hiphop",
-  "post-punk": "punk",
   "electroclash": "electronic",
-  "fusion": "jazz",
-  "hyperpop": "pop",
   "bedroompop": "electronic",
   "desi": "world",
   "grime": "hiphop",
   "psychedelic": "rock",
-  "stoner": "rock",
-  "tribute": "party",
   "dansbaar": "party",
   "funk": "funk",
   "griekse volksmuziek": "nederlandstalig",
   "mystiek": "alternative",
-  "noise": "experimental",
   "frans": "reggae",
   "satire": "folk",
-  "hardcore punk": "punk",
   "progressieve rock": "rock",
   "post grunge": "alternative",
   "soundcloud": "hiphop",
@@ -6349,74 +6097,29 @@
   "bro country": "country",
   "linedance": "country",
   "viking": "folk",
-  "garage rock": "rock",
   "australisch": "party",
   "italiaans": "reggae",
   "klassieker": "party",
   "gitarist": "party",
   "rage": "hiphop",
-  "youtube": "nederlandstalig",
-  "kinderprogramma": "nederlandstalig",
   "franse chanson": "nederlandstalig",
   "franstalig": "nederlandstalig",
   "handpan": "ambient",
   "politiek": "punk",
   "duo": "punk",
-  "post-metal": "metal",
-  "reggaeton": "latin",
-  "cumbia": "latin",
-  "tekno": "electronic",
-  "doom": "metal",
-  "salsa": "latin",
-  "prog rock": "rock",
-  "krautrock": "experimental",
-  "idm": "electronic",
-  "post-rock": "alternative",
-  "spacerock": "jazz",
-  "cafe": "party",
-  "magic tom & yuri": "punk",
-  "one man band": "rock",
-  "rock 'n roll": "rock",
-  "black metal": "metal",
-  "karaoke": "electronic",
-  "le guess who?": "electronic",
-  "singer song writer": "alternative",
-  "diy": "metal",
-  "darker wave": "electronic",
-  "metal quiz & karaoke": "party",
-  "boppin' the rock": "rock",
-  "country & western": "blues",
-  "surf": "rock",
-  "afrika": "afrobeats",
-  "ritualistic dance music": "afrobeats",
-  "ska'd for life": "reggae",
-  "bus 12": "electronic",
-  "club ekko": "electronic",
-  "karaekko": "electronic",
-  "diep in de groef": "electronic",
-  "zora": "electronic",
   "tropical": "world",
-  "death metal": "metal",
   "18+ nachtleven pop": "pop",
-  "african": "world",
-  "levenslied": "nederlandstalig",
+  "krautrock": "experimental",
   "big band": "jazz",
   "highlife": "afrobeats",
   "classic": "pop",
+  "tekno": "electronic",
   "popcultuur": "pop",
-  "motown": "soul",
-  "neo-classical": "classical",
-  "indie alternative": "alternative",
-  "zero for three": "alternative",
-  "garage punk punkrock": "punk",
-  "prog metal": "metal",
-  "boom bap": "hiphop",
-  "indiestad": "alternative",
-  "loud": "rock",
   "pop singer songwriter": "folk",
   "rock roots": "country",
   "klassiek loud": "classical",
   "dance eigen productie": "electronic",
+  "loud": "rock",
   "jazz roots": "funk",
   "hiphop nachtleven young creatives": "hiphop",
   "tributes pop": "party",
@@ -6438,7 +6141,6 @@
   "jazz hiphop": "funk",
   "tributes roots": "party",
   "tributes rock": "party",
-  "jazz klassiekers": "funk",
   "loud reggae": "reggae",
   "jazz indie": "funk",
   "tributes loud": "party",
@@ -6446,10 +6148,38 @@
   "indie roots": "alternative",
   "jazz loud": "funk",
   "dancehall zoca flavor": "reggae",
-  "thrash": "metal",
-  "avant-garde": "experimental",
-  "ska punk": "punk",
-  "riot grrrl": "punk",
+  "spacerock": "jazz",
+  "cafe": "party",
+  "magic tom & yuri": "punk",
+  "one man band": "rock",
+  "rock 'n roll": "rock",
+  "karaoke": "electronic",
+  "le guess who?": "electronic",
+  "singer song writer": "alternative",
+  "diy": "metal",
+  "darker wave": "electronic",
+  "metal quiz & karaoke": "party",
+  "boppin' the rock": "rock",
+  "country & western": "blues",
+  "surf": "rock",
+  "afrika": "afrobeats",
+  "ritualistic dance music": "afrobeats",
+  "ska'd for life": "reggae",
+  "dom gaan": "hiphop",
+  "bus 12": "electronic",
+  "club ekko": "electronic",
+  "karaekko": "electronic",
+  "diep in de groef": "electronic",
+  "zora": "electronic",
+  "indie alternative": "alternative",
+  "zero for three": "alternative",
+  "garage punk punkrock": "punk",
+  "prog metal": "metal",
+  "boom bap": "hiphop",
+  "indiestad": "alternative",
+  "opera": "classical",
+  "electronisch live": "electronic",
+  "goth": "alternative",
   "dark folk": "folk",
   "neo folk": "folk",
   "golden era hip hop": "hiphop",
@@ -6467,7 +6197,6 @@
   "doom metal pioneers": "metal",
   "deathrash": "rock",
   "toxic rock": "rock",
-  "goth": "alternative",
   "gabba": "metal",
   "acidcore": "metal",
   "french hardcore": "metal",
@@ -6479,8 +6208,6 @@
   "sexy burlesque dansacts op hardrock": "rock",
   "industrial disco metal with sing a longs": "metal",
   "hardcore gabber": "metal",
-  "electronisch live": "electronic",
-  "opera": "classical",
   "80's tot nu": "party",
   "bingo": "party",
   "pop & rock": "rock",
@@ -6493,53 +6220,50 @@
   "belpop": "alternative",
   "60s rock": "party",
   "classic pop": "pop",
+  "k-pop": "pop",
+  "dance pop": "soundtrack",
+  "p60 cafe": "party",
+  "(pop)cultuur": "pop",
+  "cultuur & maatschappij": "electronic",
+  "fuzz punk garage punk": "punk",
+  "pop punk punkrock": "punk",
+  "dance algemeen": "electronic",
+  "alternatief (dance)": "electronic",
+  "talk": "spokenword",
+  "community": "electronic",
+  "schorem": "electronic",
+  "r&b": "soul",
+  "flamenco": "latin",
+  "gospel": "devotional",
+  "strijkkwartet": "classical",
+  "free jazz": "jazz",
+  "blaasinstrumenten": "classical",
+  "ambient": "ambient",
+  "r&b hiphop": "hiphop",
+  "emo rap": "hiphop",
+  "soca": "reggae",
+  "early club": "electronic",
+  "afgelast": "metal",
+  "nieuwe datum!": "party",
   "kennis & debat": "spokenword",
   "grindcore": "metal",
-  "flamenco": "latin",
-  "blaasinstrumenten": "classical",
   "early music": "classical",
   "kamerorkest": "classical",
   "koerdisch": "world",
   "middle east": "world",
-  "strijkkwartet": "classical",
   "oratorium": "classical",
-  "free jazz": "jazz",
   "soundtrack": "soundtrack",
   "gamemuziek": "soundtrack",
-  "dance algemeen": "electronic",
-  "alternatief (dance)": "electronic",
-  "fuzz punk garage punk": "punk",
-  "pop punk punkrock": "punk",
-  "(pop)cultuur": "pop",
-  "cultuur & maatschappij": "electronic",
-  "schorem": "electronic",
-  "k-pop": "pop",
-  "dance pop": "soundtrack",
-  "ambient": "ambient",
-  "talk": "spokenword",
-  "community": "electronic",
-  "p60 cafe": "party",
-  "emo rap": "hiphop",
-  "r&b hiphop": "hiphop",
-  "early club": "electronic",
-  "afgelast": "metal",
-  "nieuwe datum!": "party",
-  "r&b": "soul",
-  "gospel": "devotional",
+  "beeldende kunst": "classical",
   "geannuleerd": "punk",
   "r'n'b": "soul",
   "lunchconcert": "classical",
   "uitverkocht!": "electronic",
   "verhuring": "electronic",
-  "soca": "reggae",
-  "blues & roots": "blues",
-  "cabaret & comedy": "spokenword",
-  "theatercollege": "hiphop",
-  "jeugd & familie": "kids",
-  "toneel": "spokenword",
-  "klassiek & opera": "classical",
+  "anarcho": "punk",
   "pagan": "metal",
   "theaterconcert": "spokenword",
+  "post punk new wave": "alternative",
   "rental": "funk",
   "cultuur": "alternative",
   "elektronische dansmuziek": "electronic",
@@ -6550,18 +6274,23 @@
   "academy": "electronic",
   "klein kunst": "hiphop",
   "dialect": "nederlandstalig",
+  "caribisch": "hiphop",
   "themafeest": "electronic",
   "externe partij (dance)": "electronic",
   "eigen special (dance)": "electronic",
   "thema": "electronic",
-  "caribisch": "hiphop",
-  "specials": "classical",
   "pubquiz": "party",
-  "spoken word": "spokenword",
+  "specials": "classical",
   "calypso": "latin",
-  "anarcho": "punk",
+  "spoken word": "spokenword",
   "jasper somsen invites ...": "jazz",
   "jazz in wageningen": "jazz",
+  "blues & roots": "blues",
+  "cabaret & comedy": "spokenword",
+  "theatercollege": "hiphop",
+  "jeugd & familie": "kids",
+  "toneel": "spokenword",
+  "klassiek & opera": "classical",
   "actie": "party",
   "wereld": "jazz",
   "don't mind the gap": "electronic",
@@ -6621,62 +6350,63 @@
   "muziekfilm": "metal",
   "(dark) ambient": "ambient",
   "dub techno": "ambient",
-  "post punk new wave": "alternative"
+  "housewarming": "electronic"
  },
- "series": 9314,
+ "series": 9375,
  "estimated": {
   "price": 0,
   "time": 2,
   "kind": 9
  },
  "unknown_genres": {
-  "Poppodium": 48,
+  "Poppodium": 50,
   "Bands - eigen productie": 36,
   "Overige": 31,
   "Playground": 31,
+  "dj": 29,
   "PPL": 26,
-  "dj": 26,
   "Getting on stage": 25,
   "Populair": 22,
   "Amusement": 20,
-  "DJ": 13,
-  "Uitgaan": 11,
+  "DJ": 14,
+  "Uitgaan": 12,
   "Popcultureel programma": 10,
-  "Cover": 9,
   "Multidisciplinair": 9,
+  "Activiteit": 9,
+  "Cover": 8,
   "Gratis entree": 8,
-  "Activiteit": 8,
   "Dansfeest": 7,
+  "Theaterconcert": 7,
   "Theatercollege": 7,
   "Toneel": 7,
-  "Theaterconcert": 7,
   "EKKO40": 6,
-  "gratis": 6,
   "Clubnight": 6,
+  "gratis": 5,
   "net bevestigd": 5,
   "laatste tickets!": 5,
   "Beeldende kunst": 5,
-  "Hardcorepunk": 5,
   "Kinderdisco": 5,
+  "Hardcorepunk": 5,
   "Hardhouse": 4,
   "Diep In De Groef": 4,
   "Belpop": 4,
   "P60 Café": 4,
+  "Cultuureducatie & talentontwikkeling": 4,
   "Uitverkocht": 4,
-  "Singersongwriter": 4,
   "Lokaal": 4,
-  "Musical": 4,
+  "Singersongwriter": 4,
   "Elektronische dansmuziek": 4,
   "Dialect": 4,
+  "Musical": 4,
   "Fantasy": 3,
   "Eigenzinnig": 3,
   "Performance": 3,
-  "Cultuureducatie & talentontwikkeling": 3,
   "dordtpas": 3,
   "quiz": 3,
   "Gratis": 3,
-  "Schoolvoorstelling": 3,
+  "Zero for three": 3,
   "Talentontwikkeling": 3,
+  "Schoolvoorstelling": 3,
   "TikTok-sensatie": 2,
   "Drama": 2,
   "Talks": 2,
@@ -6690,23 +6420,21 @@
   "Frans": 2,
   "Linedance": 2,
   "Italiaans": 2,
+  "Popcultuur": 2,
+  "educatie": 2,
   "spacerock": 2,
   "Cafe": 2,
   "Le Guess Who?": 2,
   "BUS 12": 2,
-  "Popcultuur": 2,
-  "educatie": 2,
   "Cultuur & Maatschappij": 2,
-  "Ververs": 2,
   "Theatre": 2,
+  "Ververs": 2,
   "afgelast": 2,
   "PULS": 2,
-  "Zero for three": 2,
   "Other (NIET MEER GEBRUIKEN)": 2,
   "Academy": 2,
   "Café": 2,
   "Themafeest": 2,
-  "Thema": 2,
   "Specials": 2,
   "Phoenix Academy": 2,
   "Softrock": 1,
@@ -6758,6 +6486,8 @@
   "Handpan": 1,
   "Politiek": 1,
   "Duo": 1,
+  "zoca flavor": 1,
+  "De Grote Prijs van Leidsche Rijn": 1,
   "Bier specials": 1,
   "Tap Takeover": 1,
   "MAGIC TOM & YURI": 1,
@@ -6771,7 +6501,6 @@
   "Dom Gaan": 1,
   "karaEKKO": 1,
   "ZORA": 1,
-  "zoca flavor": 1,
   "afrosound": 1,
   "Deathrash": 1,
   "progressive death": 1,
@@ -6781,7 +6510,7 @@
   "garageblues": 1,
   "gothic": 1
  },
- "artists": 7884,
+ "artists": 7948,
  "genre_groups": {
   "electronic": "Elektronisch",
   "rock": "Rock",
@@ -6812,33 +6541,49 @@
   "overig": "Overig"
  },
  "kinds": {
-  "concert": 5718,
-  "club": 734,
-  "festival": 154,
-  "talk": 185,
-  "other": 358
+  "concert": 5744,
+  "club": 744,
+  "festival": 159,
+  "talk": 186,
+  "other": 360
  },
  "price_src": {
-  "shop": 516,
-  "list": 2246,
-  "jsonld": 977,
-  "labeled": 2277,
-  "embedded": 286,
-  "text": 457,
+  "shop": 571,
+  "list": 2282,
+  "jsonld": 911,
+  "labeled": 2291,
+  "embedded": 290,
+  "text": 458,
   "none": 390
  },
  "time_src": {
-  "label": 1569,
+  "label": 1572,
   "after_date": 118,
-  "paren": 141,
-  "schedule": 221,
+  "paren": 142,
+  "schedule": 220,
   "embedded": 0
  },
- "archive": 11602,
+ "archive": 11682,
  "groundtruth": {
   "checked": 14,
-  "ok": 13,
+  "ok": 11,
   "misses": [
+   {
+    "venue": "Maassilo",
+    "title": "Zwangere Guy",
+    "date": "2026-12-03",
+    "time": "20:00",
+    "problem": "ontbreekt"
+   },
+   {
+    "venue": "Nieuwe Nor",
+    "title": "Knaltibal",
+    "date": "2026-11-07",
+    "time": "22:00",
+    "checked": "2026-09-06 browser",
+    "url": "https://nieuwenor.nl/programma/2026/11/07/knaltibal",
+    "problem": "ontbreekt"
+   },
    {
     "venue": "Q-factory",
     "title": "Four Decades of Detroit Techno",
@@ -6937,5 +6682,5 @@
    }
   ]
  },
- "total_events": 7149
+ "total_events": 7193
 }
