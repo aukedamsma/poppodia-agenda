@@ -1,4 +1,4 @@
-11:14:44 Traceback (most recent call last):
+10:47:41 Traceback (most recent call last):
   File "/home/runner/work/poppodia-agenda/poppodia-agenda/fetch.py", line 280, in run_one
     evs, strat, note, audit = fetch_venue(v, cache)
                               ^^^^^^^^^^^^^^^^^^^^^
@@ -11,39 +11,40 @@
     raise HTTPError(http_error_msg, response=self)
 requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://www.melkweg.nl/nl/agenda
 
-11:14:44 == Melkweg (Amsterdam): 0 events via error (0s) HTTPError: 404 Client Error: Not Found for url: https://www.melkweg.nl/nl/agenda
-11:14:44     147 eventlinks, detailpagina's ophalen (gecached)…
-11:14:48 == Tolhuistuin (Amsterdam): 71 events via embedded (5s) 
-11:14:51     199 eventlinks, detailpagina's ophalen (gecached)…
-11:14:52 == 013 (Tilburg): 147 events via jsonld_detail (8s) 
-11:14:52 == Merleyn (Nijmegen): 0 events via passive (0s) geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)
-11:14:55     451 events via graphql, eventpagina's ophalen (gecached)…
-11:14:57 == Bitterzoet (Amsterdam): 52 events via wp_event (13s) 
-11:15:08 == PAARD (Den Haag): 162 events via jsonld (11s) 
-11:15:11 == De Helling (Utrecht): 63 events via jsonld (28s) ticketshop herkend: dehelling.stager.co; extra bron https://dehelling.stager.co/shop/default/events: 59 events via stager, 59 nieuw
-11:15:23     803 eventlinks, detailpagina's ophalen (gecached)…
-11:15:24 == Effenaar (Eindhoven): 116 events via embedded (13s) 
-11:15:24 == dB's (Utrecht): 56 events via tribe (40s) ticketshop herkend: dbs.stager.co; extra bron https://dbs.stager.co/shop/default/events: 41 events via stager, 41 nieuw
-11:15:39 == EKKO (Utrecht): 74 events via wp_event (55s) ticketshop herkend: ekko.stager.co; extra bron https://ekko.stager.co/shop/default/events: 63 events via stager, 63 nieuw
-11:15:40 == SPOT (Groningen): 0 events via none (1s) html: 0 events
-11:15:45     102 eventlinks, detailpagina's ophalen (gecached)…
-11:15:51 == Hedon (Zwolle): 127 events via embedded (43s) 
-11:15:52 == Paradiso (Amsterdam): 408 events via graphql_detail (68s) 
-11:15:54 == Simplon (Groningen): 69 events via html (30s) ticketshop herkend: simplon.stager.co; extra bron https://simplon.stager.co/shop/default/events: 53 events via stager, 53 nieuw
-11:16:00     podiumfilters: 4 categorieën, 4 pagina's, 0 events getagd, 0 uitgesloten
-11:16:01 == Vera (Groningen): 67 events via html (37s) html: 21 events; extra bron https://vera.stager.co/shop/default/events: 66 events via stager, 66 nieuw; 0 events getagd via podiumfilters
-11:16:14 == Patronaat (Haarlem): 168 events via html (82s) 
-11:16:15 == GIGANT (Apeldoorn): 46 events via wp_event (14s) wp_event: 34 events; extra bron https://www.gigant.nl/clubnachten/: 12 events via wp_event, 12 nieuw
-11:16:17 == Neushoorn (Leeuwarden): 105 events via jsonld_detail (37s) ticketshop herkend: neushoorn.stager.co; extra bron https://neushoorn.stager.co/shop/neushoorn/events: 68 events via stager, 68 nieuw
-11:16:19     53 eventlinks, detailpagina's ophalen (gecached)…
-11:16:20 == Willemeen (Arnhem): 62 events via html (26s) ticketshop herkend: willemeen.stager.co; extra bron https://willemeen.stager.co/shop/default/events: 45 events via stager, 45 nieuw
-11:16:22     podiumfilters: 23 categorieën, 23 pagina's, 170 events getagd, 15 uitgesloten
-11:16:23 == De Vorstin (Hilversum): 60 events via json_api (3s) 
-11:16:24 == Iduna (Drachten): 45 events via wp_event (33s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://iduna.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026-; ticketshop herkend: iduna.stager.co; extra bron https://iduna.stager.co/shop/default/events: 39 events via stager, 39 nieuw
-11:16:25     91 eventlinks uit sitemap, detailpagina's ophalen (gecached)…
-11:16:27 == Doornroosje (Nijmegen): 181 events via jsonld_detail (99s) 153 events getagd via podiumfilters, 15 uitgesloten (andere locatie)
-11:16:34 == Q-factory (Amsterdam): 62 events via sitemap_detail (10s) 
-11:16:35 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10:47:41 == Melkweg (Amsterdam): 0 events via error (0s) HTTPError: 404 Client Error: Not Found for url: https://www.melkweg.nl/nl/agenda
+10:47:41     145 eventlinks, detailpagina's ophalen (gecached)…
+10:47:49 == 013 (Tilburg): 145 events via jsonld_detail (8s) 
+10:47:50     196 eventlinks, detailpagina's ophalen (gecached)…
+10:47:52     447 events via graphql, eventpagina's ophalen (gecached)…
+10:48:11 == Paradiso (Amsterdam): 404 events via graphql_detail (31s) 
+10:48:11 == Merleyn (Nijmegen): 0 events via passive (0s) geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)
+10:48:23     795 eventlinks, detailpagina's ophalen (gecached)…
+10:48:26 == Bitterzoet (Amsterdam): 50 events via wp_event (46s) 
+10:48:38 == EKKO (Utrecht): 72 events via wp_event (58s) ticketshop herkend: ekko.stager.co; extra bron https://ekko.stager.co/shop/default/events: 62 events via stager, 62 nieuw
+10:48:44 == De Helling (Utrecht): 61 events via jsonld (64s) ticketshop herkend: dehelling.stager.co; extra bron https://dehelling.stager.co/shop/default/events: 57 events via stager, 57 nieuw
+10:48:49 == Tolhuistuin (Amsterdam): 71 events via embedded (68s) 
+10:48:55     podiumfilters: 23 categorieën, 23 pagina's, 166 events getagd, 15 uitgesloten
+10:49:01 == Doornroosje (Nijmegen): 178 events via jsonld_detail (73s) 149 events getagd via podiumfilters, 15 uitgesloten (andere locatie)
+10:49:02 == dB's (Utrecht): 55 events via tribe (82s) ticketshop herkend: dbs.stager.co; extra bron https://dbs.stager.co/shop/default/events: 41 events via stager, 41 nieuw
+10:49:03 == SPOT (Groningen): 0 events via none (1s) html: 0 events
+10:49:05     101 eventlinks, detailpagina's ophalen (gecached)…
+10:49:10 == Hedon (Zwolle): 126 events via embedded (32s) 
+10:49:23     0 eventlinks, detailpagina's ophalen (gecached)…
+10:49:32     podiumfilters: 4 categorieën, 4 pagina's, 0 events getagd, 0 uitgesloten
+10:49:33 == Vera (Groningen): 65 events via html (44s) html: 21 events; extra bron https://vera.stager.co/shop/default/events: 64 events via stager, 64 nieuw; 0 events getagd via podiumfilters
+10:49:40 == Neushoorn (Leeuwarden): 104 events via jsonld_detail (37s) ticketshop herkend: neushoorn.stager.co; extra bron https://neushoorn.stager.co/shop/neushoorn/events: 67 events via stager, 67 nieuw
+10:49:55 == PAARD (Den Haag): 158 events via jsonld (89s) 
+10:50:00 == Iduna (Drachten): 44 events via wp_event (50s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://iduna.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026-; wp_event: 39 events; jsonld_detail: 0 events; ticketshop herkend: iduna.stager.co; extra bron https://iduna.stager.co/shop/default/events: 39 events via stager, 39 nieuw
+10:50:03 == Effenaar (Eindhoven): 114 events via embedded (79s) 
+10:50:05     52 eventlinks, detailpagina's ophalen (gecached)…
+10:50:08 == Simplon (Groningen): 68 events via html (67s) ticketshop herkend: simplon.stager.co; extra bron https://simplon.stager.co/shop/default/events: 52 events via stager, 52 nieuw
+10:50:12 == GIGANT (Apeldoorn): 45 events via wp_event (16s) wp_event: 33 events; extra bron https://www.gigant.nl/clubnachten/: 12 events via wp_event, 12 nieuw
+10:50:17 == De Vorstin (Hilversum): 58 events via json_api (5s) 
+10:50:18 == Willemeen (Arnhem): 59 events via html (38s) ticketshop herkend: willemeen.stager.co; extra bron https://willemeen.stager.co/shop/default/events: 43 events via stager, 43 nieuw
+10:50:19     91 eventlinks uit sitemap, detailpagina's ophalen (gecached)…
+10:50:27 == Metropool (Hengelo): 153 events via html (24s) 
+10:50:27 == Q-factory (Amsterdam): 62 events via sitemap_detail (9s) 
+10:50:28 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/runner/work/poppodia-agenda/poppodia-agenda/net.py", line 125, in get
     r = http_get(url, **kw)
         ^^^^^^^^^^^^^^^^^^^
@@ -63,25 +64,26 @@ requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://www.
     raise SSLError(e, request=request)
 requests.exceptions.SSLError: HTTPSConnectionPool(host='slachthuishaarlem.nl', port=443): Max retries exceeded with url: /programma/ (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'slachthuishaarlem.nl'. (_ssl.c:1010)")))
 
-11:16:35 == Slachthuis (Haarlem): 0 events via error (1s) SSLError: HTTPSConnectionPool(host='slachthuishaarlem.nl', port=443): Max retries exceeded with url: /programma/ (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate ver
-11:16:39 == Metropool (Hengelo): 157 events via html (24s) LET OP: aanvang op eventpagina's wijkt -1u af van de lijst -> zet time_is_local of controleer tijdzone
-11:16:47 == Burgerweeshuis (Deventer): 64 events via jsonld_detail (33s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; ticketshop herkend: burgerweeshuis.stager.co; extra bron https://burgerweeshuis.stager.co/shop/default/events: 59 events via stager, 59 nieuw
-11:16:51 == Victorie (Alkmaar): 98 events via wp_event (16s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumvictorie.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta
-11:16:51     podiumfilters: 3 categorieën, 3 pagina's, 44 events getagd, 0 uitgesloten
-11:16:51 == FLUOR (Amersfoort): 55 events via tribe (34s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: fluor.stager.co; extra bron https://fluor.stager.co/shop/default/events: 53 events via stager, 53 nieuw; 44 events getagd via podiumfilters
-11:16:54 == Luxor Live (Arnhem): 129 events via microdata (62s) ticketshop herkend: luxorlive.stager.co; extra bron https://luxorlive.stager.co/shop/luxor-live/events: 127 events via stager, 127 nieuw
-11:16:55 == Nobel (Leiden): 103 events via html (16s) 
-11:16:57     61 eventlinks uit sitemap, detailpagina's ophalen (gecached)…
-11:16:57 == Cinetol (Amsterdam): 57 events via html (30s) ticketshop herkend: cinetol.stager.co; extra bron https://cinetol.stager.co/shop/cinetol-tickets/events: 54 events via stager, 54 nieuw
-11:17:08 == P60 (Amstelveen): 39 events via wp_event (45s) wp_event: 39 events
-11:17:14     75 eventlinks, detailpagina's ophalen (gecached)…
-11:17:14 == Baroeg (Rotterdam): 36 events via html:theater-for-wordpress (17s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: baroeg.stager.co; extra bron https://baroeg.stager.co/shop/default/events: 29 events via stager, 29 nieuw
-11:17:14 == WORM (Rotterdam): 54 events via html (20s) ticketshop herkend: worm.stager.co; extra bron https://worm.stager.co/shop/default/events: 27 events via stager, 27 nieuw
-11:17:18 == Boerderij (Zoetermeer): 69 events via json_api (31s) extra bron https://boerderij.stager.co/shop/default/events: 68 events via stager, 68 nieuw
-11:17:20 == BIRD (Rotterdam): 66 events via sitemap_detail (25s) ticketshop herkend: bird.stager.co; extra bron https://bird.stager.co/shop/default/events: 36 events via stager, 36 nieuw
-11:17:20 == LantarenVenster (Rotterdam): 73 events via jsonld_detail (12s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.lantarenvenster.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events
-11:17:24 == Musicon (Den Haag): 68 events via jsonld (33s) ticketshop herkend: musicon.stager.co; extra bron https://musicon.stager.co/shop/default/events: 54 events via stager, 54 nieuw
-11:17:24 Traceback (most recent call last):
+10:50:28 == Slachthuis (Haarlem): 0 events via error (1s) SSLError: HTTPSConnectionPool(host='slachthuishaarlem.nl', port=443): Max retries exceeded with url: /programma/ (Caused by SSLError(SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate ver
+10:50:35 == P60 (Amstelveen): 38 events via wp_event (18s) wp_event: 38 events
+10:50:35 == Burgerweeshuis (Deventer): 63 events via jsonld_detail (35s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.burgerweeshuis.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; ticketshop herkend: burgerweeshuis.stager.co; extra bron https://burgerweeshuis.stager.co/shop/default/events: 58 events via stager, 58 nieuw
+10:50:45     podiumfilters: 41 categorieën, 82 pagina's, 666 events getagd, 0 uitgesloten
+10:50:48 == TivoliVredenburg (Utrecht): 794 events via jsonld_detail (188s) 666 events getagd via podiumfilters
+10:50:49     podiumfilters: 3 categorieën, 3 pagina's, 42 events getagd, 0 uitgesloten
+10:50:53 == FLUOR (Amersfoort): 54 events via tribe (45s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: fluor.stager.co; extra bron https://fluor.stager.co/shop/default/events: 53 events via stager, 53 nieuw; 42 events getagd via podiumfilters
+10:51:16 == Victorie (Alkmaar): 97 events via wp_event (48s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumvictorie.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta
+10:51:18 == Cinetol (Amsterdam): 56 events via html (51s) ticketshop herkend: cinetol.stager.co; extra bron https://cinetol.stager.co/shop/cinetol-tickets/events: 53 events via stager, 53 nieuw
+10:51:20     62 eventlinks uit sitemap, detailpagina's ophalen (gecached)…
+10:51:40 == WORM (Rotterdam): 53 events via html (25s) ticketshop herkend: worm.stager.co; extra bron https://worm.stager.co/shop/default/events: 27 events via stager, 27 nieuw
+10:51:42 == Luxor Live (Arnhem): 128 events via microdata (129s) ticketshop herkend: luxorlive.stager.co; extra bron https://luxorlive.stager.co/shop/luxor-live/events: 126 events via stager, 126 nieuw
+10:51:44 == BIRD (Rotterdam): 67 events via sitemap_detail (27s) ticketshop herkend: bird.stager.co; extra bron https://bird.stager.co/shop/default/events: 34 events via stager, 34 nieuw
+10:51:47     74 eventlinks, detailpagina's ophalen (gecached)…
+10:51:55 == LantarenVenster (Rotterdam): 72 events via jsonld_detail (13s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.lantarenvenster.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events
+10:51:56 == Boerderij (Zoetermeer): 68 events via json_api (81s) extra bron https://boerderij.stager.co/shop/default/events: 67 events via stager, 67 nieuw
+10:52:09 == Nobel (Leiden): 103 events via html (94s) 
+10:52:09 == Musicon (Den Haag): 66 events via jsonld (81s) ticketshop herkend: musicon.stager.co; extra bron https://musicon.stager.co/shop/default/events: 53 events via stager, 53 nieuw
+10:52:25 == Baroeg (Rotterdam): 36 events via html:theater-for-wordpress (44s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: baroeg.stager.co; extra bron https://baroeg.stager.co/shop/default/events: 29 events via stager, 29 nieuw
+10:52:25 Traceback (most recent call last):
   File "/home/runner/work/poppodia-agenda/poppodia-agenda/fetch.py", line 280, in run_one
     evs, strat, note, audit = fetch_venue(v, cache)
                               ^^^^^^^^^^^^^^^^^^^^^
@@ -94,22 +96,22 @@ requests.exceptions.SSLError: HTTPSConnectionPool(host='slachthuishaarlem.nl', p
     raise HTTPError(http_error_msg, response=self)
 requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://nieuwenor.nl/programma
 
-11:17:24 == Nieuwe Nor (Heerlen): 0 events via error (1s) HTTPError: 403 Client Error: Forbidden for url: https://nieuwenor.nl/programma
-11:17:32 == Mezz (Breda): 142 events via json_api (17s) 
-11:17:39 == Hall of Fame (Tilburg): 32 events via stager (19s) stager: 32 events; ticketshop herkend: hall-fame.stager.co; extra bron https://hall-fame.stager.co/shop/default/events: 32 events via stager, 0 nieuw
-11:17:40 == PX (Volendam): 29 events via html (9s) 
-11:17:45 == Rotown (Rotterdam): 120 events via jsonld (54s) ticketshop herkend: rotown.stager.co; extra bron https://rotown.stager.co/shop/default/events: 89 events via stager, 89 nieuw
-11:17:58 == Grenswerk (Venlo): 93 events via html (34s) ticketshop herkend: grenswerk.stager.co; extra bron https://grenswerk.stager.co/shop/default/events: 66 events via stager, 66 nieuw
-11:17:59 == Bibelot (Dordrecht): 84 events via html (45s) ticketshop herkend: bibelot.stager.co; extra bron https://bibelot.stager.co/shop/ticketshopnew/events: 80 events via stager, 80 nieuw
-11:18:05 == De Gelderlandfabriek (Culemborg): 47 events via wp_event (26s) wp_event: 9 events; ticketshop herkend: degelderlandfabriek.stager.co; extra bron https://degelderlandfabriek.stager.co/shop/default/events: 45 events via stager, 45 nieuw
-11:18:07     podiumfilters: 41 categorieën, 83 pagina's, 671 events getagd, 0 uitgesloten
-11:18:09 == De Pul (Uden): 62 events via html (11s) 
-11:18:11     21 eventlinks, detailpagina's ophalen (gecached)…
-11:18:11 == TivoliVredenburg (Utrecht): 802 events via jsonld_detail (208s) 671 events getagd via podiumfilters
-11:18:12 == De Piek (Vlissingen): 30 events via html (13s) ticketshop herkend: depiek.stager.co; extra bron https://depiek.stager.co/shop/default/events: 21 events via stager, 21 nieuw
-11:18:14     54 eventlinks, detailpagina's ophalen (gecached)…
-11:18:15 == Estrado (Harderwijk): 20 events via jsonld_detail (10s) jsonld_detail: 20 events
-11:18:16 Traceback (most recent call last):
+10:52:25 == Nieuwe Nor (Heerlen): 0 events via error (0s) HTTPError: 403 Client Error: Forbidden for url: https://nieuwenor.nl/programma
+10:52:26 == Hall of Fame (Tilburg): 32 events via stager (17s) stager: 32 events; ticketshop herkend: hall-fame.stager.co; extra bron https://hall-fame.stager.co/shop/default/events: 32 events via stager, 0 nieuw
+10:52:42 == PX (Volendam): 29 events via html (17s) 
+10:52:58 == Grenswerk (Venlo): 95 events via html (34s) ticketshop herkend: grenswerk.stager.co; extra bron https://grenswerk.stager.co/shop/default/events: 63 events via stager, 63 nieuw
+10:53:01 == Willem Twee (Den Bosch): 43 events via html (65s) ticketshop herkend: willem-twee.stager.co; extra bron https://willem-twee.stager.co/shop/default/events: 0 events via none, 0 nieuw
+10:53:11 == De Gelderlandfabriek (Culemborg): 47 events via wp_event (28s) wp_event: 9 events; ticketshop herkend: degelderlandfabriek.stager.co; extra bron https://degelderlandfabriek.stager.co/shop/default/events: 45 events via stager, 45 nieuw
+10:53:11 == Rotown (Rotterdam): 121 events via jsonld (138s) ticketshop herkend: rotown.stager.co; extra bron https://rotown.stager.co/shop/default/events: 87 events via stager, 87 nieuw
+10:53:17 == Bibelot (Dordrecht): 82 events via html (92s) ticketshop herkend: bibelot.stager.co; extra bron https://bibelot.stager.co/shop/ticketshopnew/events: 78 events via stager, 78 nieuw
+10:53:22 == De Piek (Vlissingen): 30 events via html (11s) ticketshop herkend: depiek.stager.co; extra bron https://depiek.stager.co/shop/default/events: 21 events via stager, 21 nieuw
+10:53:22     20 eventlinks, detailpagina's ophalen (gecached)…
+10:53:24 == Bolwerk (Poort) (Sneek): 117 events via wp_event (25s) 
+10:53:27     51 eventlinks, detailpagina's ophalen (gecached)…
+10:53:29 == Estrado (Harderwijk): 19 events via jsonld_detail (12s) jsonld_detail: 19 events
+10:53:32     48 eventlinks, detailpagina's ophalen (gecached)…
+10:53:33 == Mezz (Breda): 142 events via json_api (98s) 
+10:53:33 Traceback (most recent call last):
   File "/home/runner/work/poppodia-agenda/poppodia-agenda/fetch.py", line 280, in run_one
     evs, strat, note, audit = fetch_venue(v, cache)
                               ^^^^^^^^^^^^^^^^^^^^^
@@ -122,126 +124,112 @@ requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://nieu
     raise HTTPError(http_error_msg, response=self)
 requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: https://www.hetpodium.nl/agenda
 
-11:18:16 == Het Podium (Hoogeveen): 0 events via error (1s) HTTPError: 403 Client Error: Forbidden for url: https://www.hetpodium.nl/agenda
-11:18:20     50 eventlinks, detailpagina's ophalen (gecached)…
-11:18:22 == Willem Twee (Den Bosch): 44 events via html (64s) ticketshop herkend: willem-twee.stager.co; extra bron https://willem-twee.stager.co/shop/default/events: 0 events via none, 0 nieuw
-11:18:24 == Bolwerk (Poort) (Sneek): 117 events via wp_event (44s) 
-11:18:27     68 eventlinks, detailpagina's ophalen (gecached)…
-11:18:28     podiumfilters: 4 categorieën, 4 pagina's, 50 events getagd, 0 uitgesloten
-11:18:28 == 't Beest (Goes): 77 events via html:theater-for-wordpress (43s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: tbeest.stager.co; extra bron https://tbeest.stager.co/shop/default/events: 75 events via stager, 75 nieuw; 76 events getagd via podiumfilters
-11:18:30 == ECI Cultuurfabriek (Roermond): 20 events via html (5s) html: 20 events
-11:18:30 == De Pit (Terneuzen): 37 events via html:theater-for-wordpress (14s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: depit.stager.co; extra bron https://depit.stager.co/shop/default/events: 26 events via stager, 26 nieuw
-11:18:33 == De Peppel (Zeist): 29 events via tribe (5s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events
-11:18:35 == Porgy en Bess (Terneuzen): 40 events via html:theater-for-wordpress (13s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: porgyenbess.stager.co; extra bron https://porgyenbess.stager.co/shop/porgyenbess/events: 27 events via stager, 27 nieuw
-11:18:36     16 eventlinks, detailpagina's ophalen (gecached)…
-11:18:44 == De Spot (Middelburg): 88 events via jsonld_detail (33s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://despotmiddelburg.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; ticketshop herkend: despot.stager.co; extra bron https://despot.stager.co/shop/default/events: 41 events via stager, 41 nieuw
-11:18:45 == So What! (Gouda): 22 events via none (12s) wp_event: HTTPError 404 Client Error: Not Found for url: https://www.so-what.nl/wp-json/wp/v2/event?per_page=100&_embed=1&page=1; extra bron https://so-what.stager.co/shop/default/events: 22 events via stager, 22 nieuw
-11:18:45 == Capsloc (Capelle aan den IJssel): 20 events via jsonld_detail (15s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.capsloc.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 14 events; ticketshop herkend: capsloc.stager.co; extra bron https://capsloc.stager.co/shop/default/events: 17 events via stager, 17 nieuw
-11:18:52     9 eventlinks, detailpagina's ophalen (gecached)…
-11:18:53     117 eventlinks, detailpagina's ophalen (gecached)…
-11:18:53 == Manifesto (Hoorn): 21 events via html:theater-for-wordpress (9s) jsonld: 0 events; microdata: 0 events; embedded: 0 events
-11:18:57 == De Flux (Zaandam): 9 events via jsonld_detail (12s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 9 events; ticketshop herkend: flux.stager.co; extra bron https://flux.stager.co/shop/tickets/events: 5 events via stager, 5 nieuw
-11:18:59     27 eventlinks, detailpagina's ophalen (gecached)…
-11:19:10 == De Bosuil (Weert): 69 events via jsonld_detail (58s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.debosuil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; ticketshop herkend: debosuil.stager.co; extra bron https://debosuil.stager.co/shop/default/events: 65 events via stager, 65 nieuw
-11:19:10 == Corneel (Lelystad): 28 events via jsonld_detail (17s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.corneel.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 27 events; ticketshop herkend: corneel.stager.co; extra bron https://corneel.stager.co/shop/default/events: 24 events via stager, 24 nieuw
-11:19:14 == Muziekgieterij (Maastricht): 123 events via wp_event (114s) ticketshop herkend: muziekgieterij.stager.co; extra bron https://muziekgieterij.stager.co/shop/concert/events: 69 events via stager, 69 nieuw
-11:19:17     podiumfilters: 30 categorieën, 54 pagina's, 50 events getagd, 0 uitgesloten
-11:19:17 == Volt (Sittard): 53 events via jsonld_detail (68s) 50 events getagd via podiumfilters
-11:19:17 == De Cacaofabriek (Helmond): 38 events via html (8s) html: 38 events
-11:19:18 == Maassilo (Rotterdam): 5 events via html (4s) html: 5 events
-11:19:23 == Kroepoekfabriek (Vlaardingen): 34 events via wp_event (48s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://kroepoekfabriek.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; ticketshop herkend: kroepoekfabriek.stager.co; extra bron https://kroepoekfabriek.stager.co/shop/de-kroepoekfabriek/events: 25 events via stager, 25 nieuw
-11:19:23 == Zonnehuis (Amsterdam): 0 events via passive (0s) geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)
-11:19:27     20 eventlinks, detailpagina's ophalen (gecached)…
-11:19:29 == Astrant (Ede): 21 events via wp_event (18s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://astrant-ede.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; ticketshop herkend: astrantede.stager.co; extra bron https://astrantede.stager.co/shop/default/events: 10 events via stager, 10 nieuw
-11:19:29     podiumfilters: 16 categorieën, 32 pagina's, 83 events getagd, 0 uitgesloten
-11:19:32 == Cpunt (Hoofddorp): 112 events via jsonld_detail (47s) 78 events getagd via podiumfilters
-11:19:33 Traceback (most recent call last):
-  File "/home/runner/work/poppodia-agenda/poppodia-agenda/fetch.py", line 280, in run_one
-    evs, strat, note, audit = fetch_venue(v, cache)
-                              ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/poppodia-agenda/poppodia-agenda/fetch.py", line 77, in fetch_venue
-    r0 = get(base, delay=float(v.get("crawl_delay", 0)))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/poppodia-agenda/poppodia-agenda/net.py", line 126, in get
-    r.raise_for_status()
-  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/models.py", line 1167, in raise_for_status
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 500 Server Error: Internal Server Error for url: https://www.skatecafe.nl/
-
-11:19:33 == Skatecafe (Amsterdam): 0 events via error (1s) HTTPError: 500 Server Error: Internal Server Error for url: https://www.skatecafe.nl/
-11:19:36 == Groene Engel (Oss): 48 events via html (40s) ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 0 events via none, 0 nieuw
-11:19:41 == De Meester (Almere): 21 events via jsonld_detail (24s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://poppodiumdemeester.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; ticketshop herkend: demeesteralmere.stager.co; extra bron https://demeesteralmere.stager.co/shop/default/events: 20 events via stager, 20 nieuw
-11:19:48     5 eventlinks, detailpagina's ophalen (gecached)…
-11:19:49 == Gebouw-T (Bergen op Zoom): 238 events via wp_event (78s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://gebouw-t.nl/wp-json/tribe/events/v1/events?page=1&per_page=50&start_date=20; ticketshop herkend: gebouw-t.stager.co; extra bron https://gebouw-t.stager.co/shop/default/events: 62 events via stager, 62 nieuw
-11:19:50 == Poppodium Phoenix (Breda): 50 events via tribe (26s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: phoenix.stager.co; extra bron https://phoenix.stager.co/shop/default/events: 44 events via stager, 44 nieuw
-11:19:50     3 eventlinks, detailpagina's ophalen (gecached)…
-11:19:52     5 eventlinks, detailpagina's ophalen (gecached)…
-11:19:52 == Maloe Melo (Amsterdam): 8 events via tribe (10s) jsonld: 5 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 8 events; wp_event: 8 events; jsonld_detail: 5 events
-11:19:54 == Popcentrale (Dordrecht): 5 events via jsonld_detail (35s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.popcentrale.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 5 events
-11:19:55 == The Cave (Amsterdam): 3 events via jsonld_detail (19s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.thecaveamsterdam.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&s; wp_event: 0 events; jsonld_detail: 3 events
-11:19:57 == AFAS Live (Amsterdam): 83 events via html (5s) 
-11:19:58 == Altstadt (Eindhoven): 30 events via wp_event (41s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.altstadt.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat
-11:20:00     2 eventlinks, detailpagina's ophalen (gecached)…
-11:20:02 == Parallel (Amsterdam): 0 events via none (13s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://parallel.am/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events; jsonld_detail: 0 events
-11:20:02 == Ziggo Dome (Amsterdam): 119 events via json_api (13s) 
-11:20:04     9 eventlinks, detailpagina's ophalen (gecached)…
-11:20:06     3 eventlinks, detailpagina's ophalen (gecached)…
-11:20:09     68 eventlinks, detailpagina's ophalen (gecached)…
-11:20:09     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:09 == Amsterdamse Bostheater (Amsterdam): 0 events via none (16s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://bostheater.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=; wp_event: 0 events; jsonld_detail: 2 events
-11:20:09     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:10     23 eventlinks, detailpagina's ophalen (gecached)…
-11:20:13 == Ahoy (Rotterdam): 67 events via jsonld_detail (15s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.ahoy.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events
-11:20:14     9 eventlinks, detailpagina's ophalen (gecached)…
-11:20:15 == V11 (Rotterdam): 9 events via jsonld_detail (18s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.vessel11.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 4 events; ticketshop herkend: v11.stager.co; extra bron https://v11.stager.co/shop/default/events: 6 events via stager, 6 nieuw
-11:20:15 == OCCII (Amsterdam): 23 events via jsonld_detail (43s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://occii.org/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026; wp_event: 0 events
-11:20:18     6 eventlinks, detailpagina's ophalen (gecached)…
-11:20:18 == Grounds (Rotterdam): 21 events via none (23s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.grounds.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: grounds.stager.co; extra bron https://grounds.stager.co/shop/default/events: 21 events via stager, 21 nieuw
-11:20:20 == WPC Nederland 3 (Wateringen): 30 events via tribe (11s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events
-11:20:20 == Resistor (Leiden): 6 events via jsonld_detail (7s) jsonld: 0 events; microdata: 0 events; embedded: 6 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.resistor.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 6 events
-11:20:21     12 eventlinks, detailpagina's ophalen (gecached)…
-11:20:22 == Openluchttheater De Goffert (Nijmegen): 0 events via none (7s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.oltgoffert.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 2 events
-11:20:27 == DJS (Dordrecht): 43 events via none (24s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: muziekpodiumdjs.stager.co; extra bron https://muziekpodiumdjs.stager.co/shop/default/events: 43 events via stager, 43 nieuw
-11:20:28     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:29 == De Beuk (Barendrecht): 0 events via none (14s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.beukonline.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: beuk.stager.co; extra bron https://beuk.stager.co/shop/default/events: 0 events via none, 0 nieuw
-11:20:31     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:31 == Caprera (Bloemendaal): 0 events via none (8s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://caprera.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: 0 events; jsonld_detail: 0 events
-11:20:31 == De Amer (Amen): 38 events via jsonld_detail (29s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.cafedeamer.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 9 events; ticketshop herkend: amer.stager.co; extra bron https://amer.stager.co/shop/default/events: 36 events via stager, 36 nieuw
-11:20:34     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:34 == Little Devil (Tilburg): 0 events via none (4s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.littledevil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events
-11:20:36     72 eventlinks, detailpagina's ophalen (gecached)…
-11:20:36     18 eventlinks, detailpagina's ophalen (gecached)…
-11:20:40 == Aa-Theater (Groningen): 15 events via wp_event (9s) jsonld: 15 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 15 events; wp_event: 15 events; jsonld_detail: 15 events
-11:20:41     13 eventlinks, detailpagina's ophalen (gecached)…
-11:20:45     0 eventlinks, detailpagina's ophalen (gecached)…
-11:20:45 == Toekomstmuziek (Amsterdam): 0 events via none (11s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.toekomstmuziek.com/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events; jsonld_detail: 0 events
-11:20:45     11 eventlinks, detailpagina's ophalen (gecached)…
-11:20:47 == Beauforthuis (Austerlitz): 56 events via jsonld (27s) 
-11:20:55 == De Grote Weiver (Wormerveer): 8 events via jsonld_detail (36s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://degrooteweiver.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 8 events
-11:20:57 == De Vereeniging (Nijmegen): 11 events via jsonld_detail (26s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.stadsschouwburgendevereeniging.nl/wp-json/tribe/events/v1/events?per_pa; wp_event: 0 events; jsonld_detail: 11 events
-11:20:58 == Loburg (Wageningen): 24 events via wp_event (38s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.loburg.com/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date
-11:21:43 == PHIL (Haarlem): 37 events via jsonld_detail (76s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://philhaarlem.nl/wp-json/tribe/events/v1/events; wp_event: 0 events; jsonld_detail: 37 events
-11:25:27 == De Nieuwe Anita (Amsterdam): 20 events via wp_event (359s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.denieuweanita.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star
-11:25:27     Melkweg: bron onbereikbaar, 262 events van de vorige run hergebruikt
-11:25:27     Parallel: bron onbereikbaar, 10 events van de vorige run hergebruikt
-11:25:27     Little Devil: bron onbereikbaar, 5 events van de vorige run hergebruikt
-11:25:28 Locaties: 270 events verhuisd naar het podium waar ze plaatsvinden; 135 dubbele events samengevoegd
-11:25:28 Identiteit: 1 events van url-sleutel naar podium|dag|titel gemigreerd (first_seen behouden)
-11:25:28 Verschil met vorige run: 41 events verdwenen, 4 van dag verschoven, 15 van tijd (≥1 uur), 12 van prijs (>€ 5); podia met veel verdwenen events: De Vereeniging
-11:27:38 MusicBrainz: 33 artiesten opgezocht (11 nog te doen)
-11:27:53 Spotify: 44 artiesten opgezocht
-11:28:52 Zelflerend: 203 tag->type-koppelingen (+1), 345 geleerde subgenres (+1)
-11:28:52 Artiestenbank: 8934 artiesten; 941 events kregen genre via de kennisbank
-11:28:52 Reeksengeheugen: 10458 reeksen; 3 tijden en 11 typen overgenomen uit eerdere edities (prijzen worden nooit geschat)
-11:28:52 Prijsherkomst: shop 501, list 2119, jsonld 973, labeled 2119, embedded 264, text 450, none 406 · tijd uit pagina: label 1485, after_date 109, paren 139, schedule 200
-11:28:52 Archief: 13253 events bewaard (data/archive.json); 1 records naar de nieuwe id verhuisd
-11:28:52 LET OP groundtruth Maassilo · Zwangere Guy 2026-12-03: ontbreekt
-11:28:52 LET OP groundtruth Nieuwe Nor · Knaltibal 2026-11-07: ontbreekt
-11:28:52     baseline run29 afwijking Baroeg · Halloween Madness: Ritual (The Dutch Gho 2026-10-31: tijd 19:00 i.p.v. 19:30
-11:28:52     baseline run29 afwijking Bibelot · Reggae Central: Mark Wonder & The Rude C 2026-11-05: prijs € 20,16 i.p.v. 13.5
-11:28:52     baseline run29 afwijking Iduna · Toys Kill Us Halloween Experience 2026-10-31: ontbreekt
-11:28:52     baseline run29 afwijking Kroepoekfabriek · CHURCH OF CASH 2026-11-14: tijd 19:30 i.p.v. 20:15
-11:28:52     baseline run29 afwijking dB's · Halloween Rock 2026-10-31: ontbreekt
-11:28:52 Groundtruth: 5/7 gecontroleerde steekproef-events kloppen; baseline: 17/22 ongewijzigd
-11:28:53 
-Klaar: 6832 events uit 96/106 podia
+10:53:33 == Het Podium (Hoogeveen): 0 events via error (0s) HTTPError: 403 Client Error: Forbidden for url: https://www.hetpodium.nl/agenda
+10:53:45     67 eventlinks, detailpagina's ophalen (gecached)…
+10:53:46 == Muziekgieterij (Maastricht): 122 events via wp_event (97s) ticketshop herkend: muziekgieterij.stager.co; extra bron https://muziekgieterij.stager.co/shop/concert/events: 68 events via stager, 68 nieuw
+10:53:57 == De Spot (Middelburg): 85 events via jsonld_detail (34s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://despotmiddelburg.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; ticketshop herkend: despot.stager.co; extra bron https://despot.stager.co/shop/default/events: 40 events via stager, 40 nieuw
+10:54:02 == De Pul (Uden): 61 events via html (52s) 
+10:54:05 == ECI Cultuurfabriek (Roermond): 20 events via html (7s) html: 20 events
+10:54:10 == De Pit (Terneuzen): 36 events via html:theater-for-wordpress (37s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: depit.stager.co; extra bron https://depit.stager.co/shop/default/events: 25 events via stager, 25 nieuw
+10:54:10     15 eventlinks, detailpagina's ophalen (gecached)…
+10:54:11     podiumfilters: 4 categorieën, 4 pagina's, 48 events getagd, 0 uitgesloten
+10:54:11 == 't Beest (Goes): 74 events via html:theater-for-wordpress (70s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: tbeest.stager.co; extra bron https://tbeest.stager.co/shop/default/events: 73 events via stager, 73 nieuw; 74 events getagd via podiumfilters
+10:54:14 == De Peppel (Zeist): 28 events via tribe (12s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events
+10:54:22 == Capsloc (Capelle aan den IJssel): 19 events via jsonld_detail (17s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.capsloc.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 13 events; ticketshop herkend: capsloc.stager.co; extra bron https://capsloc.stager.co/shop/default/events: 16 events via stager, 16 nieuw
+10:54:26 == So What! (Gouda): 21 events via none (16s) wp_event: HTTPError 404 Client Error: Not Found for url: https://www.so-what.nl/wp-json/wp/v2/event?per_page=100&_embed=1&page=1; extra bron https://so-what.stager.co/shop/default/events: 21 events via stager, 21 nieuw
+10:54:29 == De Bosuil (Weert): 68 events via jsonld_detail (60s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.debosuil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; ticketshop herkend: debosuil.stager.co; extra bron https://debosuil.stager.co/shop/default/events: 64 events via stager, 64 nieuw
+10:54:29     podiumfilters: 30 categorieën, 53 pagina's, 47 events getagd, 0 uitgesloten
+10:54:32 == Volt (Sittard): 50 events via jsonld_detail (70s) 47 events getagd via podiumfilters
+10:54:33     9 eventlinks, detailpagina's ophalen (gecached)…
+10:54:37     116 eventlinks, detailpagina's ophalen (gecached)…
+10:54:38 == Porgy en Bess (Terneuzen): 40 events via html:theater-for-wordpress (53s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; ticketshop herkend: porgyenbess.stager.co; extra bron https://porgyenbess.stager.co/shop/porgyenbess/events: 27 events via stager, 27 nieuw
+10:54:38 == De Flux (Zaandam): 9 events via jsonld_detail (12s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.podiumdeflux.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start; wp_event: 0 events; jsonld_detail: 9 events; ticketshop herkend: flux.stager.co; extra bron https://flux.stager.co/shop/tickets/events: 5 events via stager, 5 nieuw
+10:54:39     26 eventlinks, detailpagina's ophalen (gecached)…
+10:54:46 == Manifesto (Hoorn): 21 events via html:theater-for-wordpress (24s) jsonld: 0 events; microdata: 0 events; embedded: 0 events
+10:54:49 == De Cacaofabriek (Helmond): 37 events via html (11s) html: 37 events
+10:54:49 == Kroepoekfabriek (Vlaardingen): 33 events via wp_event (36s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://kroepoekfabriek.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; ticketshop herkend: kroepoekfabriek.stager.co; extra bron https://kroepoekfabriek.stager.co/shop/de-kroepoekfabriek/events: 24 events via stager, 24 nieuw
+10:54:53 == Corneel (Lelystad): 27 events via jsonld_detail (21s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.corneel.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 26 events; ticketshop herkend: corneel.stager.co; extra bron https://corneel.stager.co/shop/default/events: 23 events via stager, 23 nieuw
+10:54:58 == Maassilo (Rotterdam): 5 events via html (9s) html: 5 events
+10:54:59     19 eventlinks, detailpagina's ophalen (gecached)…
+10:55:04     5 eventlinks, detailpagina's ophalen (gecached)…
+10:55:05 == Popcentrale (Dordrecht): 4 events via jsonld_detail (7s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.popcentrale.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 4 events
+10:55:05 == Zonnehuis (Amsterdam): 0 events via passive (0s) geen eigen bron: ontvangt events die een ander podium hier programmeert (relabel_by_location)
+10:55:07 == Astrant (Ede): 21 events via wp_event (22s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://astrant-ede.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; ticketshop herkend: astrantede.stager.co; extra bron https://astrantede.stager.co/shop/default/events: 10 events via stager, 10 nieuw
+10:55:11     podiumfilters: 16 categorieën, 32 pagina's, 82 events getagd, 0 uitgesloten
+10:55:13 == Cpunt (Hoofddorp): 111 events via jsonld_detail (44s) 77 events getagd via podiumfilters
+10:55:16 == De Meester (Almere): 20 events via jsonld_detail (26s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://poppodiumdemeester.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&sta; wp_event: 0 events; jsonld_detail: 19 events; ticketshop herkend: demeesteralmere.stager.co; extra bron https://demeesteralmere.stager.co/shop/default/events: 19 events via stager, 19 nieuw
+10:55:21     0 eventlinks, detailpagina's ophalen (gecached)…
+10:55:21 == Skatecafe (Amsterdam): 0 events via none (8s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.skatecafe.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_da; wp_event: 0 events; jsonld_detail: 0 events
+10:55:33 == Poppodium Phoenix (Breda): 50 events via tribe (29s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; ticketshop herkend: phoenix.stager.co; extra bron https://phoenix.stager.co/shop/default/events: 43 events via stager, 43 nieuw
+10:55:35     2 eventlinks, detailpagina's ophalen (gecached)…
+10:55:37 == The Cave (Amsterdam): 0 events via none (16s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.thecaveamsterdam.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&s; wp_event: 0 events; jsonld_detail: 2 events
+10:55:40     5 eventlinks, detailpagina's ophalen (gecached)…
+10:55:42 == Maloe Melo (Amsterdam): 7 events via tribe (9s) jsonld: 5 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 7 events; wp_event: 7 events; jsonld_detail: 5 events
+10:55:49     2 eventlinks, detailpagina's ophalen (gecached)…
+10:55:50 == Groene Engel (Oss): 47 events via html (72s) ticketshop herkend: groene-engel.stager.co; extra bron https://groene-engel.stager.co/shop/default/events: 0 events via none, 0 nieuw
+10:55:51 == Parallel (Amsterdam): 0 events via none (13s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://parallel.am/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events; jsonld_detail: 0 events
+10:55:53     22 eventlinks, detailpagina's ophalen (gecached)…
+10:55:54 == Gebouw-T (Bergen op Zoom): 237 events via wp_event (104s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://gebouw-t.nl/wp-json/tribe/events/v1/events?page=1&per_page=50&start_date=20; ticketshop herkend: gebouw-t.stager.co; extra bron https://gebouw-t.stager.co/shop/default/events: 61 events via stager, 61 nieuw
+10:55:56 == Ziggo Dome (Amsterdam): 119 events via json_api (14s) 
+10:56:01     3 eventlinks, detailpagina's ophalen (gecached)…
+10:56:01 == OCCII (Amsterdam): 22 events via jsonld_detail (46s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://occii.org/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=2026; wp_event: 0 events
+10:56:04 == Amsterdamse Bostheater (Amsterdam): 0 events via none (14s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://bostheater.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=; wp_event: 0 events; jsonld_detail: 2 events
+10:56:06     9 eventlinks, detailpagina's ophalen (gecached)…
+10:56:08     0 eventlinks, detailpagina's ophalen (gecached)…
+10:56:13     68 eventlinks, detailpagina's ophalen (gecached)…
+10:56:16 == V11 (Rotterdam): 9 events via jsonld_detail (20s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.vessel11.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 4 events; ticketshop herkend: v11.stager.co; extra bron https://v11.stager.co/shop/default/events: 6 events via stager, 6 nieuw
+10:56:16     9 eventlinks, detailpagina's ophalen (gecached)…
+10:56:16 == Ahoy (Rotterdam): 67 events via jsonld_detail (14s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.ahoy.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=20; wp_event: 0 events
+10:56:19 == Grounds (Rotterdam): 22 events via none (25s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.grounds.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: grounds.stager.co; extra bron https://grounds.stager.co/shop/default/events: 22 events via stager, 22 nieuw
+10:56:22     0 eventlinks, detailpagina's ophalen (gecached)…
+10:56:25     6 eventlinks, detailpagina's ophalen (gecached)…
+10:56:27 == Altstadt (Eindhoven): 30 events via wp_event (93s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.altstadt.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat
+10:56:28 == Resistor (Leiden): 6 events via jsonld_detail (8s) jsonld: 0 events; microdata: 0 events; embedded: 6 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.resistor.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_dat; wp_event: 0 events; jsonld_detail: 6 events
+10:56:33     12 eventlinks, detailpagina's ophalen (gecached)…
+10:56:34 == De Amer (Amen): 38 events via jsonld_detail (30s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.cafedeamer.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 9 events; ticketshop herkend: amer.stager.co; extra bron https://amer.stager.co/shop/default/events: 36 events via stager, 36 nieuw
+10:56:34 == Openluchttheater De Goffert (Nijmegen): 0 events via none (7s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.oltgoffert.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 2 events
+10:56:40 == WPC Nederland 3 (Wateringen): 29 events via tribe (24s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events
+10:56:40     0 eventlinks, detailpagina's ophalen (gecached)…
+10:56:41 == De Beuk (Barendrecht): 0 events via none (14s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.beukonline.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: beuk.stager.co; extra bron https://beuk.stager.co/shop/default/events: 0 events via none, 0 nieuw
+10:56:43 == DJS (Dordrecht): 42 events via none (27s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://muziekpodiumdjs.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events; ticketshop herkend: muziekpodiumdjs.stager.co; extra bron https://muziekpodiumdjs.stager.co/shop/default/events: 42 events via stager, 42 nieuw
+10:56:50     0 eventlinks, detailpagina's ophalen (gecached)…
+10:56:50 == Caprera (Bloemendaal): 0 events via none (9s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://caprera.nu/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date=202; wp_event: 0 events; jsonld_detail: 0 events
+10:56:51     70 eventlinks, detailpagina's ophalen (gecached)…
+10:56:55     0 eventlinks, detailpagina's ophalen (gecached)…
+10:56:55 == Little Devil (Tilburg): 0 events via none (5s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.littledevil.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_; wp_event: 0 events; jsonld_detail: 0 events
+10:56:57     15 eventlinks, detailpagina's ophalen (gecached)…
+10:57:00     17 eventlinks, detailpagina's ophalen (gecached)…
+10:57:04 == Aa-Theater (Groningen): 14 events via wp_event (9s) jsonld: 14 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: 14 events; wp_event: 14 events; jsonld_detail: 14 events
+10:57:04 == De Grote Weiver (Wormerveer): 11 events via jsonld_detail (30s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://degrooteweiver.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&start_d; wp_event: 0 events; jsonld_detail: 11 events
+10:57:07 == AFAS Live (Amsterdam): 82 events via html (77s) 
+10:57:15     0 eventlinks, detailpagina's ophalen (gecached)…
+10:57:15 == Toekomstmuziek (Amsterdam): 0 events via none (11s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.toekomstmuziek.com/wp-json/tribe/events/v1/events?per_page=50&page=1&st; wp_event: 0 events; jsonld_detail: 0 events
+10:57:18     12 eventlinks, detailpagina's ophalen (gecached)…
+10:57:29 == De Vereeniging (Nijmegen): 12 events via jsonld_detail (26s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.stadsschouwburgendevereeniging.nl/wp-json/tribe/events/v1/events?per_pa; wp_event: 0 events; jsonld_detail: 12 events
+10:57:39 == Loburg (Wageningen): 23 events via wp_event (65s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.loburg.com/wp-json/tribe/events/v1/events?per_page=50&page=1&start_date
+10:57:49 == PHIL (Haarlem): 36 events via jsonld_detail (66s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://philhaarlem.nl/wp-json/tribe/events/v1/events; wp_event: 0 events; jsonld_detail: 36 events
+10:57:56 == Beauforthuis (Austerlitz): 56 events via jsonld (76s) 
+11:01:06 == De Nieuwe Anita (Amsterdam): 20 events via wp_event (359s) jsonld: 0 events; microdata: 0 events; embedded: 0 events; html_preset: 0 events; tribe: HTTPError 404 Client Error: Not Found for url: https://www.denieuweanita.nl/wp-json/tribe/events/v1/events?per_page=50&page=1&star
+11:04:26 == Patronaat (Haarlem): 165 events via html (975s) 
+11:04:26     Parallel: bron onbereikbaar, 10 events van de vorige run hergebruikt
+11:04:26     Little Devil: bron onbereikbaar, 5 events van de vorige run hergebruikt
+11:04:26 Locaties: 268 events verhuisd naar het podium waar ze plaatsvinden; 136 dubbele events samengevoegd
+11:04:26 LET OP regressie Melkweg: 0 events, was 275
+11:04:27 Verschil met vorige run: 16 events verdwenen, 1 van dag verschoven, 26 van tijd (≥1 uur), 10 van prijs (>€ 5)
+11:05:42 MusicBrainz: 23 artiesten opgezocht (6 nog te doen)
+11:05:52 Spotify: 29 artiesten opgezocht
+11:06:27 Zelflerend: 203 tag->type-koppelingen (+0), 346 geleerde subgenres (+1)
+11:06:27 Artiestenbank: 8963 artiesten; 926 events kregen genre via de kennisbank
+11:06:27 Reeksengeheugen: 10486 reeksen; 2 tijden en 12 typen overgenomen uit eerdere edities (prijzen worden nooit geschat)
+11:06:27 Prijsherkomst: shop 493, list 2077, jsonld 970, labeled 2087, embedded 17, text 442, none 393 · tijd uit pagina: label 1462, after_date 107, paren 139, schedule 197
+11:06:28 Archief: 13296 events bewaard (data/archive.json)
+11:06:28 LET OP groundtruth Maassilo · Zwangere Guy 2026-12-03: ontbreekt
+11:06:28 LET OP groundtruth Nieuwe Nor · Knaltibal 2026-11-07: ontbreekt
+11:06:28     baseline run29 afwijking Baroeg · Halloween Madness: Ritual (The Dutch Gho 2026-10-31: tijd 19:00 i.p.v. 19:30
+11:06:28     baseline run29 afwijking Bibelot · Reggae Central: Mark Wonder & The Rude C 2026-11-05: prijs € 20,16 i.p.v. 13.5
+11:06:28     baseline run29 afwijking Iduna · Toys Kill Us Halloween Experience 2026-10-31: ontbreekt
+11:06:28     baseline run29 afwijking Kroepoekfabriek · CHURCH OF CASH 2026-11-14: tijd 19:30 i.p.v. 20:15
+11:06:28     baseline run29 afwijking dB's · Halloween Rock 2026-10-31: ontbreekt
+11:06:28 Groundtruth: 5/7 gecontroleerde steekproef-events kloppen; baseline: 16/21 ongewijzigd
+11:06:28 
+Klaar: 6479 events uit 94/106 podia
